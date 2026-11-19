@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import builtins
 import threading
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -477,16 +478,22 @@ def test_pack_discovery_rescans_after_the_ttl_expires(
 def test_pack_discovery_ttl_drops_the_loaders_own_cache(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Rescanning is pointless unless the loader re-walks the filesystem too."""
+    """Each published rescan makes load_pack's loader re-discover too.
+
+    The scan itself walks the disk through a loader of its own. The engine's
+    loader, which load_pack reads, would otherwise keep its first discovery
+    for the life of the process. Counted on that instance, so a refresh of
+    some other loader does not count.
+    """
     engine = LocalEngine(pack_discovery_ttl=0.0)
     refreshes = {"count": 0}
-    original = LanguagePackLoader.refresh_discovery
+    original = engine._loader.refresh_discovery
 
-    def counting(self: LanguagePackLoader) -> None:
+    def counting() -> None:
         refreshes["count"] += 1
-        original(self)
+        original()
 
-    monkeypatch.setattr(LanguagePackLoader, "refresh_discovery", counting)
+    monkeypatch.setattr(engine._loader, "refresh_discovery", counting)
     engine._discover_pack_codes()
     engine._discover_pack_codes()
     assert refreshes["count"] == 2
@@ -527,6 +534,161 @@ def test_list_languages_reflects_a_refreshed_catalog(
     visible["codes"] = [("es", "Spanish"), ("ar", "Arabic")]
     after = {info.code: info.pack_available for info in engine.list_languages()}
     assert after["ar"] is True
+
+
+#: How long a thread that must NOT be blocked gets before the test calls it
+#: blocked. The calls under test take microseconds once they need no scan,
+#: so this bound sits far above scheduler noise. Only a thread queued behind
+#: the held scan comes near it.
+_UNBLOCKED_WITHIN_SECONDS = 5.0
+
+
+def _hold_discovery_scan(
+    monkeypatch: pytest.MonkeyPatch, codes: list[tuple[str, str]]
+) -> tuple[threading.Event, threading.Event]:
+    """Make the loader's discovery scan park until released.
+
+    Returns ``(scanning, release)``: ``scanning`` is set once a scan is in
+    flight, and setting ``release`` lets it finish with ``codes``. On
+    release it fills the loader's discovery cache, as a real scan whose
+    filesystem walk ends at that moment does.
+    """
+    scanning = threading.Event()
+    release = threading.Event()
+
+    def parked_scan(self: LanguagePackLoader, target: str = "python") -> list[tuple[str, str]]:
+        scanning.set()
+        release.wait(timeout=30)
+        self._discover_packs()
+        return list(codes)
+
+    monkeypatch.setattr(LanguagePackLoader, "list_available_languages", parked_scan)
+    return scanning, release
+
+
+def test_a_discovery_scan_does_not_block_refresh_or_cached_lookups(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The engine lock is never held across the filesystem scan.
+
+    The scan walks every installed distribution and reads every pack's
+    YAML. While a thread holds the lock for that long, a thread waiting on
+    the lock can lose it to the scanning threads again and again: before
+    Python 3.13 a lock has no hand-off to the thread that waited longest.
+    That starved ``refresh_packs`` in the concurrency test below for more
+    than 30 minutes on the 3.10 CI leg. So: scan unlocked, publish locked.
+    """
+    engine = LocalEngine(pack_discovery_ttl=3600.0)
+    translator = engine._translator_for("en", "es", "3.13")
+    scanning, release = _hold_discovery_scan(monkeypatch, [("es", "Spanish")])
+    scanner = threading.Thread(target=engine._discover_pack_codes)
+    try:
+        scanner.start()
+        assert scanning.wait(timeout=_UNBLOCKED_WITHIN_SECONDS)
+
+        looked_up: list[Any] = []
+        lookup = threading.Thread(
+            target=lambda: looked_up.append(engine._translator_for("en", "es", "3.13"))
+        )
+        lookup.start()
+        lookup.join(timeout=_UNBLOCKED_WITHIN_SECONDS)
+        assert not lookup.is_alive(), "a cached translator lookup waited on the scan"
+        assert looked_up == [translator]
+
+        refresher = threading.Thread(target=engine.refresh_packs)
+        refresher.start()
+        refresher.join(timeout=_UNBLOCKED_WITHIN_SECONDS)
+        assert not refresher.is_alive(), "refresh_packs waited on the scan"
+    finally:
+        release.set()
+        scanner.join()
+
+
+def test_a_scan_overtaken_by_refresh_packs_is_not_cached(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A scan already running when refresh_packs is called leaves no cache.
+
+    It may have read the disk before the refresh, so caching it would undo
+    the refresh. Its caller still gets the scan's answer.
+    """
+    engine = LocalEngine(pack_discovery_ttl=3600.0)
+    scanning, release = _hold_discovery_scan(monkeypatch, [("es", "Spanish")])
+    seen: list[frozenset[str]] = []
+    scanner = threading.Thread(target=lambda: seen.append(engine._discover_pack_codes()))
+    try:
+        scanner.start()
+        assert scanning.wait(timeout=_UNBLOCKED_WITHIN_SECONDS)
+        engine.refresh_packs()
+    finally:
+        release.set()
+        scanner.join()
+
+    assert seen == [frozenset({"es"})]
+    assert engine._pack_codes is None
+    # Nor the engine loader's discovery cache, which load_pack reads: the
+    # overtaken scan filled only a loader of its own.
+    assert engine._loader._discovered_packs is None
+
+
+def test_a_scan_after_refresh_never_reuses_an_overtaken_scans_discovery(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Scans share no discovery cache, so a refresh cannot be lost.
+
+    Scan A walks the disk before refresh_packs; scan B starts after it. If
+    both went through one loader, A could write what it saw into that
+    loader's discovery cache in the moment after B cleared it, and B would
+    read A's pre-refresh dict and cache it for the whole TTL as current.
+    """
+    engine = LocalEngine(pack_discovery_ttl=3600.0)
+    a_parked, a_go, a_wrote, b_read = (threading.Event() for _ in range(4))
+    pre_refresh = {"python-es": Path("before-the-refresh", "es")}
+    calls: list[int] = []
+
+    def two_scans(self: LanguagePackLoader, target: str = "python") -> list[tuple[str, str]]:
+        calls.append(len(calls))
+        if len(calls) == 1:
+            # Scan A: its walk read the disk before refresh_packs and ends now.
+            a_parked.set()
+            a_go.wait(timeout=30)
+            self._discovered_packs = pre_refresh
+            a_wrote.set()
+            b_read.wait(timeout=30)
+            return [("es", "Spanish")]
+        # Scan B, after the refresh: its walk is read once A has written.
+        a_wrote.wait(timeout=30)
+        discovered = self._discover_packs()
+        b_read.set()
+        return [(key.split("-", 1)[1], key) for key in discovered]
+
+    monkeypatch.setattr(LanguagePackLoader, "list_available_languages", two_scans)
+    after: list[frozenset[str]] = []
+    scan_a = threading.Thread(target=engine._discover_pack_codes)
+    scan_b = threading.Thread(target=lambda: after.append(engine._discover_pack_codes()))
+    try:
+        scan_a.start()
+        assert a_parked.wait(timeout=_UNBLOCKED_WITHIN_SECONDS)
+        engine.refresh_packs()
+        scan_b.start()
+    finally:
+        a_go.set()
+        scan_a.join()
+        if scan_b.ident is not None:
+            scan_b.join()
+
+    assert engine._pack_codes == after[0]
+    assert engine._pack_codes != frozenset({"es"}), (
+        f"the post-refresh scan cached the overtaken scan's discovery: {engine._pack_codes}"
+    )
+
+
+def test_a_scan_not_overtaken_is_cached() -> None:
+    """The publish step still caches an ordinary scan within the TTL."""
+    engine = LocalEngine(pack_discovery_ttl=3600.0)
+    codes = engine._discover_pack_codes()
+    assert engine._pack_codes == codes
+    assert engine._discover_pack_codes() is codes
 
 
 def test_refresh_packs_is_safe_under_concurrency() -> None:

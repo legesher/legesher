@@ -159,6 +159,13 @@ class LocalEngine:
         self._pack_codes: frozenset[str] | None = None
         self._pack_codes_read_at = 0.0
         self._pack_discovery_ttl = pack_discovery_ttl
+        #: Bumped by :meth:`refresh_packs`, so a discovery scan already in
+        #: flight can tell that it was overtaken and must not be cached.
+        self._generation = 0
+        #: Guards the fields above. Never held across the discovery scan
+        #: (see :meth:`_discover_pack_codes`). A translator build on a cache
+        #: miss does run under it, once per key, so that concurrent requests
+        #: share one build.
         self._lock = threading.Lock()
 
     def refresh_packs(self) -> None:
@@ -169,6 +176,7 @@ class LocalEngine:
         of installed packs. The TTL alone does not cover that case.
         """
         with self._lock:
+            self._generation += 1
             self._pack_codes = None
             self._pack_codes_read_at = 0.0
             self._translators.clear()
@@ -211,20 +219,47 @@ class LocalEngine:
         return infos
 
     def _discover_pack_codes(self) -> frozenset[str]:
-        """Which languages have a Python pack installed, rescanned on expiry."""
+        """Which languages have a Python pack installed, rescanned on expiry.
+
+        The scan runs WITHOUT the lock. It walks every installed
+        distribution and reads every pack's metadata, tens of milliseconds
+        or more, and a lock held that long starves its waiters: before
+        Python 3.13 a released lock goes to whichever thread asks next, not
+        to the one that waited longest, so threads that keep rescanning can
+        hold off :meth:`refresh_packs` and translator lookups indefinitely.
+        The lock is taken only to read the cache and to publish the result.
+
+        Each scan walks the disk through a loader of its own, so no scan can
+        read a discovery result another scan left behind; a scan that started
+        before :meth:`refresh_packs` is never seen by one that started after
+        it. Two threads may scan at once after expiry. Both read the disk
+        after the last refresh, and the one that finishes last is kept.
+        """
         with self._lock:
             now = time.monotonic()
             if (
-                self._pack_codes is None
-                or now - self._pack_codes_read_at >= self._pack_discovery_ttl
+                self._pack_codes is not None
+                and now - self._pack_codes_read_at < self._pack_discovery_ttl
             ):
-                # Drop the loader's own discovery cache too: without it the
-                # rescan would just re-read the same stale dict.
-                self._loader.refresh_discovery()
-                pairs = self._loader.list_available_languages("python")
-                self._pack_codes = frozenset(code for code, _name in pairs)
+                return self._pack_codes
+            generation = self._generation
+
+        # A fresh loader starts with no discovery cache, so this is a real
+        # walk of the disk, and no other thread writes to its cache.
+        pairs = LanguagePackLoader().list_available_languages("python")
+        codes = frozenset(code for code, _name in pairs)
+
+        with self._lock:
+            # A scan that refresh_packs overtook may have read the disk
+            # before the refresh, so only a scan from the current generation
+            # is cached. Its caller still gets the answer either way.
+            if self._generation == generation:
+                self._pack_codes = codes
                 self._pack_codes_read_at = now
-            return self._pack_codes
+                # Let load_pack re-discover too: the engine's own loader
+                # would otherwise keep its first discovery for good.
+                self._loader.refresh_discovery()
+        return codes
 
     # -- packs / terms ----------------------------------------------------
 
