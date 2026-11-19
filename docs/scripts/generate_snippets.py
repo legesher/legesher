@@ -10,9 +10,10 @@ else passes through.
 Outputs under --out: snippet-langs.json and legesher-snippets.css (language
 picker + display CSS), snippets/<slug>.json (localized variants with spans
 plus the per-snippet identifier glossaries applied from
-docs/snippets/identifiers/<lang>.yml), and highlight-terms/<lang>.json
+docs/snippets/identifiers/<lang>.yml), highlight-terms/<lang>.json
 (per-language token sets driving the playground's localized syntax
-highlighting).
+highlighting), and stories/<id>.json (the What's New pages' feature stories,
+read from docs/stories/ by default; see stories.py).
 """
 
 from __future__ import annotations
@@ -277,7 +278,10 @@ def _validate_glossary(
 
 
 def emit_artifacts(
-    snippets_dir: Path, out_dir: Path, version: str = PACK_VERSION_DEFAULT
+    snippets_dir: Path,
+    out_dir: Path,
+    version: str = PACK_VERSION_DEFAULT,
+    stories_dir: Path | None = None,
 ) -> None:
     bundles = load_packs(version)
     glossaries = load_identifier_glossaries(snippets_dir)
@@ -338,14 +342,32 @@ def emit_artifacts(
             json.dumps(payload, ensure_ascii=False) + "\n", encoding="utf-8"
         )
 
+    if stories_dir is not None:
+        from stories import StoryError, emit_stories  # stories imports this module
+
+        try:
+            emit_stories(stories_dir, out_dir, bundles)
+        except StoryError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            raise SystemExit(1)
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--snippets", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--version", default=PACK_VERSION_DEFAULT)
+    parser.add_argument(
+        "--stories",
+        type=Path,
+        default=None,
+        help="feature stories directory (default: the 'stories' directory beside --snippets, when it exists)",
+    )
     args = parser.parse_args()
-    emit_artifacts(args.snippets, args.out, args.version)
+    stories = args.stories
+    if stories is None and (args.snippets.parent / "stories").is_dir():
+        stories = args.snippets.parent / "stories"
+    emit_artifacts(args.snippets, args.out, args.version, stories)
 
 
 if __name__ == "__main__":

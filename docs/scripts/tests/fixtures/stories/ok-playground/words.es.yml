@@ -1,0 +1,9 @@
+status: draft
+names:
+  divide: dividir
+  numerator: numerador
+  denominator: denominador
+strings:
+  '"cannot divide"': '"no se puede dividir"'
+  '"by zero"': '"entre cero"'
+  '"attempted"': '"se intentó"'

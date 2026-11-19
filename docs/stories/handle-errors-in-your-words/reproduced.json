@@ -1,0 +1,512 @@
+{
+  "checked": "2026-11-17",
+  "details": {
+    "ar": {
+      "3.10": "خطأفيبناءالجملة: بناء جملة غير صالح",
+      "3.11": "خطأفيبناءالجملة: بناء جملة غير صالح"
+    },
+    "bn": {
+      "3.10": "বাক্যগঠনত্রুটি: invalid syntax",
+      "3.11": "বাক্যগঠনত্রুটি: invalid syntax"
+    },
+    "gu": {
+      "3.10": "વાક્યરચનાભૂલ: invalid syntax",
+      "3.11": "વાક્યરચનાભૂલ: invalid syntax"
+    },
+    "hi": {
+      "3.10": "सिंटैक्सत्रुटि: invalid syntax",
+      "3.11": "सिंटैक्सत्रुटि: invalid syntax"
+    },
+    "kn": {
+      "3.10": "ವಾಕ್ಯರಚನೆದೋಷ: invalid syntax",
+      "3.11": "ವಾಕ್ಯರಚನೆದೋಷ: invalid syntax"
+    },
+    "ml": {
+      "3.10": "വാക്യഘടനപിശക്: invalid syntax",
+      "3.11": "വാക്യഘടനപിശക്: invalid syntax"
+    },
+    "my": {
+      "3.10": "ဝါကျဖွဲ့အမှား: invalid syntax",
+      "3.11": "ဝါကျဖွဲ့အမှား: invalid syntax"
+    },
+    "ne": {
+      "3.10": "वाक्यरचनात्रुटि: invalid syntax",
+      "3.11": "वाक्यरचनात्रुटि: invalid syntax"
+    },
+    "si": {
+      "3.10": "වාක්යරීතිදෝෂය: invalid syntax",
+      "3.11": "වාක්යරීතිදෝෂය: invalid syntax",
+      "3.13": "නාමදෝෂය: name 'මුද්රණය' is not defined",
+      "3.14": "නාමදෝෂය: name 'මුද්රණය' is not defined"
+    },
+    "te": {
+      "3.10": "వాక్యరచనదోషం: invalid syntax",
+      "3.11": "వాక్యరచనదోషం: invalid syntax"
+    },
+    "th": {
+      "3.10": "ข้อผิดพลาดไวยากรณ์: invalid syntax",
+      "3.11": "ข้อผิดพลาดไวยากรณ์: invalid syntax"
+    }
+  },
+  "digests": {
+    "am": "5c6cb49e26821aa2080ee220c63d3b74e1896b4a756276461b7985101b83286d",
+    "ar": "b16b9b40a9ab20fe372092fe24785b47308b330fc1316edfaced7c2c2a0e6f58",
+    "bn": "478f5f7da471ee4866b262164bbdd20c2b6173ed6120ecd1a4c4b6845abe7750",
+    "bs": "a86035b62c000c4f440a39d29cf4e2006e5c2b7e5593d1b609c60598c917d5b8",
+    "ca": "6a961ab554b7225d7b56aacf2cd3b4c206b6921894ce74bcaf6b8347866a0353",
+    "cs": "798066d2e783b77a4f3c1efe97adcc9984d3e0de05dbb79f3c7c1770a1196aeb",
+    "cy": "f8743d8cb1c7dce5e390eb5a12cbb7cf059f85ef879f8cc7c6ebd95681fce9f4",
+    "da": "2920bfe0b1c920edf803793d08d9c34b4ae6b3d29147bd07cc134bf18f9efc64",
+    "de": "877350a17de1942888441db62550c975ed0a906bdba31feb07b9e3f766eef537",
+    "el": "1ddb537269becd40fa35925bfa96767bd27bd11dd2b3c40cb025d9e30354d045",
+    "en": "a5c2fa6b8e977cbfea4f6f2fb7de5bfd48d67267f0033e2862e2e9570d34ab22",
+    "es": "10b5f971dac9bfcad86e3dff9f11c63b316e57f78e06c7652c74bcbe8f1c540c",
+    "fa": "8d3ca1b8d853523a8df3c68f61e51b6711949c7b716c07132af3cba0915d9844",
+    "fi": "7e450d291ef5076befb914a98cc0dcc8426c41ff38b82c50b58d7446decd9d26",
+    "fr": "3b1b80e4efdaa5a35b42f82a7d4298888f3713aa5b14433d58013c217f248ca5",
+    "ga": "50c2a171231754c92a0293917ec3daa7cb3624eacb6adfc66e3553578e4c02e1",
+    "gd": "a7498f6ec20d84aaebb53e40b262f10d44f72741ec43b287e7520068faf3e997",
+    "gl": "3d22514099f42d9c50f2f836fcfa6a9c071a925310ab74428d1f021f2c6a2c4b",
+    "gu": "b1124a5bd1155ef84463cbf160583d61097830e62569d48e764c787fc256dfa0",
+    "he": "14326c6ba023723e85ea9621f7fbc3061f1316d6a0af694fa5b52f51b3318a3d",
+    "hi": "b7d407de289b23221771cdf4fd754cc73e2913027252dfd701ee4efa7b59f003",
+    "hr": "e35597d6d7a3fed90ec0a7afda1ca20b9ab4b47cfc8aeb2b4099ef0949e15747",
+    "hu": "d080500d0b880406f305452b5eca3de751e5b9d991b72f0920ad669bfbf5f11d",
+    "id": "9070a6c59c42e1e1a37841b63ce611d3a82a3641ae3d5cb9031d0590f9c474c0",
+    "it": "1f0b4f04f0ca8aa69b2f86c32493a8c9b9f27d2d898fd1fb4efe22e03041a77c",
+    "ja": "c650e14efc842c3ad6e7af701d67cce30ea5c32e0128b9d329e255e94cfeff7b",
+    "kn": "b14b828eb54bdf058a364b2a553678591e95eef9415142a58abcbe3f0ff05dd4",
+    "ko": "16eb9e7031ff2059cfbda07d7b68364dd05b721278581bb069457cbe110f358b",
+    "lv": "b4100da5aefbf1fd02ccd6a45091eeaa0b58f546a5a62cc559ef59f65bd94111",
+    "mk": "2c8d7a12058f524d99a285c4330788cd70f32a8717fe16a3946ad179851f6b0c",
+    "ml": "f95f37ae32c9e58e2e63d5ea4945c6081938771cc423db73879123a3ccb7ca1f",
+    "mn": "cb582b98ab80a69fe232ca8371a6540f4e55504c0e86b657813e17b2627ee41c",
+    "ms": "65dc4920aa6598e68d30939cc2ebb482c8aa000aa785356ef0c2ea5c699dc04c",
+    "my": "456fa3a4893aec3be7ef72a3a98f6f06ef21efecd1eeeaccc30981597fc8761c",
+    "ne": "3891d04614800e7c1e78caf7dfd2448f5df51640f1c9655238a870c4a56d84ee",
+    "nl": "60c3587e6a7ab09c8127c87adeb9812af99fbb83e716f48f9a22eaffe8428071",
+    "no": "74b0763769e69a30fd06711b76679f86cf6594176d6f74e6998a551bd49c996d",
+    "pl": "cec63cd41afe4f93e590215b25533d253d0a1d862b13b5fa48ae19ab1cfad990",
+    "pt": "9a3443c68c7fdb0ccc3ceccbab1306e21b6460ae50b62a60ce46ab0c60da1602",
+    "ro": "9c5707f3e62f15b2a242c53e894c538a64bf438ebcc1b737a96df0e5295639ec",
+    "ru": "ef366b33317e7406d04caf85fdc5aff4b572bee27c39c3876b009f847f68c64d",
+    "si": "78b7113b907b3cd6a74a8d97678a97d9f7de47d2987e393b700b311d34c0ff14",
+    "sr": "38120ffd7de5f358c8b13868c2d58424007639cb6808639d569cc1a467c4d062",
+    "su": "08a86d3fa0d50e7a19b4d30da835e78b834500d439966a4d30da795a9c1d45e1",
+    "sv": "1aa76c05f12942ead527712e2d8b77aa00a46b6f3d6dbaf3e1d8e3cd5c01d47d",
+    "sw": "e3864c21263328661d837dafa1422109fde99d2c012d55f31b295d53f554b362",
+    "te": "906a47e0ac4ccb7e76a02fcb54bc895d75d8e54a448f0626c7fdaa69f161999a",
+    "th": "eafa8cc69e087eb9c68957c057344f2908e2e63acb884e288d1150aa54d1b274",
+    "tl": "520b12c97637e107d36e30ba1e0305a5fabe4c327eadf6846b999dbd3c3c2ea3",
+    "tr": "39f1d3c67600484f17353b5e1a7e848e280d8d62e41a4b8451df656f57dd44d0",
+    "uk": "a722923438160438d4f5f51756484b9d26bee73b5ec6fd3e308df71e18b028dc",
+    "ur": "21b424c392e208e9706e2b10d79586aa56cce11eaf833f1f827133ff2de308a5",
+    "uz": "f46523ab8ca6d3ca16a773b7771945d9acfdbf9e7087bcd1a9654b8a857088ff",
+    "vi": "a482d9ef00ce2f0668f296a1e99aeba3e7ccda7befcc839e5801f4b7184ecbf6",
+    "xh": "f39090e3d8b4328aa6c8ec16cc4756481eb9ff9222fff8f54a6f493737d024ad",
+    "zh": "6c0810307d4c37773f62326461a206ab78e726c537bd0c1628c1a1abd7c7153a"
+  },
+  "legesher": "0.25.1",
+  "python": [
+    "3.10",
+    "3.11",
+    "3.12",
+    "3.13",
+    "3.14"
+  ],
+  "results": {
+    "am": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "ar": {
+      "3.10": "error",
+      "3.11": "error",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "bn": {
+      "3.10": "error",
+      "3.11": "error",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "bs": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "ca": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "cs": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "cy": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "da": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "de": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "el": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "en": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "es": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "fa": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "fi": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "fr": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "ga": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "gd": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "gl": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "gu": {
+      "3.10": "error",
+      "3.11": "error",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "he": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "hi": {
+      "3.10": "error",
+      "3.11": "error",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "hr": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "hu": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "id": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "it": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "ja": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "kn": {
+      "3.10": "error",
+      "3.11": "error",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "ko": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "lv": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "mk": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "ml": {
+      "3.10": "error",
+      "3.11": "error",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "mn": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "ms": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "my": {
+      "3.10": "error",
+      "3.11": "error",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "ne": {
+      "3.10": "error",
+      "3.11": "error",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "nl": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "no": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "pl": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "pt": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "ro": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "ru": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "si": {
+      "3.10": "error",
+      "3.11": "error",
+      "3.12": "match",
+      "3.13": "error",
+      "3.14": "error"
+    },
+    "sr": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "su": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "sv": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "sw": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "te": {
+      "3.10": "error",
+      "3.11": "error",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "th": {
+      "3.10": "error",
+      "3.11": "error",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "tl": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "tr": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "uk": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "ur": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "uz": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "vi": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "xh": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    },
+    "zh": {
+      "3.10": "match",
+      "3.11": "match",
+      "3.12": "match",
+      "3.13": "match",
+      "3.14": "match"
+    }
+  },
+  "story": "handle-errors-in-your-words"
+}
