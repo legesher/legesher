@@ -29,7 +29,7 @@ UV_VERSION="0.13.7"
 # tool dir --bin, tool update-shell).
 UV_MINIMUM="0.5.0"
 SERVER_PYTHON="3.12"
-CLI_PIN="legesher==0.25.1"
+CLI_PIN="legesher==0.27.0"
 SERVER_PIN="legesher-language-server==0.3.0"
 EXTENSION_ID="legesher.legesher-vscode"
 MANUAL_STEPS="https://github.com/legesher/legesher#installation"
@@ -162,7 +162,7 @@ write_constraints() {
     cat >"$1" <<'CONSTRAINTS'
 # BEGIN CONSTRAINTS
 annotated-types==0.8.0
-anthropic==2.9.0
+anthropic==2.10.0
 anyio==4.16.0
 attrs==26.1.0
 cattrs==26.2.1
@@ -180,9 +180,9 @@ jinja2==3.1.6
 jiter==0.19.0
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
-legesher==0.25.1
-legesher-core==0.25.1
-legesher-i18n==0.25.1
+legesher==0.27.0
+legesher-core==0.27.0
+legesher-i18n==0.27.0
 legesher-language-server==0.3.0
 legesher-runtime==0.1.0
 lru-dict==1.4.1

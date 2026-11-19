@@ -149,6 +149,14 @@ def _requirement_pins() -> dict[str, str]:
     return pins
 
 
+# The versions the installers install, read from requirements.in so a bump
+# needs no edit here.
+CLI_VERSION = _requirement_pins()["legesher"]
+SERVER_VERSION = _requirement_pins()["legesher-language-server"]
+CLI_PIN = f"legesher=={CLI_VERSION}"
+SERVER_PIN = f"legesher-language-server=={SERVER_VERSION}"
+
+
 def test_tool_pins_agree_everywhere() -> None:
     pins = _requirement_pins()
     assert set(pins) == {"legesher", "legesher-language-server"}
@@ -270,10 +278,12 @@ class Sandbox:
                 "#!/bin/sh\necho 'network blocked in tests' >&2\nexit 97\n",
             )
         _executable(
-            self.tool_bin / "legesher", "#!/bin/sh\necho 'legesher, version 0.25.1'\n"
+            self.tool_bin / "legesher",
+            f"#!/bin/sh\necho 'legesher, version {CLI_VERSION}'\n",
         )
         _executable(
-            self.tool_bin / "legesher-lsp", "#!/bin/sh\necho 'legesher-lsp 0.3.0'\n"
+            self.tool_bin / "legesher-lsp",
+            f"#!/bin/sh\necho 'legesher-lsp {SERVER_VERSION}'\n",
         )
 
     def stub(self, name: str, body: str) -> None:
@@ -335,14 +345,14 @@ def test_installs_both_tools_and_the_extension(tmp_path: Path) -> None:
     calls = sandbox.calls()
     installs = [call for call in calls if call[:3] == ["uv", "tool", "install"]]
     assert [call[-1] for call in installs] == [
-        "legesher==0.25.1",
-        "legesher-language-server==0.3.0",
+        CLI_PIN,
+        SERVER_PIN,
     ]
     for call in installs:
         assert call[3:7] == ["--python", "3.12", "--no-build", "--constraints"], call
     assert ["code", "--install-extension", "legesher.legesher-vscode"] in calls
-    assert "legesher, version 0.25.1" in result.stdout
-    assert "legesher-lsp 0.3.0" in result.stdout
+    assert f"legesher, version {CLI_VERSION}" in result.stdout
+    assert f"legesher-lsp {SERVER_VERSION}" in result.stdout
 
 
 def test_a_path_with_spaces_and_any_script_reaches_uv_as_one_argument(
@@ -484,7 +494,7 @@ def test_a_failed_tool_install_stops_the_run(tmp_path: Path) -> None:
     )
     result = sandbox.run()
     assert result.returncode != 0
-    assert "uv could not install legesher==0.25.1" in result.stderr
+    assert f"uv could not install {CLI_PIN}" in result.stderr
     assert "done." not in result.stdout
     assert "network blocked" not in result.stderr
 
@@ -509,8 +519,8 @@ def test_installs_uv_itself_into_a_home_with_spaces_and_any_script(
         call for call in sandbox.calls() if call[:3] == ["uv", "tool", "install"]
     ]
     assert [call[-1] for call in installs] == [
-        "legesher==0.25.1",
-        "legesher-language-server==0.3.0",
+        CLI_PIN,
+        SERVER_PIN,
     ]
 
 
