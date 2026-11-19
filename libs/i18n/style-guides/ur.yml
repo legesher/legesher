@@ -41,7 +41,7 @@ script:
   constraints:
   - "Urdu Nastaliq (not Naskh). Urdu identifiers must use keheh (ک, U+06A9) not Arabic kaf (U+0643), and Farsi yeh (ی, U+06CC) not Arabic yeh (U+064A); NFKC does not unify these look-alikes. Urdu's extra letters ٹ ڈ ڑ ں ے ھ live in the standard Arabic block. Use the standard Arabic block (U+0600–06FF); avoid presentation forms (U+FB50–FDFF, U+FE70–FEFF)."
   - "Omit vowel diacritics (harakat / tashkil) in identifiers — write the bare consonantal skeleton."
-  - "Digits: Urdu natively uses ۰۱۲۳; code uses ASCII 0-9 today. Native-digit support is a planned Legesher feature (currently ASCII-only)."
+  - "Digits: Urdu natively uses ۰۱۲۳; numeric literals may be typed in these digits, and Legesher reads them as ASCII 0-9 when the code runs (prefixed literals such as 0x stay ASCII). Identifiers keep ASCII digits."
 
 # Formatting rules.
 formatting:

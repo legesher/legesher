@@ -40,7 +40,7 @@ script:
   direction: ltr
   constraints:
   - "Use standard kanji/kana. Katakana loanwords are idiomatic in Japanese computing but prefer a kanji term where one is established."
-  - "Digits: Japanese natively uses １２３; code uses ASCII 0-9 today. Native-digit support is a planned Legesher feature (currently ASCII-only)."
+  - "Digits: a Japanese input method in fullwidth mode types １２３; code uses ASCII 0-9. Legesher does not read fullwidth digits as numbers, so numeric literals are typed in ASCII. Identifiers keep ASCII digits."
 
 # Formatting rules.
 formatting:

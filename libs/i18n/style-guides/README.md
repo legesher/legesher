@@ -77,8 +77,8 @@ only **profiles** it: if a language natively writes digits in its own script,
 note that (with a sample), e.g.
 
 ```yaml
-- "Digits: Hindi natively uses Devanagari १२३; code uses ASCII 0-9 today
-   (native-digit support is a planned Legesher feature, currently disabled)."
+- "Digits: Hindi natively uses १२३; numeric literals may be typed in these digits,
+   and Legesher reads them as ASCII 0-9 when the code runs. Identifiers keep ASCII digits."
 ```
 
 Set `supports.native_digits` accordingly. Do not put enable/convert logic here.

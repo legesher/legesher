@@ -66,6 +66,8 @@ except ImportError:  # Python 3.10: importlib.resources is a single module
     from importlib.readers import FileReader  # type: ignore[no-redef]
 
 from legesher_core import TokenTranslator
+from legesher_core.utils import continues_identifier as _continues_identifier
+from legesher_i18n.language_registry import get_native_digits
 from legesher.config import LegesherConfig
 from legesher.runtime.source_mapper import get_source_mapper
 
@@ -83,15 +85,6 @@ _CLAIM_PREFIX_BYTES = 16384
 # (English source or None, code object).
 _BYTECODE_HEADER = b"LGSH\x01"
 _BYTECODE_KEY_SIZE = 32
-
-
-def _continues_identifier(char: str) -> bool:
-    """Whether ``char`` can sit inside an identifier.
-
-    Python's identifier rules, not ``\\w``: combining marks (a Devanagari
-    anusvara, a Thai vowel sign) and zero-width joiners continue a word.
-    """
-    return ("a" + char).isidentifier()
 
 
 def _stock_roots() -> tuple[str, ...]:
@@ -312,6 +305,9 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
             if forms
             else None
         )
+        # The language's own digits: a module of native constants
+        # (``मान = १२``) has no keyword to claim it by.
+        self._native_digits = frozenset(get_native_digits(language) or "")
         # Everything but the source bytes that decides what a translated
         # file compiles to. Library names stay canonical in compiled code,
         # so no vocabulary revision belongs here.
@@ -449,10 +445,12 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
            standard library, this environment's site-packages) and nothing
            inside any site-packages or dist-packages directory.
         2. Otherwise, claim only a file whose first _CLAIM_PREFIX_BYTES
-           contain one of the pack's native keyword forms as a whole word.
-           No parse happens here. Claiming an English file that merely
-           shares a word with the pack is safe (the loader's parse-first
-           rule leaves it untranslated); missing a native file is not.
+           contain one of the pack's native keyword forms as a whole word,
+           or one of the language's native digits. No parse happens here.
+           Claiming an English file that merely shares a word with the pack,
+           or holds a native digit in a string, is safe (the loader's
+           parse-first rule leaves it untranslated); missing a native file
+           is not.
 
         Args:
             origin: Path of the source file the stock finder resolved
@@ -462,7 +460,7 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
         """
         if _is_stock_location(os.path.realpath(origin), self._stock_roots):
             return False
-        if self._keyword_pattern is None:
+        if self._keyword_pattern is None and not self._native_digits:
             return False
         try:
             with open(origin, "rb") as source_file:
@@ -478,6 +476,10 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
         except LookupError:
             text = prefix.decode("utf-8", errors="replace")
         text = unicodedata.normalize("NFKC", text)
+        if not self._native_digits.isdisjoint(text):
+            return True
+        if self._keyword_pattern is None:
+            return False
         for match in self._keyword_pattern.finditer(text):
             start, end = match.span()
             if start > 0 and _continues_identifier(text[start - 1]):

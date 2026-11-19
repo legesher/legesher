@@ -41,7 +41,7 @@ script:
   constraints:
   - "Prose is spaceless — underscores between logical words are REQUIRED. Thai has no case."
   - "CRITICAL: U+0E33 (SARA AM ำ) decomposes under NFKC, so an identifier containing it differs from the runtime token. Prefer forms that avoid it; any term needing it is reviewer-pending until regenerated NFKC-stable."
-  - "Digits: Thai natively uses ๑๒๓; code uses ASCII 0-9 today. Native-digit support is a planned Legesher feature (currently ASCII-only)."
+  - "Digits: Thai natively uses ๑๒๓; numeric literals may be typed in these digits, and Legesher reads them as ASCII 0-9 when the code runs (prefixed literals such as 0x stay ASCII). Identifiers keep ASCII digits."
 
 # Formatting rules.
 formatting:

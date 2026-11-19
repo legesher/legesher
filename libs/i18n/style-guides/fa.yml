@@ -41,7 +41,7 @@ script:
   constraints:
   - "Python accepts ZWNJ (U+200C) as a medial identifier character, so a form with it and one without are DIFFERENT names that render identically — forbid ZWNJ by codepoint and separate logical words with an underscore. Persian identifiers must use keheh (ک, U+06A9) not Arabic kaf (U+0643), and Farsi yeh (ی, U+06CC) not Arabic yeh (U+064A); NFKC does not unify these look-alikes. Use the standard Arabic block; avoid presentation forms (U+FB50–FDFF, U+FE70–FEFF)."
   - "Omit vowel diacritics (harakat / tashkil) in identifiers — write the bare consonantal skeleton."
-  - "Digits: Persian natively uses ۰۱۲۳; code uses ASCII 0-9 today. Native-digit support is a planned Legesher feature (currently ASCII-only)."
+  - "Digits: Persian natively uses ۰۱۲۳; numeric literals may be typed in these digits, and Legesher reads them as ASCII 0-9 when the code runs (prefixed literals such as 0x stay ASCII). Identifiers keep ASCII digits."
 
 # Formatting rules.
 formatting:

@@ -18,6 +18,12 @@ Production-ready translation engine for multilingual Python with two complete tr
   parentheses (`，` `；` `：` `（` `）`) are read as their ASCII marks in code position, so a program typed on an
   Arabic keyboard or a fullwidth input method runs. Strings and comments keep their marks. The engine reads these
   marks and never writes them: display and the return leg of a round trip carry ASCII punctuation
+- **Native-Digit Literals**: In a language whose registry entry names its own digits (Arabic `٠١٢٣`, Persian and
+  Urdu `۰۱۲۳`, Hindi `०१२३`, Bengali, Thai, Burmese and others), a numeric literal typed in those digits is read as
+  ASCII when the code is translated or run, so `x = ١٢٣ + 456` runs. Strings, comments and identifiers keep their
+  digits, prefixed literals (`0x`, `0b`, `0o`) stay ASCII, and the engine never writes native digits: git stores
+  the file as typed. `legesher_core.native_digits` holds the rules. The language server does not read them yet, so
+  the editor still marks such a literal as an error
 - **Fast**: both backends translate a small module in well under a millisecond; run
   `pytest libs/core/tests/benchmarks` to measure on your own hardware
 - **Graceful Degradation**: Handles incomplete code and syntax errors

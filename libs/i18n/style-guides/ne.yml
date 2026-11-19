@@ -77,7 +77,7 @@ script:
   constraints:
   - "Combining vowel signs, virama, anusvara, chandrabindu and visarga are legal in identifiers, but each identifier must be an NFKC fixed point. Zero-width joiner (U+200D) and non-joiner (U+200C) are forbidden even where visually customary."
   - "No nukta letters: their precomposed forms (U+0958 to U+095F) are NFC composition exclusions, so they would not survive normalisation, and Nepali does not use them."
-  - "Digits: Nepali natively uses १२३; code uses ASCII 0-9 today. Native-digit support is a planned Legesher feature (currently ASCII-only)."
+  - "Digits: Nepali natively uses १२३; numeric literals may be typed in these digits, and Legesher reads them as ASCII 0-9 when the code runs (prefixed literals such as 0x stay ASCII). Identifiers keep ASCII digits."
 
 # Formatting rules.
 formatting:

@@ -41,7 +41,7 @@ script:
   constraints:
   - "Combining vowel signs are legal in identifiers but each identifier must be an NFKC fixed point. Zero-width joiner (U+200D) is forbidden even where visually customary."
   - "Chillu letters (ൺ ൻ ർ ൽ ൾ ൿ) are atomic; verify NFKC stability. ZWJ-based conjunct forms are forbidden in identifiers."
-  - "Digits: Malayalam natively uses ൧൨൩; code uses ASCII 0-9 today. Native-digit support is a planned Legesher feature (currently ASCII-only)."
+  - "Digits: Malayalam natively uses ൧൨൩; numeric literals may be typed in these digits, and Legesher reads them as ASCII 0-9 when the code runs (prefixed literals such as 0x stay ASCII). Identifiers keep ASCII digits."
 
 # Formatting rules.
 formatting:

@@ -118,6 +118,9 @@ extend-exclude = [
     # under this package's 3.10 floor. Its manifest gates each file by the
     # grammar it needs; ruff has no such gate.
     "tests/fixtures/corpus/",
+    # The native-digit fixture spells every literal form on purpose (`10.`,
+    # `2E10`, `000.125`); the formatter would normalize the spellings it tests.
+    "tests/fixtures/native_digits/",
 ]
 
 [tool.uv.sources]

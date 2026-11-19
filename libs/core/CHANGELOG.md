@@ -9,6 +9,44 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- A numeric literal typed in the source language's own digits is read as
+  ASCII, in the token and tree-sitter backends: Arabic-Indic for Arabic,
+  Extended Arabic-Indic for Persian and Urdu, Devanagari for Hindi and
+  Nepali, and the digits of Bengali, Gujarati, Kannada, Malayalam, Telugu,
+  Thai and Burmese, as the language registry records them. A program that
+  writes `x = ١٢٣ + 456` now translates and runs; before, the English form
+  failed with `SyntaxError: invalid character`. Every form is read digit for
+  digit: grouping underscores, leading zeros, exponents and imaginary
+  literals, and in Arabic, Persian and Urdu both `٫` and `.` as the decimal
+  point. Each literal is read on its own: one that mixes native and ASCII
+  digits, uses another script's digits or runs into a name is left as typed,
+  and so are prefixed literals (`0x`, `0b`, `0o`). Strings, comments,
+  f-string text and identifiers keep their digits. One character is replaced
+  by one, so line and column numbers do not move.
+  `legesher_core.native_digits.fold_code_digits` holds the rules.
+- `TokenTranslator` and `TreeSitterTranslator` carry `source_language` and
+  `target_language`. `from_language_pack` sets them, `reverse()` swaps them,
+  and the source language decides which digits are read. A translator built
+  from maps has neither and reads ASCII digits only.
+- The engine reads native digits and never writes them. A translation for
+  display and the return leg of a round trip carry ASCII digits, and the git
+  clean filter does not touch digits, so git stores the file as typed. The
+  round-trip check reports such source as not byte-identical under the new
+  layer `digits`. A line holding both a native mark and a native digit is
+  named for the cause of its first differing character; a line with a fold
+  and a second difference is classified by the second and reported at its
+  column. The language server does not read native digits yet, so the
+  editor still marks such a literal as an error.
+- `legesher_core.native_digits.read_native_code` reads source as the engine
+  does, native punctuation first and then native digits; both backends and
+  the round-trip check call it, so the order is decided in one place.
+- `legesher_core.utils.continues_identifier` is the identifier-continuation
+  rule the import hook and the digit fold share: a native digit after a
+  combining mark (`संख्या१`) stays part of its identifier on CPython 3.10 and
+  3.11, whose tokenizer splits the word there.
+
 ## [0.27.0] - 2026-11-18
 
 ## [0.26.0] - 2026-11-18

@@ -149,6 +149,7 @@ class Layer(str, Enum):
     STRINGS = "strings"
     COLLISION = "collision"            # identifier spelled like a pack term
     PUNCTUATION = "punctuation"        # native mark in code position, read as ASCII
+    DIGITS = "digits"                  # a literal typed in native digits
 
 def classify_divergence(divergence, expected_source, actual_source, pack, *, native_side) -> Layer | None
 def classified(divergences, expected_source, actual_source, pack, *, native_side) -> list[Divergence]
@@ -217,6 +218,19 @@ Why the classes matter — each maps to a different action:
 | punctuation | the source uses native punctuation in code position; it runs, and the return writes ASCII | nothing in the pack or engine; the author keeps the mark or types the ASCII one |
 | identifiers | expected today — canonical form retains native identifiers (CORE-1841) | nothing; disclosed, not failed |
 | comments / strings | the writer's fuzzy layer drifted | the writer's own output |
+| digits | a numeric literal was typed in the language's own digits; the engine read it as ASCII and the return leg wrote ASCII | nothing; by design, the source runs and git keeps the digits as typed |
+
+`digits` follows the punctuation rule above. The expected side is classified
+from the source as the engine reads it: native punctuation first, then
+native-digit literals (`native_digits.fold_code_digits`), one character for
+one, because from CPython 3.12 the tokenizer lexes `١٢٣` as a name. Name
+findings and exercised layers are computed from that reading too. A line the
+two folds account for in full is named for the cause of its first differing
+character (`f(١، ٢)` is `digits`, `f(x، ١)` is `punctuation`); a line with a
+fold and a second difference is classified by the second, and its reported
+column is where the reading and the returned line part, not the folded
+character. `FOLD_LAYERS` holds both; a verified trip lists neither as
+uncovered.
 
 ### Layer 3 — the orchestrator
 

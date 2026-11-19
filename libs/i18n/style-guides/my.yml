@@ -40,7 +40,7 @@ script:
   direction: ltr
   constraints:
   - "Prose is written without spaces, so underscores between logical words are REQUIRED for a readable identifier. Stacked consonants use virama; keep identifiers NFKC-stable."
-  - "Digits: Burmese natively uses ၁၂၃; code uses ASCII 0-9 today. Native-digit support is a planned Legesher feature (currently ASCII-only)."
+  - "Digits: Burmese natively uses ၁၂၃; numeric literals may be typed in these digits, and Legesher reads them as ASCII 0-9 when the code runs (prefixed literals such as 0x stay ASCII). Identifiers keep ASCII digits."
 
 # Formatting rules.
 formatting:
