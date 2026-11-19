@@ -4,3 +4,86 @@
 	--sl-font: 'Noto Sans Variable', sans-serif;
 	--sl-font-system: 'Noto Sans Variable', sans-serif;
 }
+
+/*
+ * One palette for code on the site: the colours the ordinary code blocks get
+ * from Expressive Code's Night Owl themes, as rendered (after its contrast
+ * adjustment). The localized sample (LocalizedCode.astro) and the playground
+ * editor (src/playground/editor.ts) read these, so all code looks the same.
+ * Dark is Starlight's default theme; light is [data-theme='light'].
+ */
+:root {
+	--lg-code-bg: #23262f;
+	--lg-code-fg: #d6deeb;
+	--lg-code-keyword: #c792ea;
+	--lg-code-builtin: #c5e478;
+	--lg-code-function: #82aaff;
+	--lg-code-class: #ffcb8b;
+	--lg-code-self: #7fdbca;
+	--lg-code-atom: #ff6a83;
+	--lg-code-string: #ecc48d;
+	--lg-code-number: #f78c6c;
+	--lg-code-comment: #919f9f;
+	/* Editor overlays: tinted only as far as every token stays at 4.5:1 or more. */
+	--lg-code-selection: #28324a;
+	--lg-code-word-match: #253630;
+	--lg-code-word-match-edge: #5fa86b;
+	--lg-code-search-match: #34322e;
+	--lg-code-search-current: #34322b;
+	--lg-code-search-edge: #c9a227;
+	--lg-code-bracket: #2e323e;
+	--lg-code-bracket-edge: #7f8ea8;
+	--lg-code-active-line: #2a2d36;
+}
+:root[data-theme='light'] {
+	--lg-code-bg: #f6f7f9;
+	--lg-code-fg: #403f53;
+	--lg-code-keyword: #8844ae;
+	--lg-code-builtin: #3b61b0;
+	--lg-code-function: #3b61b0;
+	--lg-code-class: #111111;
+	--lg-code-self: #096e72;
+	--lg-code-atom: #a24848;
+	--lg-code-string: #984e4d;
+	--lg-code-number: #aa0982;
+	--lg-code-comment: #5f636f;
+	--lg-code-selection: #dee4f0;
+	--lg-code-word-match: #dce7df;
+	--lg-code-word-match-edge: #3f7d4c;
+	--lg-code-search-match: #ece3c9;
+	--lg-code-search-current: #f0e3bb;
+	--lg-code-search-edge: #8a6a00;
+	--lg-code-bracket: #e1e4ea;
+	--lg-code-bracket-edge: #6f7d96;
+	--lg-code-active-line: #eceef2;
+}
+
+/*
+ * Badges (the sidebar's "review" marker) use the text font: Starlight's
+ * monospace with letter spacing breaks the joining of Arabic letters.
+ */
+.sl-badge {
+	font-family: var(--sl-font);
+	letter-spacing: normal;
+}
+
+/*
+ * In the sidebar the badge is a status label, not a warning: one soft amber
+ * pill, the same on every entry, including the page you are reading (where
+ * Starlight would otherwise switch it to an outline in the link's colours).
+ */
+:root {
+	--lg-badge-review-bg: #3a2f12;
+	--lg-badge-review-border: #8a6d1f;
+	--lg-badge-review-text: #f3d58a;
+}
+:root[data-theme='light'] {
+	--lg-badge-review-bg: #fdf3d7;
+	--lg-badge-review-border: #e2c46e;
+	--lg-badge-review-text: #6b4e00;
+}
+#starlight__sidebar .sl-badge {
+	background-color: var(--lg-badge-review-bg);
+	border-color: var(--lg-badge-review-border);
+	color: var(--lg-badge-review-text);
+}

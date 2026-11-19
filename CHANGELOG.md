@@ -78,11 +78,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **docs**: playground errors, standard error and the empty-run note get their
   own colour and weight; the styles never reached output written at run time.
 - **docs**: the playground editor has a dark theme that follows the site's, so
-  code stays readable in dark mode; light mode is unchanged.
+  code stays readable in dark mode.
 - **docs**: review badges in the sidebar sit a word space after their label
   again. Astro 7's default HTML compression had dropped the space and put each
   badge against its label; the docs build now collapses whitespace to one
   space, as it did on Astro 6.
+- **docs**: code on the docs site shares one palette, the one the ordinary
+  code blocks use (light and dark). The localized sample takes it in full; its
+  yellow and green had fallen below 2:1 in light mode. The playground editor
+  takes it too, in both themes, and leaves builtin and call names in the text
+  colour. Every token stays at 4.5:1 or more at rest and on the selection,
+  word and search matches and bracket highlights, and the search panel
+  follows the theme. The sidebar review badges are one soft amber label in
+  the text font, so Arabic letters join.
 
 ## [0.27.0] - 2026-11-18
 

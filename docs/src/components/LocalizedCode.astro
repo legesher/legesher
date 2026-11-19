@@ -85,15 +85,19 @@ const html = (spans: [string, string][]) =>
     .lg-code-pick > span[aria-hidden='true'] { display: none; }
     .lg-code-pick select { max-width: none; width: 100%; }
   }
-  .lg-code pre { margin: 0; padding: 1rem; overflow-x: auto; border: 0; border-radius: 0; }
+  .lg-code pre {
+    margin: 0; padding: 1rem; overflow-x: auto; border: 0; border-radius: 0;
+    background: var(--lg-code-bg); color: var(--lg-code-fg);
+  }
+  .lg-code pre code { color: inherit; }
   .lg-code pre[dir='rtl'] span { unicode-bidi: isolate; }
-  .lg-keyword { color: var(--sl-color-accent-high); font-weight: 600; }
-  .lg-builtin { color: var(--sl-color-accent); }
-  .lg-exception { color: var(--sl-color-orange); }
-  .lg-reserved { color: var(--sl-color-accent); font-style: italic; }
-  .lg-string { color: var(--sl-color-green); }
-  .lg-comment { color: var(--sl-color-gray-3); font-style: italic; }
-  .lg-number { color: var(--sl-color-orange); }
+  /* The site's code palette (src/styles/custom.css), as the code blocks use it. */
+  .lg-keyword { color: var(--lg-code-keyword); }
+  .lg-builtin, .lg-exception { color: var(--lg-code-builtin); }
+  .lg-reserved { color: var(--lg-code-self); }
+  .lg-string { color: var(--lg-code-string); }
+  .lg-comment { color: var(--lg-code-comment); }
+  .lg-number { color: var(--lg-code-number); }
 </style>
 <script is:inline>
   // Wire every unwired sample idempotently (a page may hold several) and keep

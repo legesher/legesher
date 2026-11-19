@@ -7,7 +7,7 @@
 // layer (highlight.ts, passed in via `extensions`) colors localized keywords
 // and names to match the English view. The base text direction comes from
 // direction.ts and can be switched while the editor is mounted; theme.ts
-// gives it a dark theme that follows the site's.
+// gives it the site's code palette, light and dark.
 
 import { EditorView, keymap } from "@codemirror/view";
 import { EditorState, Prec, type Extension } from "@codemirror/state";
@@ -50,7 +50,6 @@ export function mountEditor({
   extensions = [],
 }: MountOptions): PlaygroundEditor {
   const baseDirection = editorDirection(direction);
-  const theme = siteTheme();
   // Highest precedence: basicSetup's default keymap also binds Mod-Enter (to
   // insert a blank line), and it would otherwise win.
   const runKey = Prec.highest(keymap.of([
@@ -75,11 +74,11 @@ export function mountEditor({
       extensions: [
         basicSetup,
         python(),
+        siteTheme,
         runKey,
         changeListener,
         EditorState.tabSize.of(4),
         baseDirection.extension,
-        theme.extension,
         EditorView.theme({
           "&": { fontSize: "0.9rem", borderRadius: "0.5rem" },
           "&.cm-focused": { outline: "2px solid var(--sl-color-accent)" },
@@ -90,8 +89,6 @@ export function mountEditor({
     }),
   });
 
-  const stopFollowingTheme = theme.follow(view);
-
   return {
     getDoc: () => view.state.doc.toString(),
     setDoc: (text: string) =>
@@ -100,9 +97,6 @@ export function mountEditor({
       }),
     setDirection: (next: TextDirection) => baseDirection.set(view, next),
     focus: () => view.focus(),
-    destroy: () => {
-      stopFollowingTheme();
-      view.destroy();
-    },
+    destroy: () => view.destroy(),
   };
 }

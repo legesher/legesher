@@ -4,7 +4,7 @@ description: جميع اللغات الـ56 التي يدعمها Legesher لل�
 sidebar:
   badge:
     text: بحاجة لمراجعة
-    variant: caution
+    variant: default
 ---
 
 يدعم Legesher حاليًا **56 لغة** للتطوير بلغة Python. تتكون كل حزمة لغة من
