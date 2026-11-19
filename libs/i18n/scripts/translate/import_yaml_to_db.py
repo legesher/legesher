@@ -14,10 +14,16 @@ Usage:
 
     # Dry run to see what would be imported
     python import_yaml_to_db.py --dry-run
+
+Each pack's ``messages`` section (CORE-2630) is imported too, into the
+messages partition, when the database carries one. See
+:func:`import_pack_messages`.
 """
 
 import argparse
+import json
 import logging
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -27,10 +33,20 @@ import yaml
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from legesher_i18n.db import TranslationDatabase
+from legesher_i18n.db.schema_v2 import connect
+from legesher_i18n.pack_messages import (
+    DEFAULT_STATUS,
+    IMPLEMENTATION_TARGETS,
+    MESSAGES_SECTION,
+    bidi_controls,
+    entry_problem,
+    message_fingerprint,
+)
 from legesher_i18n.term_definitions import (
     YAML_SECTION_CATEGORIES,
     get_all_terms_by_category,
 )
+from scripts.seed_message_templates import missing_locales, probe_database
 
 logging.basicConfig(
     level=logging.INFO,
@@ -260,6 +276,185 @@ def import_language(
     return total_imported, total_skipped
 
 
+#: ``created_by`` and ``source`` recorded on every message row this script
+#: inserts, so a row restored from a pack is never mistaken for a new rendering.
+MESSAGES_CREATED_BY = "import_yaml_to_db.py"
+MESSAGES_SOURCE = "pack-import"
+
+
+def import_pack_messages(
+    language_code: str,
+    db_path: Path,
+    *,
+    packs_dir: Path | None = None,
+    dry_run: bool = False,
+) -> tuple[int, int]:
+    """Import a pack's ``messages`` into the messages partition (CORE-2630).
+
+    The reverse of the exporter's ``messages`` section, so a database built
+    from scratch recovers the translations the packs carry instead of
+    exporting empty sections over them. For each entry in each version file:
+
+    * the English template is the row of that implementation and key whose
+      fingerprint is the entry's ``src``. No such row: the entry was written
+      for a wording this database does not have, and it is skipped;
+    * the entry must pass the catalog's join rules and carry no bidi
+      control, or it is skipped;
+    * a translation the database already stores for that template and
+      locale is kept. The same text is a no-op; a different text is
+      reported as a conflict and left alone. The database is the source of
+      truth, and a pack never overwrites it.
+
+    Inserted rows carry the entry's ``status`` (``machine`` when it has
+    none) and the provenance ``source='pack-import'``.
+
+    Args:
+        language_code: The pack's language code, which is also the locale.
+        db_path: The translations database.
+        packs_dir: The pack's ``packs/`` directory; defaults to the
+            monorepo's.
+        dry_run: Check and count, write nothing.
+
+    Returns:
+        ``(imported, skipped)``. A database without the messages partition,
+        or a pack without messages, gives ``(0, 0)``.
+
+    Raises:
+        SystemExit: If the locale is missing from the database, which this
+            script never creates as a side effect.
+    """
+    if packs_dir is None:
+        packs_dir = (
+            LANGUAGE_PACKS_DIR
+            / language_code
+            / f"legesher_i18n_python_{language_code}"
+            / "packs"
+        )
+    files = sorted(
+        packs_dir.glob("3.*.yml"),
+        key=lambda path: tuple(int(part) for part in path.stem.split(".")),
+    )
+    sections: list[tuple[str, dict]] = []
+    for path in files:
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
+            # As the term import does: one unreadable file is reported and
+            # skipped, never the end of the whole run.
+            logger.warning(f"  {path.name}: messages not imported, unreadable: {exc}")
+            continue
+        section = data.get(MESSAGES_SECTION) if isinstance(data, dict) else None
+        if isinstance(section, dict) and section:
+            sections.append((path.name, section))
+    if not sections:
+        return 0, 0
+
+    try:
+        is_v2 = probe_database(Path(db_path))
+    except SystemExit as exc:
+        logger.warning(f"  messages not imported for {language_code}: {exc}")
+        return 0, 0
+
+    connection = connect(db_path) if is_v2 else sqlite3.connect(db_path)
+    imported = skipped = 0
+    try:
+        missing = missing_locales(connection, is_v2, [language_code])
+        if missing:
+            raise SystemExit(
+                f"locale missing from {db_path}: {missing}; register it first, "
+                "this script never creates locales"
+            )
+        for filename, section in sections:
+            for implementation, entries in section.items():
+                if implementation not in IMPLEMENTATION_TARGETS or not isinstance(
+                    entries, dict
+                ):
+                    skipped += len(entries) if isinstance(entries, dict) else 1
+                    logger.warning(
+                        f"  {filename}: messages for {implementation!r} not imported"
+                    )
+                    continue
+                templates: dict[tuple[str, str], tuple[int, str, list[str]]] = {}
+                for row_id, key, template_en, placeholders in connection.execute(
+                    "SELECT id, key, template_en, placeholders "
+                    "FROM message_templates WHERE implementation = ?",
+                    (implementation,),
+                ):
+                    try:
+                        declared = [p["name"] for p in json.loads(placeholders or "[]")]
+                    except (ValueError, TypeError, KeyError):
+                        # A damaged template row: its entries find no
+                        # template and are reported as skipped below.
+                        logger.warning(
+                            f"  template {key!r} has unreadable placeholders; "
+                            "its translations are not imported"
+                        )
+                        continue
+                    templates[(key, message_fingerprint(template_en))] = (
+                        row_id,
+                        template_en,
+                        declared,
+                    )
+                for key, entry in entries.items():
+                    where = f"{filename} {implementation} {key}"
+                    src = entry.get("src") if isinstance(entry, dict) else None
+                    template = templates.get((key, src))
+                    if template is None:
+                        logger.warning(
+                            f"  {where}: no English template with this key and "
+                            f"fingerprint {src!r}; skipped"
+                        )
+                        skipped += 1
+                        continue
+                    row_id, template_en, declared = template
+                    problem = entry_problem(
+                        entry, template_en=template_en, placeholders=declared
+                    )
+                    controls = bidi_controls(entry["text"]) if problem is None else []
+                    if problem is not None or controls:
+                        logger.warning(
+                            f"  {where}: {problem or f'bidi controls {controls}'}; "
+                            "skipped"
+                        )
+                        skipped += 1
+                        continue
+                    stored = connection.execute(
+                        "SELECT template FROM message_translations "
+                        "WHERE template_id = ? AND locale = ?",
+                        (row_id, language_code),
+                    ).fetchone()
+                    if stored is not None:
+                        if stored[0] != entry["text"]:
+                            logger.warning(
+                                f"  {where}: the database stores a different "
+                                "translation; kept, the pack does not overwrite it"
+                            )
+                            skipped += 1
+                        continue
+                    connection.execute(
+                        "INSERT INTO message_translations "
+                        "(template_id, locale, template, status, "
+                        " source, model_version, created_by) "
+                        "VALUES (?, ?, ?, ?, ?, NULL, ?)",
+                        (
+                            row_id,
+                            language_code,
+                            entry["text"],
+                            entry.get("status", DEFAULT_STATUS),
+                            MESSAGES_SOURCE,
+                            MESSAGES_CREATED_BY,
+                        ),
+                    )
+                    imported += 1
+        if dry_run:
+            connection.rollback()
+        else:
+            connection.commit()
+    finally:
+        connection.close()
+    return imported, skipped
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Import existing YAML language packs into the translation database"
@@ -323,6 +518,14 @@ def main():
         grand_total_imported += imported
         grand_total_skipped += skipped
         logger.info(f"  {language}: {imported} imported, {skipped} skipped")
+        message_imported, message_skipped = import_pack_messages(
+            language, Path(db.db_path), dry_run=args.dry_run
+        )
+        if message_imported or message_skipped:
+            logger.info(
+                f"  {language} messages: {message_imported} imported, "
+                f"{message_skipped} skipped"
+            )
 
     # Summary
     logger.info("")

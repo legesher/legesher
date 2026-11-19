@@ -46,6 +46,7 @@ __all__ = [
     "DEFAULT_STATUS",
     "ENTRY_FIELDS",
     "FORBIDDEN_BIDI",
+    "IMPLEMENTATION_TARGETS",
     "MESSAGES_SECTION",
     "MESSAGE_IMPLEMENTATION_PATTERN",
     "MESSAGE_KEY_PATTERN",
@@ -61,6 +62,11 @@ __all__ = [
 
 #: The pack's top-level key.
 MESSAGES_SECTION = "messages"
+
+#: The pack target that carries each implementation's messages. An
+#: implementation with no entry here has no pack to read or write; its
+#: translations live in its catalog seed only.
+IMPLEMENTATION_TARGETS: dict[str, str] = {"cpython": "python"}
 
 #: An implementation name: ``cpython``, ``v8``. Compared with ``fullmatch``.
 MESSAGE_IMPLEMENTATION_PATTERN = re.compile(r"[a-z0-9]+")

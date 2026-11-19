@@ -7,17 +7,17 @@
 A pack version file may carry a `messages` section: the localized wording of
 the traceback structure ("Traceback (most recent call last):") and of the
 interpreter's error messages ("name 'x' is not defined"). The section was
-added in CORE-2630. No shipped pack carries it yet.
+added in CORE-2630. The Spanish and Arabic packs carry it; the others do not yet.
 
 ```yaml
 messages:
   cpython:
     traceback.frame:
       text: "Archivo \"{file}\", línea {line}, en {name}"
-      src: fcb6c6422b34
+      src: "fcb6c6422b34"
     NameError.not_defined:
       text: "el nombre '{name}' no está definido"
-      src: 998720c0a4af
+      src: "998720c0a4af"
 ```
 
 ## What is in the pack and what is not
@@ -163,6 +163,42 @@ field from the entry it replaces.
 A translation of a message that Python reworded in a later version is written
 into that version's file. A section can therefore appear only in an overlay
 file (`3.12.yml`) and not in the base (`3.10.yml`).
+
+## Where the entries come from
+
+The section is exported from the translations database, like every other
+section, and never edited by hand. `scripts/translate/yaml_exporter.py` reads
+`message_templates` joined to `message_translations` for the locale and:
+
+- writes each translation into the file of the Python version its English
+  wording entered at (`version_added`; none means `3.10.yml`), so a reworded
+  message's translation overrides the earlier one through `extends`;
+- writes `src` as the fingerprint of that wording, always double-quoted;
+- writes `status` only when it is not `machine`;
+- writes the entries in catalog order, so a regeneration is reproducible;
+- exports a partial set as it is: an untranslated message prints in English;
+- refuses a stored translation that fails a join rule or carries a bidi
+  control (the database is damaged), and a wording that entered at a Python
+  version with no pack file.
+
+`scripts/verify_pack_regen.py` compares the section entry by entry, so a
+changed message is reported as `messages.cpython.<key>`.
+
+`scripts/translate/import_yaml_to_db.py` reads the section back into the
+database: each entry goes to the English template with its key and
+fingerprint. An entry for a wording the database does not have, or one that
+fails a join rule, is skipped. A translation the database already stores is
+never overwritten. Inserted rows record `source = 'pack-import'`.
+
+A message that a later Python version stops printing, with no rewording to
+replace it, cannot be retracted from the files after the one that carries it:
+`extends` only adds and overrides. The entry is ignored at run time, and
+`pack_message_problems` treats it as inherited, like an earlier wording's
+translation.
+
+The published dataset does not carry pack messages: `scripts/export_packs.py`
+reads only the term and vocabulary sections from packs, and a test holds that
+until message endorsements have content-addressed keys.
 
 ## Compatibility: a pack with messages needs a loader that knows them
 

@@ -184,12 +184,171 @@ exceptions:
 implicit_params:
   self: mismo
   cls: misma_clase
+messages:
+  cpython:
+    traceback.header:
+      text: 'Rastreo (llamada más reciente al final):'
+      src: "5dd94ced5a2a"
+    traceback.frame:
+      text: Archivo "{file}", línea {line}, en {name}
+      src: "fcb6c6422b34"
+    traceback.frame_no_scope:
+      text: Archivo "{file}", línea {line}
+      src: "1a3c011cc860"
+    traceback.cause:
+      text: 'La excepción anterior fue la causa directa de la siguiente excepción:'
+      src: "966282d41922"
+    traceback.context:
+      text: 'Durante el manejo de la excepción anterior, ocurrió otra excepción:'
+      src: "6e3748232ef0"
+    SyntaxError.invalid_syntax:
+      text: sintaxis inválida
+      src: "cab55a6f6670"
+    SyntaxError.invalid_syntax_comma:
+      text: sintaxis inválida. ¿Quizás olvidaste una coma?
+      src: "cb0c9c17ad83"
+    SyntaxError.missing_parentheses_print:
+      text: Faltan paréntesis en la llamada a 'print'. ¿Quisiste decir print(...)?
+      src: "1d8cfb71cb8f"
+    SyntaxError.cannot_assign_literal:
+      text: no se puede asignar a un literal aquí. ¿Quizás quisiste decir '==' en
+        lugar de '='?
+      src: "1b1f3fa4bba4"
+    SyntaxError.cannot_assign_expression:
+      text: no se puede asignar a una expresión aquí. ¿Quizás quisiste decir '=='
+        en lugar de '='?
+      src: "baab57529ee8"
+    SyntaxError.unterminated_string:
+      text: literal de cadena sin terminar (detectado en la línea {line})
+      src: "de7f2a057a82"
+    SyntaxError.unterminated_triple_string:
+      text: literal de cadena con comillas triples sin terminar (detectado en la línea
+        {line})
+      src: "5a69100134f7"
+    SyntaxError.bracket_never_closed:
+      text: '''{bracket}'' nunca se cerró'
+      src: "7309dd98bf46"
+    SyntaxError.expected_colon:
+      text: se esperaba ':'
+      src: "21761155cc82"
+    SyntaxError.leading_zeros:
+      text: no se permiten ceros iniciales en literales enteros decimales; usa el
+        prefijo 0o para enteros octales
+      src: "5ccfc14b423d"
+    NameError.not_defined:
+      text: el nombre '{name}' no está definido
+      src: "998720c0a4af"
+    NameError.not_defined_did_you_mean:
+      text: 'el nombre ''{name}'' no está definido. ¿Quisiste decir: ''{suggestion}''?'
+      src: "c8bd77320391"
+    TypeError.unsupported_operand:
+      text: 'tipo(s) de operando no soportado(s) para {op}: ''{left}'' y ''{right}'''
+      src: "b6d504fd5f73"
+    TypeError.not_callable:
+      text: el objeto '{obj_type}' no es invocable
+      src: "7545c7d0d024"
+    TypeError.not_subscriptable:
+      text: el objeto '{obj_type}' no es subindexable
+      src: "5dedda6c6aea"
+    TypeError.not_iterable:
+      text: el objeto '{obj_type}' no es iterable
+      src: "a0a77d9c95b6"
+    TypeError.arg_count:
+      text: '{func}() acepta {expected} argumentos posicionales pero se dieron {given}'
+      src: "ef5ecbc19cb0"
+    TypeError.missing_argument:
+      text: 'a {func}() le falta {count} argumento posicional requerido: ''{name}'''
+      src: "f2600ed52c15"
+    TypeError.missing_arguments:
+      text: 'a {func}() le faltan {count} argumentos posicionales requeridos: {names}'
+      src: "50d82709d2bf"
+    TypeError.can_only_concatenate_str:
+      text: solo se puede concatenar str (no "{other_type}") a str
+      src: "f7ede5d5b786"
+    AttributeError.no_attribute:
+      text: el objeto '{obj_type}' no tiene el atributo '{attr}'
+      src: "4bc329d99f61"
+    AttributeError.no_attribute_did_you_mean:
+      text: 'el objeto ''{obj_type}'' no tiene el atributo ''{attr}''. ¿Quisiste decir:
+        ''{suggestion}''?'
+      src: "740d97d74980"
+    AttributeError.module_no_attribute:
+      text: el módulo '{module}' no tiene el atributo '{attr}'
+      src: "3832fccc3d4b"
+    ImportError.cannot_import_name:
+      text: no se puede importar el nombre '{name}' desde '{module}'
+      src: "1a4a46b21cf9"
+    ModuleNotFoundError.no_module:
+      text: No existe ningún módulo llamado '{module}'
+      src: "abb6eee2592a"
+    IndexError.list_index:
+      text: índice de lista fuera de rango
+      src: "f6b287406351"
+    IndexError.string_index:
+      text: índice de cadena fuera de rango
+      src: "19ff6e327ab1"
+    KeyError.key:
+      text: '{key}'
+      src: "359598810a84"
+    ValueError.int_literal:
+      text: 'literal inválido para int() con base {base}: {value}'
+      src: "5c2d2025ce46"
+    ValueError.too_many_unpack:
+      text: demasiados valores para desempaquetar (se esperaban {expected})
+      src: "99194cd80d92"
+    ValueError.not_enough_unpack:
+      text: no hay suficientes valores para desempaquetar (se esperaban {expected},
+        se obtuvieron {got})
+      src: "772615981147"
+    ZeroDivisionError.division_by_zero:
+      text: división por cero
+      src: "2bc124600496"
+    ZeroDivisionError.float_division:
+      text: división de float por cero
+      src: "8e186aca0f88"
+    ZeroDivisionError.int_division_or_modulo:
+      text: división entera o módulo por cero
+      src: "5c6f15550dfe"
+    IndentationError.expected_block:
+      text: se esperaba un bloque sangrado después de la sentencia '{statement}' en
+        la línea {line}
+      src: "a88bac6eca5e"
+    IndentationError.unexpected_indent:
+      text: sangría inesperada
+      src: "769bc4baab39"
+    IndentationError.unindent_mismatch:
+      text: la reducción de sangría no coincide con ningún nivel de sangría exterior
+      src: "857d1309faee"
+    TabError.inconsistent:
+      text: uso inconsistente de tabulaciones y espacios en la sangría
+      src: "7af3a6997073"
+    FileNotFoundError.enoent:
+      text: '[Errno {errno}] No existe el archivo o directorio: {filename}'
+      src: "14c6c5ea69c2"
+    RecursionError.max_depth:
+      text: se excedió la profundidad máxima de recursión
+      src: "34e02bfc2281"
+    UnboundLocalError.before_assignment:
+      text: variable local '{name}' referenciada antes de su asignación
+      src: "2ba5fbdd7304"
+    RuntimeError.generator_raised_stopiteration:
+      text: el generador lanzó StopIteration
+      src: "f447bdc1634b"
+    StopIteration.no_value:
+      text: ''
+      src: "e3b0c44298fc"
+    KeyboardInterrupt.interrupt:
+      text: ''
+      src: "e3b0c44298fc"
+    AssertionError.no_message:
+      text: ''
+      src: "e3b0c44298fc"
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.13'
   compatibility_tested:
   - '3.10'
-  last_updated: '2026-03-19'
+  last_updated: '2026-11-17'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: Apache-2.0

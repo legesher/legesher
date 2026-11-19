@@ -21,6 +21,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   messages still reads the translations in the seed, so Spanish and Arabic
   render as before. A database with the catalog still wins, and an explicit
   `db_path` is still read alone. [CORE-2630]
+- **The pack exporter writes the `messages` section.** Each translation goes
+  into the file of the Python version its English wording entered at, with
+  the wording's fingerprint, and a stored translation that fails the join
+  rules stops the export. The regeneration gate compares the section entry by
+  entry, and `import_yaml_to_db.py` reads it back into the database without
+  overwriting what is stored. Message translations stay out of the published
+  dataset. [CORE-2630]
+- **The Spanish and Arabic packs carry their 55 error messages**, so their
+  tracebacks render from the pack. The output is unchanged. [CORE-2630]
 - **`pack_message_problems`** reports every pack message the catalog would
   skip, with the reason, for one locale and Python version, except an entry
   the pack carried unchanged at a version where its earlier wording applied:
