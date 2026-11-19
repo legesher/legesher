@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 // Populates Astro's codegen dir with the localized-snippet artifacts that
-// SnippetLangSelect / LocalizedCode import (snippet-langs.json,
+// LocalizedCode imports (snippet-langs.json,
 // legesher-snippets.css, snippets/*.json).
 //
 // Default: COPY the pre-generated artifacts committed under docs/generated/.

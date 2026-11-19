@@ -1,5 +1,16 @@
 ---
+// A Python sample in every language that has a pack, with its own title bar:
+// the programming language, the code-language picker and a copy button.
+//
+// The code language is a site-wide setting, separate from the page language.
+// The inline head script in astro.config.mjs applies the stored pick (else the
+// page language, else English) before first paint; this picker changes it and
+// stores it, and the playground starts from the same stored pick.
 import '../../.astro/integrations/legesher-snippets/legesher-snippets.css';
+// Bundled at build time: import.meta.url is not source-relative once Astro
+// prerenders from dist/.prerender/, so runtime fs reads break there.
+import langs from '../../.astro/integrations/legesher-snippets/snippet-langs.json';
+import labels from '../localized-code/labels.json';
 
 interface Props { slug: string }
 const { slug } = Astro.props;
@@ -12,6 +23,16 @@ const artifacts = import.meta.glob<{ variants: Record<string, { code: string; sp
 const artifact = artifacts[`../../.astro/integrations/legesher-snippets/snippets/${slug}.json`];
 if (!artifact) throw new Error(`Unknown snippet slug: ${slug}`);
 const { variants } = artifact;
+
+const lang = Astro.locals.starlightRoute.lang.split('-')[0].toLowerCase();
+const label = labels[lang as keyof typeof labels];
+if (!label) {
+  throw new Error(
+    `No code-sample labels for the "${lang}" locale. Add them to src/localized-code/labels.json.`,
+  );
+}
+const options = langs.filter((l) => l.code in variants);
+
 const escape = (s: string) =>
   s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 const html = (spans: [string, string][]) =>
@@ -21,13 +42,50 @@ const html = (spans: [string, string][]) =>
     )
     .join('');
 ---
-<figure class="lg-code">
+<figure class="lg-code" aria-label="Python">
+  <div class="lg-code-bar">
+    <span class="lg-code-pl" aria-hidden="true">Python</span>
+    <label class="lg-code-pick">
+      <span aria-hidden="true">{label.picker}</span>
+      <select class="lg-snippet-lang" aria-label={label.picker}>
+        {options.map((l) => <option value={l.code} lang={l.code}>{l.native}</option>)}
+      </select>
+    </label>
+    <!-- Hidden until the script below wires it: it does nothing without JavaScript. -->
+    <button type="button" class="lg-code-copy" data-copied={label.copied} data-failed={label.failed} hidden>{label.copy}</button>
+    <span class="sr-only" role="status"></span>
+  </div>
   {Object.entries(variants).map(([code, v]) => (
     <pre data-lang={code} dir={v.rtl ? 'rtl' : 'ltr'}><code set:html={html(v.spans)} /></pre>
   ))}
 </figure>
 <style is:global>
-  .lg-code pre { padding: 1rem; overflow-x: auto; border-radius: 0.5rem; }
+  .lg-code { border: 1px solid var(--sl-color-gray-5); border-radius: 0.5rem; overflow: hidden; }
+  .lg-code-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem;
+    padding: 0.4rem 0.75rem; font-size: var(--sl-text-sm);
+    background: var(--sl-color-gray-6); border-bottom: 1px solid var(--sl-color-gray-5);
+  }
+  .lg-code-pl { font-weight: 600; }
+  .lg-code-pick { display: inline-flex; align-items: center; gap: 0.4rem; min-width: 0; color: var(--sl-color-gray-2); }
+  .lg-code-pick select {
+    max-width: 11rem; background: transparent; color: var(--sl-color-white);
+    border: 1px solid var(--sl-color-gray-4); border-radius: 0.25rem; padding: 0.1rem 0.25rem;
+  }
+  .lg-code-copy {
+    margin-inline-start: auto; background: transparent; color: inherit; cursor: pointer;
+    border: 1px solid var(--sl-color-gray-4); border-radius: 0.25rem; padding: 0.1rem 0.6rem;
+  }
+  .lg-code-copy:focus-visible, .lg-code-pick select:focus-visible { outline-offset: 2px; }
+  /* On a phone the bar keeps one line: the picker's visible label goes (the
+     select keeps it as its accessible name) and the select takes the room. */
+  @media (max-width: 30rem) {
+    .lg-code-bar { flex-wrap: nowrap; }
+    .lg-code-pick { flex: 1 1 auto; }
+    .lg-code-pick > span[aria-hidden='true'] { display: none; }
+    .lg-code-pick select { max-width: none; width: 100%; }
+  }
+  .lg-code pre { margin: 0; padding: 1rem; overflow-x: auto; border: 0; border-radius: 0; }
   .lg-code pre[dir='rtl'] span { unicode-bidi: isolate; }
   .lg-keyword { color: var(--sl-color-accent-high); font-weight: 600; }
   .lg-builtin { color: var(--sl-color-accent); }
@@ -37,3 +95,50 @@ const html = (spans: [string, string][]) =>
   .lg-comment { color: var(--sl-color-gray-3); font-style: italic; }
   .lg-number { color: var(--sl-color-orange); }
 </style>
+<script is:inline>
+  // Wire every unwired sample idempotently (a page may hold several) and keep
+  // their pickers in step with each other and with the stored pick.
+  (() => {
+    const KEY = 'legesher-snippet-lang';
+    const pickers = () => document.querySelectorAll('.lg-code select.lg-snippet-lang');
+    pickers().forEach((sel) => {
+      if (sel.dataset.lgWired) return;
+      sel.dataset.lgWired = '1';
+      const current = document.documentElement.dataset.snippetLang || 'en';
+      if ([...sel.options].some((o) => o.value === current)) sel.value = current;
+      sel.addEventListener('change', () => {
+        try { localStorage.setItem(KEY, sel.value); } catch (e) { /* storage blocked: this page still switches */ }
+        if (sel.value === 'en') delete document.documentElement.dataset.snippetLang;
+        else document.documentElement.dataset.snippetLang = sel.value;
+        pickers().forEach((other) => {
+          // A sample without this variant keeps its own pick.
+          if (other !== sel && [...other.options].some((o) => o.value === sel.value)) other.value = sel.value;
+        });
+      });
+    });
+    document.querySelectorAll('.lg-code .lg-code-copy').forEach((btn) => {
+      if (btn.dataset.lgWired) return;
+      btn.dataset.lgWired = '1';
+      btn.hidden = false;
+      const idle = btn.textContent;
+      const status = btn.parentElement.querySelector('[role="status"]');
+      let reset = 0;
+      const show = (text) => {
+        btn.textContent = text;
+        status.textContent = text;
+        clearTimeout(reset);
+        reset = setTimeout(() => { btn.textContent = idle; status.textContent = ''; }, 2000);
+      };
+      btn.addEventListener('click', async () => {
+        const shown = [...btn.closest('.lg-code').querySelectorAll('pre')].find((p) => p.getClientRects().length);
+        if (!shown) return;
+        try {
+          await navigator.clipboard.writeText(shown.innerText);
+          show(btn.dataset.copied);
+        } catch (e) {
+          show(btn.dataset.failed);
+        }
+      });
+    });
+  })();
+</script>

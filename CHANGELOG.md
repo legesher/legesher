@@ -38,6 +38,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 
 - **mcp**: the `libs/mcp/Dockerfile` image installs `legesher-mcp` 0.3.1.
+- **docs**: the header has one language selector, for the page language. The
+  code-language picker moves onto the localized code sample, in a title bar
+  with the programming language and a copy button. The code language is still
+  a separate, saved choice, and the playground still starts from it.
+  [CORE-2761]
 
 ### Fixed
 
