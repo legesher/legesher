@@ -22,16 +22,9 @@ DOCS="$(cd "$HERE/.." && pwd)"
 ROOT="$(cd "$DOCS/.." && pwd)"
 OUT="$DOCS/public/wheels"
 
-# RTL languages are out of scope for the v1 playground (the editor is LTR-only;
-# RTL editing is tracked as CORE-1552). This set mirrors the rtl=true entries in
-# the i18n language registry (legesher_i18n/language_registry.py).
-RTL_EXCLUDE=(ar fa he ur)
-
-is_rtl() {
-  local l="$1" r
-  for r in "${RTL_EXCLUDE[@]}"; do [ "$l" = "$r" ] && return 0; done
-  return 1
-}
+# Every pack directory gets a wheel, right-to-left languages included: the
+# playground reads each language's direction from the language registry and
+# lays the editor out to match.
 
 cd "$ROOT"
 rm -rf "$OUT"
@@ -41,10 +34,9 @@ echo "building legesher-core + legesher-i18n wheels…"
 uv build --package legesher-core --wheel -o "$OUT" >/dev/null
 uv build --package legesher-i18n --wheel -o "$OUT" >/dev/null
 
-echo "building non-RTL language-pack wheels…"
+echo "building language-pack wheels…"
 for d in "$ROOT"/libs/i18n/language-packs/python/*/; do
   lang="$(basename "$d")"
-  is_rtl "$lang" && continue
   uv build --package "legesher-i18n-python-$lang" --wheel -o "$OUT" >/dev/null
 done
 

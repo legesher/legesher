@@ -2,11 +2,19 @@
 // In-browser Python playground (CORE-1551): edit localized Python, click Run to
 // translate → execute it entirely client-side via Pyodide.
 //
-// v1 offers LTR pack languages only; RTL editing is CORE-1552. The offered set is
-// snippet-langs filtered to non-RTL languages that have a vendored wheel in
-// wheels-manifest.json. A pack added after the last build_wheels.sh run appears
-// in the static snippets but is held out here until the wheels are rebuilt,
-// rather than offered and failing on Run.
+// The offered set is snippet-langs filtered to languages that have a vendored
+// wheel in wheels-manifest.json. A pack added after the last build_wheels.sh
+// run appears in the static snippets but is held out here until the wheels are
+// rebuilt, rather than offered and failing on Run.
+//
+// Each offered language carries its `rtl` flag from the language registry. A
+// right-to-left language lays out the editor, the output and the controls
+// right-to-left (src/playground/direction.ts). Direction is decided by that
+// flag alone, never by a language code.
+//
+// The section is marked `not-content`. Without it, the site's prose styles add
+// a top margin to every editor line and to the editor's caret and selection
+// layers, and a click lands on a different line from the one under the pointer.
 //
 // These JSON artifacts are the same ones the static snippets use; importing them
 // statically bundles their contents at build time.
@@ -29,9 +37,8 @@ const meta = langsMeta as LangMeta[];
 
 const vendored = new Set(Object.keys((wheels as { packs: Record<string, string> }).packs));
 const offered = meta
-  .filter((l) => !l.rtl && vendored.has(l.code))
-  .map((l) => ({ code: l.code, native: l.native, name: l.name }));
-const rtlNative = meta.filter((l) => l.rtl).map((l) => l.native);
+  .filter((l) => vendored.has(l.code))
+  .map((l) => ({ code: l.code, native: l.native, name: l.name, rtl: l.rtl }));
 
 // Curated samples on a difficulty ladder (CORE-1696). Each lives ONCE as
 // canonical English in docs/snippets/*.py; the localized variants here are
@@ -59,25 +66,25 @@ const data = { offered, samples, defaultLang: 'es' };
 const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
 ---
 
-<section class="pg" aria-label="Python playground">
+<section id="pg-root" class="pg not-content" aria-label="Python playground">
   <div class="pg-toolbar">
     <label class="pg-lang-label">
       Language
-      <select id="pg-lang" aria-label="Editor language">
+      <select id="pg-lang" aria-label="Editor language" dir="ltr">
         {offered.map((l) => <option value={l.code}>{l.native} ({l.code})</option>)}
       </select>
     </label>
     <label class="pg-lang-label">
       Sample
-      <select id="pg-sample" aria-label="Code sample">
+      <select id="pg-sample" aria-label="Code sample" dir="ltr">
         {samples.map((s) => <option value={s.slug}>{s.label}</option>)}
       </select>
     </label>
-    <button id="pg-run" type="button" class="pg-run">Run ▶</button>
-    <button id="pg-share" type="button" class="pg-secondary">Copy link</button>
-    <button id="pg-toggle" type="button" class="pg-secondary">Show English</button>
-    <span id="pg-view-note" class="pg-status" hidden>English view</span>
-    <span id="pg-status" class="pg-status" role="status" aria-live="polite" hidden></span>
+    <button id="pg-run" type="button" class="pg-run" dir="auto">Run ▶</button>
+    <button id="pg-share" type="button" class="pg-secondary" dir="auto">Copy link</button>
+    <button id="pg-toggle" type="button" class="pg-secondary" dir="auto">Show English</button>
+    <span id="pg-view-note" class="pg-status" dir="auto" hidden>English view</span>
+    <span id="pg-status" class="pg-status" role="status" aria-live="polite" dir="auto" hidden></span>
   </div>
 
   <div id="pg-editor" class="pg-editor"></div>
@@ -87,22 +94,18 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
     <pre id="pg-output" class="pg-output" aria-live="polite" tabindex="0"></pre>
   </div>
 
-  <p class="pg-rtl-note">
-    Right-to-left languages ({rtlNative.join(', ')}) render in the docs but aren’t
-    editable here yet — RTL editing is coming soon.
-  </p>
-
   <script type="application/json" id="pg-data" set:html={dataJson}></script>
 </section>
 
 <script>
+  import { directionOf } from '../playground/direction';
   import { mountEditor } from '../playground/editor';
   import { localizedHighlight, toTermSets, type HighlightTerms } from '../playground/highlight';
   import { invertGlossary, swapIdentifiers } from '../playground/identifiers';
   import { createRunner } from '../playground/runner';
   import { decodeShareCode, encodeShareCode } from '../playground/share';
 
-  type Offered = { code: string; native: string; name: string };
+  type Offered = { code: string; native: string; name: string; rtl: boolean };
   type Sample = {
     slug: string;
     label: string;
@@ -114,6 +117,7 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
   const URL_SYNC_DEBOUNCE_MS = 500;
 
   const dataEl = document.getElementById('pg-data');
+  const rootEl = document.getElementById('pg-root');
   const editorParent = document.getElementById('pg-editor');
   const langSel = document.getElementById('pg-lang') as HTMLSelectElement | null;
   const sampleSel = document.getElementById('pg-sample') as HTMLSelectElement | null;
@@ -124,7 +128,7 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
   const outputEl = document.getElementById('pg-output');
   const statusEl = document.getElementById('pg-status');
 
-  if (dataEl && editorParent && langSel && sampleSel && runBtn && shareBtn && toggleBtn && viewNoteEl && outputEl && statusEl) {
+  if (dataEl && rootEl && editorParent && langSel && sampleSel && runBtn && shareBtn && toggleBtn && viewNoteEl && outputEl && statusEl) {
     const { offered, samples, defaultLang } = JSON.parse(dataEl.textContent || '{}') as PgData;
 
     // Honor the docs-wide code-language preference when it's an offered pack,
@@ -170,6 +174,25 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
     let canonicalShown = '';
     let translating = false;
 
+    // Base direction comes from the selected language's own metadata. The
+    // canonical view is English text, so the editor is left-to-right there
+    // whatever the language; the output and the controls stay with the
+    // language, because the program and its output are the same in both views.
+    const langDirection = () => directionOf(offered.find((l) => l.code === currentLang));
+    const editorDirection = () => (view === 'canonical' ? 'ltr' : langDirection());
+    const applyFrameDirection = () => {
+      const direction = langDirection();
+      // The controls mirror for a right-to-left language. For a left-to-right
+      // one the attribute is removed, so they follow the host page, which may
+      // itself be right-to-left. The output is always explicit.
+      if (direction === 'rtl') rootEl.setAttribute('dir', 'rtl');
+      else rootEl.removeAttribute('dir');
+      outputEl.setAttribute('dir', direction);
+    };
+    // Before the first await, so a right-to-left link does not paint a
+    // left-to-right toolbar while the highlight terms load.
+    applyFrameDirection();
+
     // Localized highlight terms are generated per-language chunks, lazy-loaded
     // so no pack data rides the page. English needs none: python() already
     // highlights English natively, and the canonical view is English text.
@@ -193,6 +216,7 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
     const editor = mountEditor({
       parent: editorParent,
       doc: sharedCode ?? seedFor(),
+      direction: editorDirection(),
       onRun: () => run(),
       // The URL only ever mirrors the localized source, never the canonical view.
       onChange: () => view === 'source' && scheduleUrlSync(),
@@ -202,6 +226,12 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
         ),
       ],
     });
+
+    // The editor's direction is always explicit too, and follows the view.
+    const applyDirection = () => {
+      applyFrameDirection();
+      editor.setDirection(editorDirection());
+    };
 
     // Keep the query string shareable: it always mirrors the localized buffer
     // (src stays 'en' — the canonical source language of every pack).
@@ -276,6 +306,21 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
       span.textContent = text;
       outputEl.appendChild(span);
     };
+    // One line of output from a right-to-left run: text in an unknown script.
+    // The line starts on the output's right edge and keeps its leading
+    // whitespace there, so indentation survives. The rest is isolated and
+    // takes its direction from its own first strong character, so a Latin
+    // line (or one that starts with a digit) still reads left to right.
+    const appendRtlLine = (line: string, cls?: string) => {
+      const indent = /^[ \t]*/.exec(line)?.[0] ?? '';
+      if (indent) outputEl.appendChild(document.createTextNode(indent));
+      const span = document.createElement('span');
+      if (cls) span.className = cls;
+      span.dir = 'auto';
+      span.textContent = line.slice(indent.length);
+      outputEl.appendChild(span);
+      outputEl.appendChild(document.createTextNode('\n'));
+    };
     const setBusy = (b: boolean) => {
       busy = b;
       runBtn.disabled = b;
@@ -318,6 +363,7 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
           canonicalShown = english;
           view = 'canonical'; // before setDoc so onChange skips the URL sync
           editor.setDoc(english);
+          applyDirection();
         } else {
           const current = editor.getDoc();
           let restored: string;
@@ -330,6 +376,7 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
           }
           view = 'source'; // before setDoc so onChange resumes the URL sync
           editor.setDoc(restored);
+          applyDirection();
         }
         updateToggleUi();
       } catch (e) {
@@ -356,7 +403,13 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
             setStatus('Running…');
           }
         },
-        onOutput: (stream, line) => append(line + '\n', stream === 'stderr' ? 'pg-stderr' : undefined),
+        onOutput: (stream, line) => {
+          const cls = stream === 'stderr' ? 'pg-stderr' : undefined;
+          // A left-to-right run keeps the output exactly as before: each line
+          // in the output's own direction, in the order the program printed.
+          if (langDirection() === 'rtl') appendRtlLine(line, cls);
+          else append(line + '\n', cls);
+        },
         onError: (phase, message) => {
           const label =
             phase === 'translate'
@@ -394,6 +447,7 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
         setTranslating(false);
       }
       editor.setDoc(seedFor());
+      applyDirection();
       outputEl.textContent = '';
       setStatus('');
       updateToggleUi();
@@ -408,6 +462,7 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
       currentSample = next;
       view = 'source';
       editor.setDoc(seedFor());
+      applyDirection();
       outputEl.textContent = '';
       setStatus('');
       updateToggleUi();
@@ -508,20 +563,25 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
     white-space: pre-wrap;
     word-break: break-word;
   }
-  .pg-stderr {
+  /* The output's lines are created at run time, so they do not carry this
+     component's style scope: each selector below reaches them with :global. */
+  .pg-output :global(.pg-stderr) {
     color: var(--sl-color-orange-high);
   }
-  .pg-error {
+  .pg-output :global(.pg-error) {
     color: var(--sl-color-red-high);
     font-weight: 600;
   }
-  .pg-muted {
+  .pg-output :global(.pg-muted) {
     color: var(--sl-color-gray-3);
     font-style: italic;
   }
-  .pg-rtl-note {
-    font-size: 0.8125rem;
-    color: var(--sl-color-gray-3);
-    margin: 0;
+  /* A Python traceback is left-to-right text whose indentation carries its
+     structure. Inside a right-to-left output it stays a left-to-right block
+     instead of being pushed flush right line by line. */
+  .pg-output[dir='rtl'] :global(.pg-error) {
+    display: block;
+    direction: ltr;
+    text-align: left;
   }
 </style>
