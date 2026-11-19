@@ -40,7 +40,7 @@ script:
   direction: ltr
   constraints:
   - "Simplified Han characters concatenate without separators; underscores are optional for clarity in long names. Fullwidth digits (１２３) are NFKC-unstable and forbidden in identifiers."
-  - "Digits: Chinese natively uses 一二三; code uses ASCII 0-9 today. Native-digit support is a planned Legesher feature (currently ASCII-only)."
+  - "Digits: Chinese natively uses 一二三, which are not a decimal digit block; code uses ASCII 0-9. Legesher does not read Chinese numerals or fullwidth digits (１２３) as numbers, so numeric literals are typed in ASCII. Identifiers keep ASCII digits."
 
 # Formatting rules.
 formatting:

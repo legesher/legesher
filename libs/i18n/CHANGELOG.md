@@ -77,8 +77,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - The style guides' "Digits:" notes for the twelve languages with a native
   digit block say that numeric literals may be typed in those digits and are
   read as ASCII 0-9 when the code runs; identifiers keep ASCII digits. The
-  Japanese and Korean notes say that code uses ASCII 0-9 and that fullwidth
-  digits (`１２３`) are not read as numbers.
+  Japanese, Korean and Chinese notes say that code uses ASCII 0-9 and that
+  fullwidth digits (`１２３`) are not read as numbers, nor are Chinese
+  numerals (`一二三`).
 
 ### Fixed
 
