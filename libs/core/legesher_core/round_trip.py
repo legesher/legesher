@@ -702,7 +702,7 @@ def _name_findings(
     return findings
 
 
-SCHEMA_VERSION = "1.1.0"
+SCHEMA_VERSION = "1.2.0"
 
 #: The ticket that widens coverage; referenced in every verdict line, so a
 #: constant rather than a string scattered through f-strings.

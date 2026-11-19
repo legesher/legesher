@@ -9,11 +9,37 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- `round_trip` carries `finding_count`, the number of names the trip cannot
+  vouch for, from legesher-core's report. It is counted on a failed trip
+  too, where `verdict_line` reports only the failure. With a native comma,
+  `os.abrir('p'， 0)` reads as a failure in the punctuation layer, which hid
+  the NOT VERIFIED name finding the same line has with an ASCII comma.
+
 ### Changed
 
 - `Dockerfile` installs `legesher-mcp` 0.3.1, the release that requires the
   MCP Python SDK 1.30.0 or later, and resolves dependencies as the indexes
   stood at the start of 19 November 2026 (UTC).
+
+### Fixed
+
+- The `layer` description in the translate tools' output schema, the
+  `legesher-localized-code` skill and the AGENTS template name the two
+  round-trip layers that mean "by design, change nothing": `punctuation` (a
+  native punctuation mark in code position) and `digits` (a numeric literal
+  typed in native digits). The engine reads either as ASCII and the return
+  leg writes ASCII, so git keeps such source as typed and the trip reads
+  `round-trip FAILED`. Agents were told only the other eight layers,
+  and the AGENTS template said to stop on any failure, so an agent could
+  rewrite the author's marks or digits to ASCII. Such a failure now means
+  the file is correct as written only when `forward_valid` is true, at
+  least one divergence is listed and none is hidden, every listed
+  divergence is `punctuation` or `digits`, and `finding_count` is 0.
+  `round_trip.schema_version` is 1.2.0 with a legesher-core that carries the
+  change. A test reads the engine's layers and fails when the schema
+  description or the skill does not name each one, or drops a condition.
 
 ## [0.3.1] - 2026-11-18
 

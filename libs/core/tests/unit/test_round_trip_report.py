@@ -293,8 +293,9 @@ class TestSerialisation:
             pack=spanish_pack,
         )
         payload = json.loads(json.dumps(report.to_dict()))
-        # 1.1.0 (CORE-2237) added finding_count and findings.
-        assert report.schema_version == "1.1.0"
+        # 1.1.0 (CORE-2237) added finding_count and findings; 1.2.0 names
+        # the punctuation and digits layers, which the key set cannot show.
+        assert report.schema_version == "1.2.0"
         assert set(payload) == {
             "schema_version",
             "round_trips",

@@ -47,6 +47,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   combining mark (`संख्या१`) stays part of its identifier on CPython 3.10 and
   3.11, whose tokenizer splits the word there.
 
+### Changed
+
+- `round_trip.SCHEMA_VERSION` is 1.2.0. `RoundTripReport`'s keys are
+  unchanged; the version moves because `layer` can now be `punctuation`
+  (added in 0.26.0 without a bump) or `digits`, so a reader keyed on the
+  version can tell the set of values grew.
+
 ## [0.27.0] - 2026-11-18
 
 ## [0.26.0] - 2026-11-18

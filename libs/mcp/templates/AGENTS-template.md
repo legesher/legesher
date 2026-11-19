@@ -58,7 +58,12 @@ between the two; both forms are the same program, and the
    call — `translate_to_source` with `verify_round_trip: true` — and
    quote the returned `verdict_line`; the verdict comes from the engine,
    never by comparing the two renderings yourself. If it reports a
-   failure, or NOT VERIFIED, stop and report rather than committing.
+   failure, or NOT VERIFIED, stop and report rather than committing. The
+   one exception is a failure that is by design: `forward_valid` is true,
+   at least one divergence is listed, `divergence_count` equals the number
+   listed, every listed divergence has layer `punctuation` or `digits`, and
+   `finding_count` is 0. The engine read the native marks or digits as
+   ASCII; change nothing and keep the file as typed.
    After a dot, as a keyword argument and in a module path, write a
    library's name as the code shows it (`os.open`, `type=int`), never the
    pack's word for a builtin.
