@@ -129,8 +129,8 @@ In order:
    checkout has one.
 3. Otherwise the English side comes from the seed that ships in the package,
    and the translations from the pack for the locale, at the tier the pack
-   loader serves for the running Python version. Messages and words come
-   from the same tier. On a Python newer than every tier the pack has, that
+   loader picks for the running Python version, by the rule that picks the
+   tier for words. On a Python newer than every tier the pack has, that
    is its newest tier: every entry is joined by fingerprint, so a message
    the newer Python reworded stays in English and every other message stays
    translated. The pack is the only source of translations: a message it

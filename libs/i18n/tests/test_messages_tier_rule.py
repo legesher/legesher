@@ -5,16 +5,16 @@ file at or below the interpreter's version. The loader has the rule every other
 surface uses (``test_newest_tier_fallback.py``), and the two differed: the
 catalog filled a tier missing from the middle of a pack and read the newest
 tier on the next major version, where the loader serves neither. Now the
-catalog asks the loader for the interpreter's version, so the pack localizes
-messages exactly where it localizes words:
+catalog asks the loader for the interpreter's version, so one rule picks the
+tier for messages and for words:
 
 * newer than every tier the pack has, within the major version: the newest tier;
 * a tier missing from the middle: not filled;
 * the next major version, or below the pack's oldest tier: nothing.
 
 Versions are derived from the tiers the test pack is given, never written as
-the answer. The test locale has no translations in the seed, so a message the
-pack does not supply is not localized at all.
+the answer. The seed carries no translations, so a message the pack does not
+supply is not localized at all.
 """
 
 from __future__ import annotations
@@ -50,8 +50,8 @@ def _shift(version: str, minors: int) -> str:
     return f"{major}.{minor + minors}"
 
 
-def _next_major(version: str) -> str:
-    return f"{_xy(version)[0] + 1}.0"
+def _next_major(version: str, minor: int = 0) -> str:
+    return f"{_xy(version)[0] + 1}.{minor}"
 
 
 #: The test pack starts one tier later than the shipped packs, so "below its
@@ -86,8 +86,8 @@ def gapped_pack(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, no_database):
 
     The oldest file carries the header in Devanagari and the newest overrides
     it in Arabic, so the text says which file a message came from. Returns a
-    function that rewrites the newest file's entry, for the cases that need a
-    faulty one.
+    function that rewrites one file's entry, for the cases that need a faulty
+    one.
     """
     module = tmp_path / "packs" / LOCALE / f"legesher_i18n_python_{LOCALE}"
     packs = module / "packs"
@@ -124,7 +124,12 @@ def gapped_pack(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, no_database):
         "_discover_packs",
         lambda self: {f"python-{LOCALE}": module},
     )
-    return lambda entry: write(NEWEST, TIERS[-2], entry)
+
+    def rewrite(version: str, entry: dict) -> None:
+        index = TIERS.index(version)
+        write(version, TIERS[index - 1] if index else None, entry)
+
+    return rewrite
 
 
 def _header(version: str):
@@ -142,13 +147,17 @@ def _loader_serves(version: str) -> bool:
     return True
 
 
+#: The next major version twice: at a minor below every tier, and at the newest
+#: tier's own minor, which a rule that looked only at the minor would serve.
+NEXT_MAJOR = [_next_major(NEWEST), _next_major(NEWEST, _xy(NEWEST)[1])]
+
 #: Below the oldest tier, every tier, the missing one, past the newest, the
 #: next major version.
 SWEEP = [
     *SHIPPED,
     _shift(NEWEST, 1),
     _shift(NEWEST, 2),
-    _next_major(NEWEST),
+    *NEXT_MAJOR,
 ]
 
 
@@ -176,8 +185,9 @@ class TestTheCatalogFollowsTheLoadersRule:
         assert not missing.localized
         assert missing.template == missing.template_en
 
-    def test_the_next_major_version_is_not_served(self, gapped_pack):
-        beyond = _header(_next_major(NEWEST))
+    @pytest.mark.parametrize("version", NEXT_MAJOR)
+    def test_the_next_major_version_is_not_served(self, gapped_pack, version):
+        beyond = _header(version)
         assert not beyond.localized
         assert beyond.template == beyond.template_en
 
@@ -188,35 +198,45 @@ class TestTheCatalogFollowsTheLoadersRule:
 class TestPackMessageProblemsOnANewerPython:
     """A version past the newest tier is checked as that tier, never waved through."""
 
+    STALE = {"text": NEWEST_TEXT, "src": "0" * 12}
+
     def test_the_newest_tiers_entries_are_checked(self, gapped_pack):
         assert pack_message_problems(LOCALE, _shift(NEWEST, 1)) == []
-        gapped_pack({"text": NEWEST_TEXT, "src": "0" * 12})
+        gapped_pack(NEWEST, self.STALE)
         (problem,) = pack_message_problems(LOCALE, _shift(NEWEST, 1))
         assert problem.startswith(f"{KEY}:"), problem
 
-    def test_where_the_loader_serves_nothing_the_report_is_empty(self, gapped_pack):
-        gapped_pack({"text": NEWEST_TEXT, "src": "0" * 12})
+    def test_a_missing_tier_is_not_checked_as_the_tier_below_it(self, gapped_pack):
+        below = _shift(MISSING, -1)
+        gapped_pack(below, self.STALE)
+        (problem,) = pack_message_problems(LOCALE, below)  # the entry is faulty
+        assert problem.startswith(f"{KEY}:"), problem
         assert pack_message_problems(LOCALE, MISSING) == []
-        assert pack_message_problems(LOCALE, _next_major(NEWEST)) == []
+
+    @pytest.mark.parametrize("version", NEXT_MAJOR)
+    def test_the_next_major_version_is_not_checked(self, gapped_pack, version):
+        gapped_pack(NEWEST, self.STALE)
+        assert pack_message_problems(LOCALE, version) == []
 
 
 def _shipped_newest_tiers() -> list[object]:
-    """Every shipped pack at one minor past the newest tier.
+    """Every shipped pack at one minor past the newest tier any pack has.
 
-    The marks are the ones its newest tier carries: where that tier needs
-    Unicode 15.1 identifiers, an older interpreter cannot load it, at its own
-    version or as the tier served to a newer one.
+    Each pack is asked through its own newest tier, so a pack that stops
+    earlier than the others is still here. The marks are the ones that tier
+    carries: where it needs Unicode 15.1 identifiers, an older interpreter
+    cannot load it, at its own version or as the tier served to a newer one.
     """
-    newest, newer = SHIPPED[-1], _shift(SHIPPED[-1], 1)
+    newer = _shift(SHIPPED[-1], 1)
+    own_newest: dict[str, object] = {}
+    for param in _shipped_tiers():
+        language, version = param.values
+        held = own_newest.get(language)
+        if held is None or _xy(version) > _xy(held.values[1]):
+            own_newest[language] = param
     return [
-        pytest.param(
-            param.values[0],
-            newer,
-            marks=param.marks,
-            id=f"{param.values[0]}-{newer}",
-        )
-        for param in _shipped_tiers()
-        if param.values[1] == newest
+        pytest.param(language, newer, marks=param.marks, id=f"{language}-{newer}")
+        for language, param in own_newest.items()
     ]
 
 

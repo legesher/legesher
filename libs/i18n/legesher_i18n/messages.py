@@ -452,9 +452,9 @@ def _pack_entries(
 ) -> dict[str, Any] | None:
     """The pack's entries for ``implementation``, or ``None`` when it has none.
 
-    The tier is the one :meth:`LanguagePackLoader.load` serves for the
-    interpreter's version, so messages and words always come from the same
-    tier. On an interpreter newer than every tier the pack has, that is the
+    The tier is the one :meth:`LanguagePackLoader.load` picks for the
+    interpreter's version, so one rule chooses the tier for messages and for
+    words. On an interpreter newer than every tier the pack has, that is the
     pack's newest tier, which is safe because every entry is joined by
     fingerprint: a message the newer interpreter reworded is a different
     English template, so the older translation does not attach to it, and
