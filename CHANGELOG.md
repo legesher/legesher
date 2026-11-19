@@ -34,6 +34,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   the controls from right to left; a left-to-right language stays left to
   right, including on the Arabic pages. The engine the playground runs in the
   browser moves from 0.23.0 to 0.27.0.
+- **vs-code**: the extension installs its own language server. When no
+  `legesher-lsp` is found it offers an Install button (and the
+  `Legesher: Install Language Server` command), downloads a pinned,
+  checksum-verified uv into its own storage, and installs Python 3.12 and the
+  server from a hash-locked requirements file that ships with the extension. A
+  new extension release that ships a new lock updates the server on its own.
+  `legesher.serverCommand` is never written: the setting, then `legesher-lsp`
+  on `PATH`, then the extension's install, are tried in that order.
 
 ### Changed
 

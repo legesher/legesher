@@ -363,7 +363,7 @@
           "type": "string",
           "default": "legesher-lsp",
           "scope": "machine-overridable",
-          "description": "Command that starts the Legesher language server. The default, legesher-lsp, is installed by the legesher-language-server Python package. Hover, completion, diagnostics and keyword highlighting need it."
+          "description": "Command that starts the Legesher language server. Leave it at legesher-lsp to use legesher-lsp on PATH, or else the server the extension installs for itself (Legesher: Install Language Server). The legesher-language-server Python package provides it. Hover, completion, diagnostics and keyword highlighting need it."
         },
         "legesher.trace.server": {
           "type": "string",
@@ -413,6 +413,10 @@
       {
         "command": "legesher.restartServer",
         "title": "Legesher: Restart Language Server"
+      },
+      {
+        "command": "legesher.installLanguageServer",
+        "title": "Legesher: Install Language Server"
       },
       {
         "command": "legesher.selectLanguage",
@@ -538,6 +542,7 @@
     "test": "vscode-test",
     "test:unit": "TS_NODE_PROJECT=test/tsconfig.json mocha --require ts-node/register 'test/unit/**/*.test.ts'",
     "package": "vsce package",
+    "lock:server": "uv pip compile -q --universal --generate-hashes --python-version 3.12 --no-build --no-config --custom-compile-command \"npm run lock:server\" server/requirements.in -o server/requirements.lock",
     "compile:integration": "tsc -p test/tsconfig.integration.json"
   },
   "devDependencies": {

@@ -9,6 +9,7 @@ import { type ResolvedLanguages } from './config';
 import { connectionErrorHandler } from './connectionErrorHandler';
 import { DOCUMENT_LANGUAGE_NOTIFICATION, DocumentLanguageSync } from './documentLanguage';
 import { Logger } from './logger';
+import { isolatedPythonEnv } from './managedServer';
 import { LegesherTelemetry } from './telemetry';
 
 /**
@@ -21,6 +22,13 @@ const DOCUMENT_SELECTOR = [
     { scheme: 'file', language: 'python' },
     { scheme: 'untitled', language: 'python' },
 ];
+
+/** The server command to start, resolved by the caller. */
+export interface ServerToStart {
+    readonly command: string;
+    /** True for the extension's own install, which runs without PYTHONPATH and PYTHONHOME. */
+    readonly isolated: boolean;
+}
 
 /** A language client, and the channel that names each document's language to its server. */
 export interface LegesherClient {
@@ -64,12 +72,16 @@ export function createLanguageClient(
     outputChannel: vscode.LogOutputChannel,
     languages: ResolvedLanguages,
     resource: vscode.Uri | undefined,
-    languageOf: (document: vscode.TextDocument) => string
+    languageOf: (document: vscode.TextDocument) => string,
+    server: ServerToStart
 ): LegesherClient {
-    // Server settings resolve against the document too, so a project can pin
-    // its own server binary or trace level the same way it pins a language.
+    // The trace level resolves against the document, so a project can pin it
+    // the same way it pins a language. The command is resolved by the caller,
+    // from the same setting, PATH and the extension's own install
+    // (`managedServer.ts`), so the command checked and the command started
+    // cannot differ.
     const config = vscode.workspace.getConfiguration('legesher', resource);
-    const serverCommand = config.get<string>('serverCommand', 'legesher-lsp');
+    const serverCommand = server.command;
     const traceLevel = config.get<string>('trace.server', 'off');
 
     Logger.info(`Creating language client with command: ${serverCommand}`);
@@ -81,7 +93,9 @@ export function createLanguageClient(
         args: ['--stdio'],
         options: {
             env: {
-                ...process.env,
+                // The extension's own install is kept from any Python
+                // packages the user's environment points at.
+                ...(server.isolated ? isolatedPythonEnv(process.env) : process.env),
                 // Pass any environment variables the server might need
                 PYTHONUNBUFFERED: '1', // Ensure Python output is unbuffered
             }

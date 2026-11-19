@@ -20,7 +20,7 @@ function isValidLegesherCommand(command: string): boolean {
  * Uses execFile to prevent command injection vulnerabilities
  * Validates command appears to be Legesher-related before execution
  */
-export async function isServerAvailable(command: string): Promise<boolean> {
+export async function isServerAvailable(command: string, env?: NodeJS.ProcessEnv): Promise<boolean> {
     // Validate command before executing
     if (!isValidLegesherCommand(command)) {
         Logger.warn(`Command '${command}' does not appear to be a Legesher executable. Skipping availability check.`);
@@ -29,7 +29,7 @@ export async function isServerAvailable(command: string): Promise<boolean> {
 
     try {
         await new Promise<void>((resolve, reject) => {
-            execFile(command, ['--version'], (error: Error | null) => {
+            execFile(command, ['--version'], { env: env ?? process.env }, (error: Error | null) => {
                 if (error) {
                     reject(error);
                 } else {

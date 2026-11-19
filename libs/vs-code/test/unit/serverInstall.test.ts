@@ -13,6 +13,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {
     DEFAULT_SERVER_COMMAND,
+    INSTALL_COMMAND_TITLE,
+    MANUAL_STEPS_URL,
     SERVER_PACKAGE,
     serverNotFoundMessage,
 } from '../../src/serverInstall';
@@ -52,6 +54,34 @@ describe('serverInstall', () => {
         assert.ok(message.includes('legesher.serverCommand'), message);
         assert.ok(message.includes('Hover, completion, diagnostics and keyword highlighting'), message);
         assert.ok(message.includes('extension README'), message);
+    });
+
+    // The message names the command by its palette title, so the title has to
+    // be the one package.json gives it.
+    it('names the install command by the title package.json gives it', () => {
+        const manifest = JSON.parse(fs.readFileSync(path.join(EXTENSION_ROOT, 'package.json'), 'utf8'));
+        const command = manifest.contributes.commands.find(
+            (entry: { command: string }) => entry.command === 'legesher.installLanguageServer'
+        );
+        assert.ok(command, 'package.json declares no legesher.installLanguageServer');
+        assert.strictEqual(command.title, INSTALL_COMMAND_TITLE);
+    });
+
+    it('offers someone on the default the install with no terminal', () => {
+        assert.ok(serverNotFoundMessage(DEFAULT_SERVER_COMMAND).includes(`"${INSTALL_COMMAND_TITLE}"`));
+    });
+
+    // An install would not be used: the setting wins (managedServer.ts).
+    it('does not offer the install to someone with their own command', () => {
+        assert.ok(!serverNotFoundMessage('/opt/tools/legesher-lsp-dev').includes(INSTALL_COMMAND_TITLE));
+    });
+
+    it('links the manual steps to a heading the README has', () => {
+        const readme = fs.readFileSync(path.join(EXTENSION_ROOT, 'README.md'), 'utf8');
+        const anchor = MANUAL_STEPS_URL.split('#')[1];
+        const headings = [...readme.matchAll(/^#+ (.+)$/gm)].map(match =>
+            match[1].trim().toLowerCase().replace(/[^\p{L}\p{N} -]/gu, '').replace(/ /g, '-'));
+        assert.ok(headings.includes(anchor), `no README heading makes #${anchor}`);
     });
 
     it('points someone with a custom command back at their setting', () => {
