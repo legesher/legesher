@@ -162,10 +162,12 @@ skips an incomplete section rather than shipping it half-filled.
    translations (a test holds that); on a fresh database, `scripts/translate/import_yaml_to_db.py` restores the
    ones the packs carry.
 3. `scripts/add_message_locale.py --file <addition>.json`: a new locale for existing templates. All-or-nothing,
-   checks placeholder parity and bidi hygiene, requires `source`. Never INSERT directly and never invent a
-   `version_added` for a locale.
+   checks placeholder parity, bidi hygiene and that a translation is empty exactly when its English template is,
+   requires `source`. Never INSERT directly and never invent a `version_added` for a locale.
 4. `scripts/translate/generate_messages.py --all-missing` (or `--locales fr am`): model renderings, each written
-   through step 3's checks with model provenance. `--dry-run` renders the prompts without calling a model.
+   through step 3's checks with model provenance. `--dry-run` renders the prompts without calling a model. A real
+   run needs `--model` (or `LEGESHER_ANTHROPIC_MODEL`) set to a current model, and the rates configured so the
+   budget ceiling can be enforced. A locale whose response was cut off or declined is listed by that reason.
 5. Regenerate the packs of every locale whose translations changed (`export_language`, "Changing pack values"
    step 2): the exporter writes their `messages` sections. Then the pack version bump, the regen gate and the
    REFERENCE.md regeneration, as for any pack change.

@@ -111,7 +111,7 @@ def render_convention_inventory() -> str:
     return "\n".join(lines)
 
 
-def render_style_profile(language_code: str) -> str:
+def render_style_profile(language_code: str, *, identifier_rules: bool = True) -> str:
     """The language's script/formatting facts, from its style guide.
 
     Rules only — which is all a style guide holds. The guide is read, never
@@ -121,6 +121,16 @@ def render_style_profile(language_code: str) -> str:
 
     A language with no guide gets an explicit "not available" line rather
     than a silent omission, so a thin prompt is visible in the log.
+
+    Args:
+        identifier_rules: Include the guide's rules for writing a name: its
+            identifier-formation rule and its script constraints. A prompt
+            for sentences (``generate_messages.py``) leaves both out and
+            keeps the script, direction, case and digit lines. The
+            constraints cannot be filtered one by one: several are naming
+            rules worded as requirements ("underscores between logical words
+            are REQUIRED" for Thai and Burmese), which a sentence must not
+            follow.
     """
     try:
         guide = StyleGuideLoader().load(language_code)
@@ -139,6 +149,8 @@ def render_style_profile(language_code: str) -> str:
         f"{'yes' if supports.get('native_digits') else 'no'} "
         "(code uses ASCII 0-9 regardless).",
     ]
+    if not identifier_rules:
+        return "\n".join(lines)
     if naming.get("detail"):
         lines.append(f"- Identifier formation: {str(naming['detail']).strip()}")
     for constraint in script.get("constraints", []) or []:
@@ -283,18 +295,18 @@ def parse_json_response(text: str) -> dict[str, Any]:
     return json.loads(stripped[start : end + 1])
 
 
-def call_model(prompt: str, model: str) -> tuple[str, int, int]:
-    """One Anthropic call. Returns ``(text, input_tokens, output_tokens)``.
+def create_message(prompt: str, model: str, max_tokens: int):
+    """One Anthropic call. Returns the SDK's response object unread.
 
     Raises:
         RuntimeError: If the SDK is unavailable or no API key is set. Both
             fail loudly rather than degrading to a stub — an invented
-            vocabulary is worse than no vocabulary.
+            rendering is worse than none.
     """
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
         raise RuntimeError(
-            "ANTHROPIC_API_KEY is not set. Vocabulary values are never "
+            "ANTHROPIC_API_KEY is not set. Renderings are never "
             "fabricated locally; set the key or use --dry-run."
         )
     try:
@@ -306,11 +318,20 @@ def call_model(prompt: str, model: str) -> tuple[str, int, int]:
         ) from exc
 
     client = Anthropic(api_key=api_key)
-    response = client.messages.create(
+    return client.messages.create(
         model=model,
-        max_tokens=MAX_OUTPUT_TOKENS,
+        max_tokens=max_tokens,
         messages=[{"role": "user", "content": prompt}],
     )
+
+
+def call_model(prompt: str, model: str) -> tuple[str, int, int]:
+    """One Anthropic call. Returns ``(text, input_tokens, output_tokens)``.
+
+    Raises:
+        RuntimeError: See :func:`create_message`.
+    """
+    response = create_message(prompt, model, MAX_OUTPUT_TOKENS)
     text = "".join(
         block.text for block in response.content if getattr(block, "type", "") == "text"
     )

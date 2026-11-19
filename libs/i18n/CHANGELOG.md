@@ -83,6 +83,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **The message generation lane can finish a real run.**
+  `scripts/translate/generate_messages.py` asks for its own output ceiling:
+  current models think before they answer, and that thinking counts against
+  it. A response cut off at the ceiling or declined is reported by that
+  reason, writes nothing, and still counts against the run's budget. The
+  prompt asks for sentences in the language's normal orthography, because
+  the style guides describe identifiers, and keeps code inside a template
+  verbatim. `scripts/add_message_locale.py` refuses a translation that is
+  empty where its English template is not, or worded where it is empty.
+  [CORE-2028]
 - On a Python newer than every tier a pack has, `LanguagePackLoader.load` serves
   that pack's newest tier instead of raising `PackNotFoundError`. On Python 3.15,
   with packs up to 3.14, the 3.14 tier is served. Tiers only grow, so a newer
