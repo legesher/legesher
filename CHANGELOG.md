@@ -17,6 +17,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   tracebacks render from the pack with no change in output. The CPython
   catalog that ships in `legesher-i18n` now holds only the English side. [CORE-2630]
 
+### Changed
+
+- **mcp**: the `libs/mcp/Dockerfile` image installs `legesher-mcp` 0.3.1.
+
 ### Fixed
 
 - **i18n**, **legesher**: `legesher run`, `translate`, the git filter and

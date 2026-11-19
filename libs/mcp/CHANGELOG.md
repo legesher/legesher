@@ -9,6 +9,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- `Dockerfile` installs `legesher-mcp` 0.3.1, the release that requires the
+  MCP Python SDK 1.30.0 or later, and resolves dependencies as the indexes
+  stood at the start of 19 November 2026 (UTC).
+
 ## [0.3.1] - 2026-11-18
 
 ### Added
