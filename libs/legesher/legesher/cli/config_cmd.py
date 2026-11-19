@@ -311,7 +311,8 @@ def config_set(key: str, value: str, use_global: bool):
     else:
         data, config_path = _load_config()
     _set_nested(data, key, value)
-    with open(config_path, "w", encoding="utf-8") as f:
+    # LF on every platform, so the file is the same bytes everywhere.
+    with open(config_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(dump_config(data))
     click.echo(f"Set {key} = {_coerce_value(value)} in {config_path}")
 

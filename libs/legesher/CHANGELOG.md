@@ -23,6 +23,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   Python newer than every tier the language packs have (Python 3.15 today).
   They failed in every language with `PackNotFoundError`; the pack loader in
   `legesher-i18n` now serves each pack's newest tier to a newer interpreter.
+- On Windows, `legesher init`, `legesher config set` and `legesher git setup`
+  write `.legesher/config.yml` (and `config set --global` writes
+  `~/.legesher/config.yml`) with LF line endings, so the file is the same bytes
+  on every system. They wrote CRLF, and a `config set` after `init` on Windows
+  rewrote every line of the file.
 
 ## [0.27.0] - 2026-11-18
 

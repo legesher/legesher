@@ -45,6 +45,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   localized tracebacks work on Python 3.15. A Python newer than every tier of a
   language pack is served the pack's newest tier, so words that 3.15 added stay
   in English until the packs carry a 3.15 tier.
+- **legesher**: on Windows, `legesher init`, `legesher config set` and
+  `legesher git setup` write `.legesher/config.yml` with LF line endings, as on
+  macOS and Linux. They wrote CRLF, so a config shared between Windows and other
+  systems showed as a whole-file diff.
 - **docs**: in the playground editor, a click puts the caret on the line under
   the pointer, and the caret and selection are drawn on their own line; the
   site's prose spacing had pushed them down a line or more.

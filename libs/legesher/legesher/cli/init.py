@@ -470,8 +470,11 @@ def _generate_config(
         git_canonical_language="en",
         git_filter_enabled=git_enabled,
     )
+    # LF on every platform, so the file is the same bytes everywhere.
     config_path.write_text(
-        CONFIG_HEADER + dump_config(config.file_dict()), encoding="utf-8"
+        CONFIG_HEADER + dump_config(config.file_dict()),
+        encoding="utf-8",
+        newline="\n",
     )
 
 

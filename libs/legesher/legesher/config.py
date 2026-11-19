@@ -766,7 +766,8 @@ class LegesherConfig:
                 merged[key].update(value)
             else:
                 merged[key] = value
-        with open(config_path, "w", encoding="utf-8") as f:
+        # LF on every platform, so the file is the same bytes everywhere.
+        with open(config_path, "w", encoding="utf-8", newline="\n") as f:
             f.write(dump_config(merged))
 
     def save_project_config(self, repo_root: Path | None = None) -> Path:
