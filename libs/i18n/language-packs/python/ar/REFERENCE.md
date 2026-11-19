@@ -1,5 +1,5 @@
-<!-- legesher-review-template format=1 pack=legesher-i18n-python-ar pack_version=0.0.6 python=3.14 code=ar bcp47=ar digest=4194b29dd9a7 -->
-# Arabic (العربية) · legesher-i18n-python-ar 0.0.6 · Python 3.14
+<!-- legesher-review-template format=1 pack=legesher-i18n-python-ar pack_version=0.0.7 python=3.14 code=ar bcp47=ar digest=4194b29dd9a7 -->
+# Arabic (العربية) · legesher-i18n-python-ar 0.0.7 · Python 3.14
 
 ![Legesher](https://img.shields.io/badge/Legesher-ar-blue?style=for-the-badge&logo=python&logoColor=white)
 ![Script](https://img.shields.io/badge/Script-Arabic-green?style=for-the-badge)
@@ -8,7 +8,7 @@
 
 > Write Python code in Arabic. This guide shows the Arabic words Legesher
 > understands for Python's keywords, built-in functions, exceptions and
-> reserved words, as shipped in `legesher-i18n-python-ar` 0.0.6.
+> reserved words, as shipped in `legesher-i18n-python-ar` 0.0.7.
 >
 > **Note:** This is a right-to-left (RTL) language. RTL support is a work in
 > progress; the words below render in the same order a Python source line shows
@@ -57,7 +57,7 @@ Do not put an email address in this file. It is public. To reach us privately, w
 | **Language** | Arabic |
 | **Native Name** | العربية |
 | **Script** | Arabic |
-| **Pack** | `legesher-i18n-python-ar` 0.0.6 |
+| **Pack** | `legesher-i18n-python-ar` 0.0.7 |
 | **Python view** | 3.14 (version files: 3.10, 3.11, 3.12, 3.13, 3.14) |
 | **ISO 639-2** | `ara` |
 | **BCP 47 Tag** | `ar` |
@@ -68,7 +68,7 @@ Do not put an email address in this file. It is public. To reach us privately, w
 
 These are Python's reserved words translated to Arabic (39 terms).
 
-| Key | English | Arabic · 0.0.6 · Python 3.14 | Applies to | Suggested | Comments |
+| Key | English | Arabic · 0.0.7 · Python 3.14 | Applies to | Suggested | Comments |
 | --- | ------- | ---------------------------- | ---------- | --------- | -------- |
 | `keywords.and` | `and` | `و` | 3.10+ | | |
 | `keywords.as` | `as` | `كَمَا` | 3.10+ | | |
@@ -114,7 +114,7 @@ These are Python's reserved words translated to Arabic (39 terms).
 
 Python's built-in functions and types in Arabic (73 terms).
 
-| Key | English | Arabic · 0.0.6 · Python 3.14 | Applies to | Suggested | Comments |
+| Key | English | Arabic · 0.0.7 · Python 3.14 | Applies to | Suggested | Comments |
 | --- | ------- | ---------------------------- | ---------- | --------- | -------- |
 | `builtins.__import__` | `__import__` | `__استيراد__` | 3.10+ | | |
 | `builtins.abs` | `abs` | `القيمةالمطلقة` | 3.10+ | | |
@@ -194,7 +194,7 @@ Python's built-in functions and types in Arabic (73 terms).
 
 Exception classes for error handling (70 terms).
 
-| Key | English | Arabic · 0.0.6 · Python 3.14 | Applies to | Suggested | Comments |
+| Key | English | Arabic · 0.0.7 · Python 3.14 | Applies to | Suggested | Comments |
 | --- | ------- | ---------------------------- | ---------- | --------- | -------- |
 | `exceptions.arithmeticerror` | `arithmeticerror` | `خطأحسابي` | 3.10+ | | |
 | `exceptions.assertionerror` | `assertionerror` | `خطأالتأكيد` | 3.10+ | | |
@@ -273,7 +273,7 @@ Python conventions like `self` and `cls` translated deterministically by the
 language pack rather than the LLM (2 terms). Distinct from keywords because they
 aren't actual keywords in the Python language.
 
-| Key | English | Arabic · 0.0.6 · Python 3.14 | Applies to | Suggested | Comments |
+| Key | English | Arabic · 0.0.7 · Python 3.14 | Applies to | Suggested | Comments |
 | --- | ------- | ---------------------------- | ---------- | --------- | -------- |
 | `implicit_params.cls` | `cls` | `الصفنفسه` | 3.10+ | | |
 | `implicit_params.self` | `self` | `نفس` | 3.10+ | | |

@@ -9,10 +9,13 @@ authors = [
 license = {text = "Apache-2.0"}
 requires-python = ">=3.10,<4.0"
 dependencies = [
-    "legesher-i18n>=0.2.0,<1.0.0",
+    # 0.28.0: the first legesher-i18n that reads the `messages` section of
+    # 3.10.yml to 3.12.yml. 0.26.0 and older refuse those files, so the pack
+    # does not load; 0.27.0 loads it and ignores the section.
+    "legesher-i18n>=0.28.0,<1.0.0",
 ]
 name = "legesher-i18n-python-es"
-version = "0.0.6"
+version = "0.0.7"
 description = "Spanish language pack for Python in Legesher"
 readme = "README.md"
 keywords = ["legesher", "i18n", "spanish", "python", "translation", "multilingual"]
