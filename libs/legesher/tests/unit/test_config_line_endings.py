@@ -3,8 +3,8 @@
 A file opened in text mode without ``newline=`` turns each ``\\n`` into
 ``os.linesep``, so on Windows the config was saved with ``\\r\\n``. YAML reads
 both, but a project's config shared between Windows and macOS or Linux then
-shows as a whole-file diff, and ``legesher config set`` after ``legesher init``
-rewrote every line of the file.
+shows as a whole-file diff: any writer on Windows rewrote every line of a
+config written on another system.
 
 On macOS and Linux ``os.linesep`` is already ``\\n``, so the real ``open`` can
 never show the defect. The ``windows_text_mode`` fixture swaps in the pure
@@ -106,6 +106,11 @@ class TestSaveProjectConfig:
             language="si", metadata_directory=directory
         ).save_project_config(tmp_path)
         assert_line_feeds_only(path.read_bytes(), directory)
+
+    def test_saving_the_user_config_writes_line_feeds(self, home, windows_text_mode):
+        path = LegesherConfig(language="si").save_user_config()
+        assert path == home / ".legesher" / "config.yml"
+        assert_line_feeds_only(path.read_bytes(), "language: si\n")
 
 
 @patch("legesher.cli.init.LanguagePackLoader")
