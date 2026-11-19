@@ -146,9 +146,9 @@ class DivergenceModel(ToolResult):
             "ASCII, and the return leg wrote ASCII; git keeps the file as "
             "typed. Never rewrite the marks or digits to ASCII. The whole "
             "trip needs no change only when forward_valid is true, "
-            "finding_count is 0, and every divergence is punctuation or "
-            "digits with none hidden (divergence_count equals the number "
-            "listed); then change nothing."
+            "finding_count is 0, at least one divergence is listed, and every "
+            "divergence is punctuation or digits with none hidden "
+            "(divergence_count equals the number listed); then change nothing."
         ),
     )
 

@@ -44,8 +44,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **mcp**, **core**: the MCP server's output schema, its localized-code skill
   and its AGENTS template name the round-trip layers `punctuation` and
   `digits` and say they are by design: git keeps the file as typed, and an
-  agent changes nothing when the canonical form compiles, no divergence is
-  hidden or in another layer, and no name finding is counted. The MCP
+  agent changes nothing when the canonical form compiles, at least one
+  divergence is listed, none is hidden or in another layer, and no name
+  finding is counted. The MCP
   `round_trip` result gains `finding_count` for that check. The round-trip
   report's schema version is 1.2.0.
 - **i18n**, **legesher**: `legesher run`, `translate`, the git filter and

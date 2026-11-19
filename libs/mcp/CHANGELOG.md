@@ -13,9 +13,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - `round_trip` carries `finding_count`, the number of names the trip cannot
   vouch for, from legesher-core's report. It is counted on a failed trip
-  too, where `verdict_line` reports only the failure: a native comma in
-  `os.abrir('p'， 0)` reads `round-trip FAILED · layer punctuation` and hid
-  the `NOT VERIFIED` name finding the same line has with an ASCII comma.
+  too, where `verdict_line` reports only the failure. With a native comma,
+  `os.abrir('p'， 0)` reads as a failure in the punctuation layer, which hid
+  the NOT VERIFIED name finding the same line has with an ASCII comma.
 
 ### Changed
 

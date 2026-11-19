@@ -42,6 +42,12 @@ FOLD_EXCEPTION_CONDITIONS = (
 )
 
 
+def _states(text: str, condition: str) -> bool:
+    """``condition`` appears as a whole clause: followed by punctuation, so
+    "is true or null" or "is 0 or more" does not count as stating it."""
+    return re.search(re.escape(condition) + r"[,;.)]", text) is not None
+
+
 def _skill_playbook_routes() -> dict[str, str]:
     """Each layer the skill's "When something doesn't map" list routes,
     mapped to the text of the bullet that routes it."""
@@ -111,7 +117,9 @@ class TestLayerVocabulary:
             f"skill {layer} entry never forbids rewriting to ASCII"
         )
         for name, phrase in FOLD_EXCEPTION_CONDITIONS:
-            assert f"`{name}` {phrase}" in bullet, f"skill {layer} entry omits `{name}` {phrase}"
+            assert _states(bullet, f"`{name}` {phrase}"), (
+                f"skill {layer} entry omits `{name}` {phrase}"
+            )
         assert "at least one" in bullet, f"skill {layer} entry allows an empty list"
 
     @pytest.mark.parametrize("layer", FOLDS)
@@ -126,7 +134,7 @@ class TestLayerVocabulary:
             "AGENTS rule 8 exception never says change nothing"
         )
         for name, phrase in FOLD_EXCEPTION_CONDITIONS:
-            assert f"`{name}` {phrase}" in sentence, f"AGENTS rule 8 omits `{name}` {phrase}"
+            assert _states(sentence, f"`{name}` {phrase}"), f"AGENTS rule 8 omits `{name}` {phrase}"
         assert "at least one" in sentence, "AGENTS rule 8 allows an empty list"
 
     @pytest.mark.parametrize("tool_name", TRANSLATE_TOOLS)
@@ -157,9 +165,12 @@ class TestLayerVocabulary:
             f"{tool_name} layer description does not end in change nothing"
         )
         for name, phrase in FOLD_EXCEPTION_CONDITIONS:
-            assert f"{name} {phrase}" in routing, (
+            assert _states(routing, f"{name} {phrase}"), (
                 f"{tool_name} layer description omits {name} {phrase}"
             )
+        assert "at least one divergence is listed" in routing, (
+            f"{tool_name} layer description allows an empty list"
+        )
 
 
 class TestAgentsTemplate:
