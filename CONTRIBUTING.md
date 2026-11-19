@@ -17,8 +17,8 @@ Python expertise.
 
 | If you are | Start here | Look for |
 | --- | --- | --- |
-| A speaker of one of our 56 pack languages | Offer a better word. Every translation you propose is collected as an option in the shared map; it is never a conflict with what ships today | `contrib:localization` |
-| A linguist, teacher, or careful reader | Native review: help decide what your language ships with. Start with the [reviewer guide](libs/i18n/REVIEWING.md) | `contrib:localization` |
+| A speaker of one of our 56 pack languages | Review your language's pack by pull request in [language-packs](https://github.com/legesher/language-packs#start-here). A word you suggest is kept as an option; it never overwrites what ships today | `contrib:localization` |
+| A linguist, teacher, or careful reader | Native review: help decide what your language ships with. Start with the [reviewing guide](https://github.com/legesher/language-packs/blob/main/REVIEWING.md) | `contrib:localization` |
 | A developer | Engine, toolchain, and editor issues scoped for newcomers | `good first issue`, `contrib:code` |
 | A bilingual writer | Docs localization: translate a guide so readers see the same words in the docs and in their editor | `contrib:docs` |
 | Someone with lived language context | Context Calls: tell us how your language is really written, texted, and code-switched. The observation is the contribution | `contrib:community` |
@@ -62,8 +62,9 @@ Open source means the code is publicly visible and accepts contributions from an
 Not sure where to start? Here are beginner-friendly ways to contribute:
 
 1. **Fix Documentation:** Found a typo? Confusing explanation? Documentation PRs are always welcome!
-2. **Offer a Better Word:** Speak one of our pack languages? Propose translation options; every
-   option you offer joins the shared map.
+2. **Review a Language Pack:** Speak one of our pack languages? Review its pack by pull request in
+   [language-packs](https://github.com/legesher/language-packs#start-here); every word you suggest is
+   kept as an option.
 3. **Report Bugs:** Found something broken? Open an issue with reproduction steps.
 4. **Answer Questions:** Help other users in GitHub Discussions.
 5. **Good First Issues:** Look for issues tagged
@@ -858,25 +859,25 @@ all 56 packs are available today with community validation in progress.
 
 What that means for you:
 
-1. **Offering a better word** is always in season. Propose your term through
-   [Propose a Translation Option](https://github.com/legesher/legesher/issues/new?template=propose_translation.yml),
-   with a note on whether it is established usage, a coinage, or a loanword your community genuinely
-   uses. You are adding to the map, not fighting the current pick.
-2. **Improving existing translations** happens the same way: propose the better option and say why.
+1. **Offering a better word** is always in season. Review your language's pack by pull request in
+   [legesher/language-packs](https://github.com/legesher/language-packs#start-here): put your word in
+   the Suggested column, with a note on whether it is established usage, a coinage, or a loanword
+   your community genuinely uses. You are adding an option, not fighting the current pick.
+2. **Improving existing translations** happens the same way: suggest the better option and say why.
    When native reviewers endorse it, the pick moves.
 3. **Native review** is how packs climb the ladder from experimental toward official. The
-   [reviewer guide](libs/i18n/REVIEWING.md) covers what reviewing involves, how endorsements are
-   weighted, and what makes a pack `reviewed` and then `official`. Sign up through
-   [Native Reviewer Signup](https://github.com/legesher/legesher/issues/new?template=reviewer_signup.yml). The
-   [Community Guidelines](COMMUNITY_GUIDELINES.md) carry the working agreements that sit underneath
-   it.
+   [reviewing guide](https://github.com/legesher/language-packs/blob/main/REVIEWING.md) covers what
+   reviewing involves, how endorsements are weighted, and what makes a pack `reviewed` and then
+   `official`. The [Community Guidelines](COMMUNITY_GUIDELINES.md) carry the working agreements
+   that sit underneath it.
 4. **Before you submit**, read
    [Your contributions and your data](CONTRIBUTOR_PRIVACY.md). It is short, and it covers what
    happens to your word, how you are identified (you are not — credit is opt-in), what we never
    publish, and how to withdraw.
-5. **Requesting a new language** starts with an issue. Packs are generated from the shared
-   database, so the path to a new language runs through collecting its options, not hand-writing
-   pack files.
+5. **Requesting a new language** starts with a
+   [new language request](https://github.com/legesher/legesher/issues/new?template=add_language.yml).
+   Packs are generated from the shared database, so the path to a new language runs through
+   collecting its options, not hand-writing pack files.
 
 ## Questions?
 
