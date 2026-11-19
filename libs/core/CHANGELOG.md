@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- Requires `legesher-i18n` 0.28.0 or later. The native-digit reader imports
+  the registry's digit and decimal-separator lookups, which 0.27.0 and older
+  do not have, so `legesher-core` 0.28.0 next to an older `legesher-i18n`
+  failed at import.
+
 ## [0.28.0] - 2026-11-19
 
 ### Added

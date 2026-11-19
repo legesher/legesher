@@ -9,6 +9,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **legesher**, **core**: upgrading from 0.27.0 with `pip install -U legesher`
+  or `pipx upgrade legesher` installed the 0.28.0 CLI but kept `legesher-core`
+  and `legesher-i18n` at 0.27.0, and every `legesher` command then failed with
+  `ImportError: cannot import name 'continues_identifier' from
+  'legesher_core.utils'`. The CLI now requires `legesher-core` and
+  `legesher-i18n` 0.28.0 or later, and `legesher-core` requires
+  `legesher-i18n` 0.28.0 or later, so an upgrade brings all three up together.
+
 ## [0.28.0] - 2026-11-19
 
 ### Added
