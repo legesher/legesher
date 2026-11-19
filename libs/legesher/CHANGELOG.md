@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-11-19
+
 ### Added
 
 - `legesher run` and the import hook read numeric literals typed in the

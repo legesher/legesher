@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-11-19
+
 ### Added
 
 - **i18n**: a language pack can carry the translations of Python's error
@@ -1782,9 +1784,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.27.0  | Yes      |
-| legesher-i18n            | 0.27.0  | Yes      |
-| legesher (CLI)           | 0.27.0  | —        |
+| legesher-core            | 0.28.0  | Yes      |
+| legesher-i18n            | 0.28.0  | Yes      |
+| legesher (CLI)           | 0.28.0  | —        |
 | legesher-language-server | 0.3.0   | Yes      |
 | legesher-vscode          | 0.1.8   | —        |
 

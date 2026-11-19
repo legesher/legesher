@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-11-19
+
 ### Added
 
 - A numeric literal typed in the source language's own digits is read as
