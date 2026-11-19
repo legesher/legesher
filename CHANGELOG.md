@@ -42,6 +42,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   new extension release that ships a new lock updates the server on its own.
   `legesher.serverCommand` is never written: the setting, then `legesher-lsp`
   on `PATH`, then the extension's install, are tried in that order.
+- **install**: one-line installers, `install/install.sh` for macOS and Linux
+  and `install/install.ps1` for Windows. Each finds or installs a pinned,
+  checksum-verified uv, installs the `legesher` CLI and the `legesher-lsp`
+  language server as uv tools with every package pinned to an exact version,
+  puts uv's tool folder on PATH, and installs the VS Code extension when `code`
+  is on PATH. Neither asks a question; both refuse ARM64 Alpine and Windows on
+  ARM, which lack ready-made builds of a dependency.
 
 ### Changed
 
