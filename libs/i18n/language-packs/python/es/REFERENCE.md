@@ -1,5 +1,5 @@
-<!-- legesher-review-template format=1 pack=legesher-i18n-python-es pack_version=0.0.6 python=3.14 code=es bcp47=es digest=65f086fbcca7 -->
-# Spanish (Español) · legesher-i18n-python-es 0.0.6 · Python 3.14
+<!-- legesher-review-template format=1 pack=legesher-i18n-python-es pack_version=0.0.7 python=3.14 code=es bcp47=es digest=65f086fbcca7 -->
+# Spanish (Español) · legesher-i18n-python-es 0.0.7 · Python 3.14
 
 ![Legesher](https://img.shields.io/badge/Legesher-es-blue?style=for-the-badge&logo=python&logoColor=white)
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
@@ -7,7 +7,7 @@
 
 > Write Python code in Spanish. This guide shows the Spanish words Legesher
 > understands for Python's keywords, built-in functions, exceptions and
-> reserved words, as shipped in `legesher-i18n-python-es` 0.0.6.
+> reserved words, as shipped in `legesher-i18n-python-es` 0.0.7.
 
 This file is also the review template for this pack. To review it, copy this file to
 `reviews/es/es-<your-github-username>.md` in the
@@ -52,7 +52,7 @@ Do not put an email address in this file. It is public. To reach us privately, w
 | **Language** | Spanish |
 | **Native Name** | Español |
 | **Script** | Latin |
-| **Pack** | `legesher-i18n-python-es` 0.0.6 |
+| **Pack** | `legesher-i18n-python-es` 0.0.7 |
 | **Python view** | 3.14 (version files: 3.10, 3.11, 3.12, 3.13, 3.14) |
 | **ISO 639-2** | `spa` |
 | **BCP 47 Tag** | `es` |
@@ -63,7 +63,7 @@ Do not put an email address in this file. It is public. To reach us privately, w
 
 These are Python's reserved words translated to Spanish (39 terms).
 
-| Key | English | Spanish · 0.0.6 · Python 3.14 | Applies to | Suggested | Comments |
+| Key | English | Spanish · 0.0.7 · Python 3.14 | Applies to | Suggested | Comments |
 | --- | ------- | ----------------------------- | ---------- | --------- | -------- |
 | `keywords.and` | `and` | `y` | 3.10+ | | |
 | `keywords.as` | `as` | `como` | 3.10+ | | |
@@ -109,7 +109,7 @@ These are Python's reserved words translated to Spanish (39 terms).
 
 Python's built-in functions and types in Spanish (73 terms).
 
-| Key | English | Spanish · 0.0.6 · Python 3.14 | Applies to | Suggested | Comments |
+| Key | English | Spanish · 0.0.7 · Python 3.14 | Applies to | Suggested | Comments |
 | --- | ------- | ----------------------------- | ---------- | --------- | -------- |
 | `builtins.__import__` | `__import__` | `__importar__` | 3.10+ | | |
 | `builtins.abs` | `abs` | `valorabsoluto` | 3.10+ | | |
@@ -189,7 +189,7 @@ Python's built-in functions and types in Spanish (73 terms).
 
 Exception classes for error handling (70 terms).
 
-| Key | English | Spanish · 0.0.6 · Python 3.14 | Applies to | Suggested | Comments |
+| Key | English | Spanish · 0.0.7 · Python 3.14 | Applies to | Suggested | Comments |
 | --- | ------- | ----------------------------- | ---------- | --------- | -------- |
 | `exceptions.arithmeticerror` | `arithmeticerror` | `erroraritmético` | 3.10+ | | |
 | `exceptions.assertionerror` | `assertionerror` | `errordeaserción` | 3.10+ | | |
@@ -268,7 +268,7 @@ Python conventions like `self` and `cls` translated deterministically by the
 language pack rather than the LLM (2 terms). Distinct from keywords because they
 aren't actual keywords in the Python language.
 
-| Key | English | Spanish · 0.0.6 · Python 3.14 | Applies to | Suggested | Comments |
+| Key | English | Spanish · 0.0.7 · Python 3.14 | Applies to | Suggested | Comments |
 | --- | ------- | ----------------------------- | ---------- | --------- | -------- |
 | `implicit_params.cls` | `cls` | `misma_clase` | 3.10+ | | |
 | `implicit_params.self` | `self` | `mismo` | 3.10+ | | |

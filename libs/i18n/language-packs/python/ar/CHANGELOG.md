@@ -7,6 +7,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- Requires `legesher-i18n` 0.28.0 or later, the first release that reads the
+  pack's `messages` section. Installed next to an older `legesher-i18n`, the
+  pack failed to load (0.26.0 and older) or its Arabic error messages were not
+  read from it (0.27.0).
+
 ### Added
 
 - The 55 error messages and traceback lines, in a `messages` section of the
