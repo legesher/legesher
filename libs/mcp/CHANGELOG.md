@@ -40,6 +40,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `round_trip.schema_version` is 1.2.0 with a legesher-core that carries the
   change. A test reads the engine's layers and fails when the schema
   description or the skill does not name each one, or drops a condition.
+- The local engine no longer holds its lock while it scans for installed
+  language packs. A scan reads every pack's metadata, and while one ran,
+  `refresh_packs()` and translator lookups on other threads waited for it.
+  On Python 3.10 to 3.12, threads that kept rescanning could hold
+  `refresh_packs()` off for minutes. The scan now runs unlocked and takes
+  the lock only to store its result. A scan that `refresh_packs()` overtakes
+  is not cached.
 
 ## [0.3.1] - 2026-11-18
 
