@@ -104,7 +104,7 @@ async def test_flag_verifies_a_clean_trip_on_translate_to_native(
     assert info["divergences"] == []
     assert "keywords" in info["verified"]
     assert info["grammar_version"] == "3.13"
-    assert info["schema_version"] == "1.1.0"
+    assert info["schema_version"] == "1.2.0"
     assert info["pivoted"] is False
     # From English the rendering's English is the return hop itself, which
     # gave back the source: the compile fact is not asserted, only unknown.

@@ -15,6 +15,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   MCP Python SDK 1.30.0 or later, and resolves dependencies as the indexes
   stood at the start of 19 November 2026 (UTC).
 
+### Fixed
+
+- The `layer` description in the translate tools' output schema, the
+  `legesher-localized-code` skill and the AGENTS template name the two
+  round-trip layers that mean "by design, change nothing": `punctuation` (a
+  native punctuation mark in code position) and `digits` (a numeric literal
+  typed in native digits). The engine reads either as ASCII and the return
+  leg writes ASCII, so such source runs, git keeps it as typed, and the trip
+  reads `round-trip FAILED`. Agents were told only the other eight layers,
+  and the AGENTS template said to stop on any failure, so an agent could
+  rewrite the author's marks or digits to ASCII. A failure in which every
+  divergence is one of the two, with none hidden, now means the file is
+  correct as written. `round_trip.schema_version` is 1.2.0 with a
+  legesher-core that carries the change. A test reads the engine's layers
+  and fails when the schema description or the skill does not name each one.
+
 ## [0.3.1] - 2026-11-18
 
 ### Added

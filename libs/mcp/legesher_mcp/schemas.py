@@ -137,10 +137,15 @@ class DivergenceModel(ToolResult):
         default=None,
         description=(
             "keywords | builtins | exceptions | implicit_params | collision | "
-            "identifiers | comments | strings. Routes the fix: pack layers are "
-            "engine/pack defects, collision is a known identifier class "
-            "(CORE-1840), identifiers are expected residue, comments/strings "
-            "are the writer's own drift."
+            "identifiers | comments | strings | punctuation | digits. Routes "
+            "the fix: pack layers are engine/pack defects, collision is a "
+            "known identifier class (CORE-1840), identifiers are expected "
+            "residue, comments/strings are the writer's own drift. "
+            "punctuation/digits are by design: the engine read a native "
+            "punctuation mark or a numeric literal typed in native digits as "
+            "ASCII, and the return leg wrote ASCII. The source runs and git "
+            "keeps it as typed. Change nothing; never rewrite the marks or "
+            "digits to ASCII."
         ),
     )
 

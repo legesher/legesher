@@ -113,15 +113,22 @@ before continuing.
 A round-trip failure names the `layer` that broke it, and the layer decides
 the move:
 
-- **`keywords`, `builtins`, `exceptions`, `implicit_params`** — the
-  deterministic layer failed: a pack or engine defect. Report it with the
+- **`keywords`, `builtins`, `exceptions`, `implicit_params`**: the
+  deterministic layer failed, which is a pack or engine defect. Report it with the
   verdict line and keep the affected code in Python's own keywords.
-- **`collision`** — an identifier is spelled like a pack rendering
+- **`collision`**: an identifier is spelled like a pack rendering
   (a known class: CORE-1840). Rename the identifier; the pack is correct.
-- **`identifiers`** — expected today; the run form retains native
+- **`identifiers`**: expected today; the run form retains native
   identifiers, which are the original names. Disclosed residue, not a
   failure. Carry on.
-- **`comments`, `strings`** — your own layer drifted. Fix it and re-verify.
+- **`comments`, `strings`**: your own layer drifted. Fix it and re-verify.
+- **`punctuation`, `digits`**: by design, not a defect. The engine read a
+  native punctuation mark (`punctuation`) or a numeric literal typed in
+  native digits (`digits`) as ASCII, and the return leg wrote ASCII. The
+  source runs, and git keeps it as typed. Change nothing: never rewrite the
+  marks or digits to ASCII. When every divergence is `punctuation` or
+  `digits` and none is hidden (`divergence_count` equals the number listed),
+  the file is correct as written. Carry on.
 
 A `NOT VERIFIED` verdict came back byte-identical, but names a position the
 check cannot vouch for. `an attribute spelled like a pack term, kept as

@@ -270,7 +270,8 @@ Callers surface it as an error (`EngineError("vacuous_round_trip")` at the
 MCP boundary), never as a verdict.
 
 ```python
-SCHEMA_VERSION = "1.1.0"   # 1.1.0 (CORE-2237): finding_count and findings
+SCHEMA_VERSION = "1.2.0"   # 1.1.0 (CORE-2237): finding_count and findings;
+                           # 1.2.0: layer gains punctuation and digits
 
 @dataclass(frozen=True)
 class RoundTripReport:
@@ -313,7 +314,9 @@ instrument can find, and it must arrive as a report.
 `to_dict()` is the JSONL projection: it omits `forward`/`returned`, and its
 key set is pinned by a test so any shape change fails until
 `SCHEMA_VERSION` is bumped. A version nothing pins is a version that
-versions nothing.
+versions nothing. A new `layer` value changes no key, so that test cannot
+see it; it is a minor bump all the same (1.2.0 for `punctuation` and
+`digits`), so a consumer keyed on the version can tell the value set grew.
 
 ### `verdict_line` — the anti-fabrication surface
 
@@ -437,7 +440,9 @@ is content-free.
 The failure path becomes a playbook keyed on `layer`: pack layer → report a
 pack/engine defect; `collision` → known class, not a pack bug; `identifiers`
 → expected residue, continue; `comments`/`strings` → fix your own output and
-re-verify.
+re-verify; `punctuation`/`digits` → by design, change nothing (when every
+divergence is one of the two and none is hidden, the file is correct as
+written). `AGENTS-template.md` rule 8 carries the same exception.
 
 Tool docstrings are the largest prompt surface this server has and the least
 tested — the three `@mcp.prompt` templates have tests, the six tool
