@@ -124,11 +124,14 @@ the move:
 - **`comments`, `strings`**: your own layer drifted. Fix it and re-verify.
 - **`punctuation`, `digits`**: by design, not a defect. The engine read a
   native punctuation mark (`punctuation`) or a numeric literal typed in
-  native digits (`digits`) as ASCII, and the return leg wrote ASCII. The
-  source runs, and git keeps it as typed. Change nothing: never rewrite the
-  marks or digits to ASCII. When every divergence is `punctuation` or
-  `digits` and none is hidden (`divergence_count` equals the number listed),
-  the file is correct as written. Carry on.
+  native digits (`digits`) as ASCII, and the return leg wrote ASCII; git
+  keeps the file as typed. Never rewrite the marks or digits to ASCII. The
+  file is correct as written, so change nothing and carry on, only when all
+  of these hold: `forward_valid` is true; `divergences` lists at least one
+  entry and `divergence_count` equals the number listed; every listed
+  divergence is `punctuation` or `digits`; and `finding_count` is 0.
+  Otherwise route the other layers as above, and treat a nonzero
+  `finding_count` as the `NOT VERIFIED` case below.
 
 A `NOT VERIFIED` verdict came back byte-identical, but names a position the
 check cannot vouch for. `an attribute spelled like a pack term, kept as

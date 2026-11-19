@@ -143,9 +143,12 @@ class DivergenceModel(ToolResult):
             "residue, comments/strings are the writer's own drift. "
             "punctuation/digits are by design: the engine read a native "
             "punctuation mark or a numeric literal typed in native digits as "
-            "ASCII, and the return leg wrote ASCII. The source runs and git "
-            "keeps it as typed. Change nothing; never rewrite the marks or "
-            "digits to ASCII."
+            "ASCII, and the return leg wrote ASCII; git keeps the file as "
+            "typed. Never rewrite the marks or digits to ASCII. The whole "
+            "trip needs no change only when forward_valid is true, "
+            "finding_count is 0, and every divergence is punctuation or "
+            "digits with none hidden (divergence_count equals the number "
+            "listed); then change nothing."
         ),
     )
 
@@ -172,6 +175,17 @@ class RoundTripInfo(ToolResult):
     )
     divergence_count: int
     divergences: list[DivergenceModel]
+    finding_count: int = Field(
+        default=0,
+        description=(
+            "Names the trip cannot vouch for: the count behind a NOT "
+            "VERIFIED verdict (a library's name after a dot, as a keyword "
+            "argument or in a module path, written as a pack word). Counted "
+            "on a failed trip too, where verdict_line reports only the "
+            "failure, so a failure whose divergences are all punctuation or "
+            "digits still needs this to be 0."
+        ),
+    )
     verified: list[str] = Field(
         description=(
             "Layers this run actually exercised AND found clean. A clean "

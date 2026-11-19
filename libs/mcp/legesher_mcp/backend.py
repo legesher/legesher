@@ -341,6 +341,7 @@ def _round_trip(
         verdict_line=report.verdict_line,
         divergence_count=report.divergence_count,
         divergences=[_divergence_model(d) for d in report.divergences],
+        finding_count=report.finding_count,
         verified=sorted(layer.value for layer in report.verified),
         grammar_version=report.grammar_version,
         pivoted=report.pivoted,

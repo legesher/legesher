@@ -32,6 +32,15 @@ TRANSLATE_TOOLS = ("translate_to_native", "translate_to_source")
 ENGINE_LAYERS = frozenset(layer.value for layer in Layer)
 FOLDS = sorted(layer.value for layer in FOLD_LAYERS)
 
+#: What makes a fold-only failure safe to leave alone. Each surface that tells
+#: an agent to change nothing must state every one, or the instruction blesses
+#: a form that does not compile, a vacuous result or a hidden name finding.
+FOLD_EXCEPTION_CONDITIONS = (
+    ("forward_valid", "is true"),
+    ("finding_count", "is 0"),
+    ("divergence_count", "equals the number listed"),
+)
+
 
 def _skill_playbook_routes() -> dict[str, str]:
     """Each layer the skill's "When something doesn't map" list routes,
@@ -95,16 +104,30 @@ class TestLayerVocabulary:
 
     @pytest.mark.parametrize("layer", FOLDS)
     def test_skill_says_a_fold_layer_changes_nothing(self, layer: str) -> None:
-        bullet = _skill_playbook_routes()[layer]
-        assert "by design" in bullet
-        assert "Change nothing" in bullet
+        bullet = " ".join(_skill_playbook_routes()[layer].split())
+        assert "by design" in bullet, f"skill {layer} entry is not routed as by design"
+        assert "change nothing" in bullet.lower(), f"skill {layer} entry never says change nothing"
+        assert "never rewrite the marks or digits to ascii" in bullet.lower(), (
+            f"skill {layer} entry never forbids rewriting to ASCII"
+        )
+        for name, phrase in FOLD_EXCEPTION_CONDITIONS:
+            assert f"`{name}` {phrase}" in bullet, f"skill {layer} entry omits `{name}` {phrase}"
+        assert "at least one" in bullet, f"skill {layer} entry allows an empty list"
 
     @pytest.mark.parametrize("layer", FOLDS)
     def test_agents_round_trip_rule_exempts_the_fold_layer(self, layer: str) -> None:
-        rule = _agents_rule(8)
+        rule = " ".join(_agents_rule(8).split())
         assert "Round-trip guarantee" in rule
-        assert f"`{layer}`" in rule
-        assert "by design" in rule
+        exception = rule.split("The one exception", 1)
+        assert len(exception) == 2, "AGENTS rule 8 has no fold exception"
+        sentence = exception[1]
+        assert f"`{layer}`" in sentence, f"AGENTS rule 8 exception omits {layer}"
+        assert "change nothing" in sentence.lower(), (
+            "AGENTS rule 8 exception never says change nothing"
+        )
+        for name, phrase in FOLD_EXCEPTION_CONDITIONS:
+            assert f"`{name}` {phrase}" in sentence, f"AGENTS rule 8 omits `{name}` {phrase}"
+        assert "at least one" in sentence, "AGENTS rule 8 allows an empty list"
 
     @pytest.mark.parametrize("tool_name", TRANSLATE_TOOLS)
     async def test_published_layer_description_lists_exactly_the_engine_layers(
@@ -121,9 +144,21 @@ class TestLayerVocabulary:
             f"{tool_name} layer description misses {sorted(ENGINE_LAYERS - listed)}, "
             f"names unknown {sorted(listed - ENGINE_LAYERS)}"
         )
-        for layer in FOLDS:
-            assert layer in description.split(". ", 1)[1], (
-                f"{tool_name} layer description never routes {layer!r}"
+        routing = description.split(". ", 1)[1]
+        assert "are by design" in routing
+        routed = routing.split(" are by design", 1)[0].rsplit(". ", 1)[-1]
+        assert set(routed.split("/")) == set(FOLDS), (
+            f"{tool_name} layer description routes {routed!r} as by design, not {FOLDS}"
+        )
+        assert "never rewrite the marks or digits to ascii" in routing.lower(), (
+            f"{tool_name} layer description never forbids rewriting to ASCII"
+        )
+        assert routing.lower().rstrip(".").endswith("change nothing"), (
+            f"{tool_name} layer description does not end in change nothing"
+        )
+        for name, phrase in FOLD_EXCEPTION_CONDITIONS:
+            assert f"{name} {phrase}" in routing, (
+                f"{tool_name} layer description omits {name} {phrase}"
             )
 
 

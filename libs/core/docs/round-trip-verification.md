@@ -440,9 +440,13 @@ is content-free.
 The failure path becomes a playbook keyed on `layer`: pack layer → report a
 pack/engine defect; `collision` → known class, not a pack bug; `identifiers`
 → expected residue, continue; `comments`/`strings` → fix your own output and
-re-verify; `punctuation`/`digits` → by design, change nothing (when every
-divergence is one of the two and none is hidden, the file is correct as
-written). `AGENTS-template.md` rule 8 carries the same exception.
+re-verify; `punctuation`/`digits` → by design, change nothing. The file is
+correct as written only when `forward_valid` is true, at least one divergence
+is listed and none is hidden, every listed divergence is one of the two, and
+`finding_count` is 0 (a failed trip still counts its name findings, and the
+verdict line reports only the failure). The MCP payload carries
+`finding_count` for that check, and `AGENTS-template.md` rule 8 carries the
+same exception.
 
 Tool docstrings are the largest prompt surface this server has and the least
 tested — the three `@mcp.prompt` templates have tests, the six tool

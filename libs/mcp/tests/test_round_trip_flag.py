@@ -105,6 +105,7 @@ async def test_flag_verifies_a_clean_trip_on_translate_to_native(
     assert "keywords" in info["verified"]
     assert info["grammar_version"] == "3.13"
     assert info["schema_version"] == "1.2.0"
+    assert info["finding_count"] == 0
     assert info["pivoted"] is False
     # From English the rendering's English is the return hop itself, which
     # gave back the source: the compile fact is not asserted, only unknown.
@@ -127,6 +128,7 @@ async def test_flag_verifies_a_clean_trip_on_translate_to_source(
     # is earned, and clean keyword-bearing source earns a true.
     assert info["forward_valid"] is True
     assert "keywords" in info["verified"]
+    assert info["finding_count"] == 0
 
 
 async def test_an_attribute_spelled_like_a_builtin_is_not_verified(
@@ -152,6 +154,57 @@ async def test_an_attribute_spelled_like_a_builtin_is_not_verified(
     assert info["verdict_line"].startswith("legesher: round-trip NOT VERIFIED")
     assert "builtins" not in info["verified"]
     assert "rango" not in info["verdict_line"]
+    assert info["finding_count"] >= 1
+
+
+async def test_a_native_comma_alone_is_a_fold_failure_with_nothing_to_fix(
+    client: ClientSession,
+) -> None:
+    """The case the skill and AGENTS rule 8 call by design: every condition
+    the exception names holds, read off the payload an agent receives."""
+    english = "def جمع(س, ص):\n    return س + ص\nprint(جمع(1, 2))\n"
+    native = await call_ok(client, "translate_to_native", {"source": english, "target_lang": "ar"})
+    typed = str(native["translated_source"]).replace(", ", "، ")
+    assert "،" in typed
+    result = await call_ok(
+        client,
+        "translate_to_source",
+        {"source": typed, "source_lang": "ar", "verify_round_trip": True},
+    )
+    info = result["round_trip"]
+    assert info["round_trips"] is False
+    assert info["forward_valid"] is True
+    assert info["divergence_count"] == len(info["divergences"]) >= 1
+    assert {d["layer"] for d in info["divergences"]} == {"punctuation"}
+    assert info["finding_count"] == 0
+
+
+async def test_a_fold_failure_still_counts_the_name_it_cannot_vouch_for(
+    client: ClientSession,
+) -> None:
+    """A FAILED verdict names only the first divergence, so a name finding
+    on a line whose only divergence is a native comma never reaches the
+    verdict line. ``finding_count`` is how an agent sees it."""
+    with_ascii = "importar os\nfd = os.abrir('p', 0)\n"
+    with_native = with_ascii.replace("', 0", "'， 0")
+    ascii_info = (
+        await call_ok(
+            client,
+            "translate_to_source",
+            {"source": with_ascii, "source_lang": "es", "verify_round_trip": True},
+        )
+    )["round_trip"]
+    assert ascii_info["verdict_line"].startswith("legesher: round-trip NOT VERIFIED")
+    native_info = (
+        await call_ok(
+            client,
+            "translate_to_source",
+            {"source": with_native, "source_lang": "es", "verify_round_trip": True},
+        )
+    )["round_trip"]
+    assert native_info["verdict_line"].startswith("legesher: round-trip FAILED")
+    assert [d["layer"] for d in native_info["divergences"]] == ["punctuation"]
+    assert native_info["finding_count"] == ascii_info["finding_count"] >= 1
 
 
 async def test_verdict_line_is_single_line_and_states_its_limits(
