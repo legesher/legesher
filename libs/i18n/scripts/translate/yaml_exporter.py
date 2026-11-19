@@ -1404,6 +1404,10 @@ This pack provides translations for:
 - **Built-ins**: {counts["builtins"]} built-in functions and types
 - **Exceptions**: {counts["exceptions"]} exception classes
 
+A pack may also carry a `messages` section: the {lang_name} wording of Python's
+error messages and traceback lines, each tied to the English sentence it
+translates. A message without a translation prints as Python prints it.
+
 ## Version Inheritance
 
 Language packs use inheritance to minimize duplication:

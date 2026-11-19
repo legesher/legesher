@@ -65,8 +65,9 @@ def catalog_source(request, tmp_path, monkeypatch) -> str:
     """Where the catalog comes from: the conftest's database, or nowhere.
 
     ``translations.db`` never ships in a wheel, so on an installed package the
-    default path has nothing behind it and the catalog is read from the seed
-    that ships with ``legesher-i18n`` (CORE-1679).
+    default path has nothing behind it: the English side comes from the seed
+    and the translations from the language pack, both of which ship with
+    ``legesher-i18n`` (CORE-1679, CORE-2630).
     """
     if request.param == "no database":
         missing = tmp_path / "translations.db"

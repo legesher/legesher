@@ -17,10 +17,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   for the locale and Python version. An entry is used only when its `src`
   matches the English template that applies, its placeholders agree and it
   carries no field this release does not know; otherwise that message
-  prints as the interpreter printed it. A locale whose pack carries no
-  messages still reads the translations in the seed, so Spanish and Arabic
-  render as before. A database with the catalog still wins, and an explicit
-  `db_path` is still read alone. [CORE-2630]
+  prints as the interpreter printed it. On a Python newer than the pack's
+  newest file, that file is read. A database with the catalog still wins,
+  and an explicit `db_path` is still read alone. [CORE-2630]
 - **The pack exporter writes the `messages` section.** Each translation goes
   into the file of the Python version its English wording entered at, with
   the wording's fingerprint, and a stored translation that fails the join
@@ -39,6 +38,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   marks its twelve. `MessageRule.slot_kinds` and `MessageRule.kind_of`
   expose it, so a renderer can tell a line number from a value it must copy
   verbatim. [CORE-2630]
+
+### Changed
+
+- **Error-message translations come only from the language packs.** The
+  CPython catalog seed carries the English side only: keys, templates,
+  matchers, placeholders and version tiers. With no translations database,
+  a locale whose pack carries no messages prints the interpreter's own text.
+  A database still wins in a maintainer checkout. [CORE-2630]
 
 ### Fixed
 

@@ -17,9 +17,9 @@ from the seed the database is filled from, which ships as package data, and
 the translations from the language pack for the locale: its ``messages``
 section (CORE-2630). A pack entry is used only when it passes the join rules
 in :func:`legesher_i18n.pack_messages.entry_problem`; an entry that fails is
-skipped and that message prints as the interpreter printed it. While packs
-are gaining the section, a locale whose pack carries no messages for the
-implementation is read from the seed's own translations instead.
+skipped and that message prints as the interpreter printed it. The seed
+carries no translations: a locale whose pack carries no messages prints the
+interpreter's own text.
 
 Rows in the database always win; an explicit ``db_path`` is never replaced
 by the seed or by a pack.
@@ -239,9 +239,9 @@ def load_catalog(
        the pack has below it. A pack entry is used only
        when :func:`legesher_i18n.pack_messages.entry_problem` finds nothing
        wrong with it for the English row that applies; otherwise that rule
-       is not localized.
-    4. When there is no such pack file, it does not load, or it carries no
-       messages for ``implementation``, the seed's own translations are used.
+       is not localized. When there is no such pack file, it does not load,
+       or it carries no messages for ``implementation``, no rule is
+       localized.
 
     Args:
         locale: BCP 47 tag (``'es'``, ``'ar'``). A locale with no translations
@@ -265,7 +265,7 @@ def load_catalog(
     else:
         rows = _database_rows(default_db_path(), locale, implementation)
         if not rows:
-            rows = _seed_rows(locale, implementation)
+            rows = _seed_rows(implementation)
             entries = _pack_entries(locale, version, implementation)
 
     applicable = _applicable_rows(rows, version)
@@ -349,7 +349,7 @@ def pack_message_problems(
     except PackNotFoundError:
         return []
     entries = pack.messages.get(implementation) or {}
-    rows = _seed_rows(locale, implementation)
+    rows = _seed_rows(implementation)
     applicable = _applicable_rows(rows, version)
 
     # An entry for an earlier wording is expected only when it really is
@@ -452,8 +452,7 @@ def _pack_entries(
     ``None`` covers every way a pack can have nothing to offer: no pack for
     the locale, no pack file at or below this interpreter version, a pack
     file that does not load, a pack with no messages for the implementation,
-    and any error while finding the pack. The caller then reads the seed's
-    translations.
+    and any error while finding the pack. No rule is then localized.
 
     The pack's minimum interpreter is not enforced: that guard protects
     translated identifiers that would not parse, and rendering a message
@@ -566,7 +565,7 @@ def _database_rows(path: Path, locale: str, implementation: str) -> list[_Row]:
                 if seed_kinds is None:
                     seed_kinds = {
                         (seed_row.key, seed_row.template_en): seed_row.placeholders
-                        for seed_row in _seed_rows("", implementation)
+                        for seed_row in _seed_rows(implementation)
                     }
                 from_seed = seed_kinds.get((row[0], row[1]))
                 if from_seed is not None and [n for n, _ in from_seed] == [
@@ -579,13 +578,14 @@ def _database_rows(path: Path, locale: str, implementation: str) -> list[_Row]:
         connection.close()
 
 
-def _seed_rows(locale: str, implementation: str) -> list[_Row]:
-    """The seed rows for ``implementation``, shaped like :func:`_database_rows`.
+def _seed_rows(implementation: str) -> list[_Row]:
+    """The seed's English rows for ``implementation``, shaped like :func:`_database_rows`.
 
     Reads what ``scripts/seed_message_templates.py`` writes: templates
-    without a matcher are skipped, a template's own ``version_added``
-    overrides the file's, and a translation's status defaults to
-    ``machine``. Templates are read in file order, the order the seeder
+    without a matcher are skipped, and a template's own ``version_added``
+    overrides the file's. Only the English side is read. Translations come
+    from the language packs (CORE-2630); a translation left in a seed file
+    never reaches an install. Templates are read in file order, the order the seeder
     inserts them, so first-match-wins holds; files are read in name order
     (the seeder takes one file per run, and each implementation has one seed
     today). A file that cannot be read or is not JSON is skipped, as a
@@ -604,7 +604,6 @@ def _seed_rows(locale: str, implementation: str) -> list[_Row]:
             matcher = template.get("matcher")
             if matcher is None:
                 continue
-            translation = template.get("translations", {}).get(locale) or {}
             rows.append(
                 _Row(
                     template["key"],
@@ -612,8 +611,8 @@ def _seed_rows(locale: str, implementation: str) -> list[_Row]:
                     matcher,
                     template.get("version_added", seed.get("version_added")),
                     template.get("version_removed"),
-                    translation.get("template"),
-                    translation.get("status", DEFAULT_STATUS) if translation else None,
+                    None,
+                    None,
                     _placeholders(template.get("placeholders", [])),
                 )
             )
