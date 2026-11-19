@@ -210,9 +210,11 @@ tables:
       direction: |
         Writing direction of the locale's script.
       numeral_system: |
-        The locale's native digit system, as recorded in v1
-        `languages.numeral_system` (the JS client pack maps it to a CLDR
-        numbering-system id). NULL when not recorded.
+        The locale's native digit system, carried over from v1
+        `languages.numeral_system`: a CLDR numbering-system identifier
+        (`latn`, `arab`, `arabext`, `deva`, ...) in a v2 database built from a
+        v1 database that has them. One built earlier holds the v1 values of
+        its time. NULL when not recorded.
       has_case_distinction: |
         1 when the locale's script distinguishes upper and lower case. Script
         metadata the prompt builder consumes; carried over from v1.

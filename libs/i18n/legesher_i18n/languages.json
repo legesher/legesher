@@ -10,6 +10,8 @@
       "bcp47": "am",
       "rtl": false,
       "has_case_distinction": false,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "ar": {
@@ -19,6 +21,8 @@
       "bcp47": "ar",
       "rtl": true,
       "has_case_distinction": false,
+      "numeral_system": "arab",
+      "decimal_separator": "٫",
       "status": "experimental"
     },
     "bn": {
@@ -28,6 +32,8 @@
       "bcp47": "bn",
       "rtl": false,
       "has_case_distinction": false,
+      "numeral_system": "beng",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "bs": {
@@ -37,6 +43,8 @@
       "bcp47": "bs",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "ca": {
@@ -46,6 +54,8 @@
       "bcp47": "ca",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "cs": {
@@ -55,6 +65,8 @@
       "bcp47": "cs",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "cy": {
@@ -64,6 +76,8 @@
       "bcp47": "cy",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "da": {
@@ -73,6 +87,8 @@
       "bcp47": "da",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "de": {
@@ -82,6 +98,8 @@
       "bcp47": "de",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "el": {
@@ -91,6 +109,8 @@
       "bcp47": "el",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "en": {
@@ -100,6 +120,8 @@
       "bcp47": "en",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "es": {
@@ -109,6 +131,8 @@
       "bcp47": "es",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "fa": {
@@ -118,6 +142,8 @@
       "bcp47": "fa",
       "rtl": true,
       "has_case_distinction": false,
+      "numeral_system": "arabext",
+      "decimal_separator": "٫",
       "status": "experimental"
     },
     "fi": {
@@ -127,6 +153,8 @@
       "bcp47": "fi",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "fr": {
@@ -136,6 +164,8 @@
       "bcp47": "fr",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "ga": {
@@ -145,6 +175,8 @@
       "bcp47": "ga",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "gd": {
@@ -154,6 +186,8 @@
       "bcp47": "gd",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "gl": {
@@ -163,6 +197,8 @@
       "bcp47": "gl",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "gu": {
@@ -172,6 +208,8 @@
       "bcp47": "gu",
       "rtl": false,
       "has_case_distinction": false,
+      "numeral_system": "gujr",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "he": {
@@ -181,6 +219,8 @@
       "bcp47": "he",
       "rtl": true,
       "has_case_distinction": false,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "hi": {
@@ -190,6 +230,8 @@
       "bcp47": "hi",
       "rtl": false,
       "has_case_distinction": false,
+      "numeral_system": "deva",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "hr": {
@@ -199,6 +241,8 @@
       "bcp47": "hr",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "hu": {
@@ -208,6 +252,8 @@
       "bcp47": "hu",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "id": {
@@ -217,6 +263,8 @@
       "bcp47": "id",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "it": {
@@ -226,6 +274,8 @@
       "bcp47": "it",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "ja": {
@@ -235,6 +285,8 @@
       "bcp47": "ja",
       "rtl": false,
       "has_case_distinction": false,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "kn": {
@@ -244,6 +296,8 @@
       "bcp47": "kn",
       "rtl": false,
       "has_case_distinction": false,
+      "numeral_system": "knda",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "ko": {
@@ -253,6 +307,8 @@
       "bcp47": "ko",
       "rtl": false,
       "has_case_distinction": false,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "lv": {
@@ -262,6 +318,8 @@
       "bcp47": "lv",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "mk": {
@@ -271,6 +329,8 @@
       "bcp47": "mk",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "ml": {
@@ -280,6 +340,8 @@
       "bcp47": "ml",
       "rtl": false,
       "has_case_distinction": false,
+      "numeral_system": "mlym",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "mn": {
@@ -289,6 +351,8 @@
       "bcp47": "mn-Cyrl",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "ms": {
@@ -298,6 +362,8 @@
       "bcp47": "ms",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "my": {
@@ -307,6 +373,8 @@
       "bcp47": "my",
       "rtl": false,
       "has_case_distinction": false,
+      "numeral_system": "mymr",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "ne": {
@@ -316,6 +384,8 @@
       "bcp47": "ne",
       "rtl": false,
       "has_case_distinction": false,
+      "numeral_system": "deva",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "nl": {
@@ -325,6 +395,8 @@
       "bcp47": "nl",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "no": {
@@ -334,6 +406,8 @@
       "bcp47": "nb",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "pl": {
@@ -343,6 +417,8 @@
       "bcp47": "pl",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "pt": {
@@ -352,6 +428,8 @@
       "bcp47": "pt",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "ro": {
@@ -361,6 +439,8 @@
       "bcp47": "ro",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "ru": {
@@ -370,6 +450,8 @@
       "bcp47": "ru",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "si": {
@@ -379,6 +461,8 @@
       "bcp47": "si",
       "rtl": false,
       "has_case_distinction": false,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "sr": {
@@ -388,6 +472,8 @@
       "bcp47": "sr-Cyrl",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "su": {
@@ -397,6 +483,8 @@
       "bcp47": "su",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "sv": {
@@ -406,6 +494,8 @@
       "bcp47": "sv",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "sw": {
@@ -415,6 +505,8 @@
       "bcp47": "sw",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "te": {
@@ -424,6 +516,8 @@
       "bcp47": "te",
       "rtl": false,
       "has_case_distinction": false,
+      "numeral_system": "telu",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "th": {
@@ -433,6 +527,8 @@
       "bcp47": "th",
       "rtl": false,
       "has_case_distinction": false,
+      "numeral_system": "thai",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "tl": {
@@ -442,6 +538,8 @@
       "bcp47": "fil",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "tr": {
@@ -451,6 +549,8 @@
       "bcp47": "tr",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "uk": {
@@ -460,6 +560,8 @@
       "bcp47": "uk",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "ur": {
@@ -469,6 +571,8 @@
       "bcp47": "ur",
       "rtl": true,
       "has_case_distinction": false,
+      "numeral_system": "arabext",
+      "decimal_separator": "٫",
       "status": "experimental"
     },
     "uz": {
@@ -478,6 +582,8 @@
       "bcp47": "uz-Latn",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "vi": {
@@ -487,6 +593,8 @@
       "bcp47": "vi",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "xh": {
@@ -496,6 +604,8 @@
       "bcp47": "xh",
       "rtl": false,
       "has_case_distinction": true,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     },
     "zh": {
@@ -505,6 +615,8 @@
       "bcp47": "zh-Hans",
       "rtl": false,
       "has_case_distinction": false,
+      "numeral_system": "latn",
+      "decimal_separator": ".",
       "status": "experimental"
     }
   }

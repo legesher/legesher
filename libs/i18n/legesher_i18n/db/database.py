@@ -243,6 +243,10 @@ class TranslationDatabase:
             conn.execute(
                 "ALTER TABLE languages ADD COLUMN in_registry BOOLEAN DEFAULT 0"
             )
+        # The decimal mark written with the language's native digits. Databases
+        # created before it lack the column; set_numeral_systems.py fills it.
+        if "decimal_separator" not in lang_columns:
+            conn.execute("ALTER TABLE languages ADD COLUMN decimal_separator TEXT")
 
         conn.commit()
         conn.close()

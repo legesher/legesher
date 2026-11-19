@@ -38,6 +38,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   marks its twelve. `MessageRule.slot_kinds` and `MessageRule.kind_of`
   expose it, so a renderer can tell a line number from a value it must copy
   verbatim. [CORE-2630]
+- **The registry records the digits each language writes.** Every language in
+  `languages.json` carries `numeral_system`, the CLDR identifier of its native
+  numbering system (`arab` for Arabic, `arabext` for Persian and Urdu, `deva`
+  for Hindi and Nepali, `beng`, `thai`, `mymr`, `knda`, `gujr`, `mlym`,
+  `telu`; `latn` for ASCII digits, which includes Chinese), and
+  `decimal_separator` (U+066B `٫` for Arabic, Persian and Urdu; `.` for every
+  other language, and always for ASCII digits, since a numeric literal in code
+  uses `.`). Both are generated from the `languages` table of
+  `translations.db`, which gains a `decimal_separator` column.
+  `legesher_i18n.numerals` derives the ten digits from the identifier (every
+  system is a block of ten consecutive code points), and the package gains
+  `get_numeral_system`, `get_decimal_separator` and `get_native_digits`.
+- The style-guide validator checks `supports.native_digits` against the
+  registry both ways, and that each guide's "Digits:" note shows digits from
+  the registry's system. Five languages profile numerals that are not a digit
+  block and stay `latn`: Amharic, Japanese, Korean, Sinhala and Chinese.
+- `scripts/set_numeral_systems.py` fills the identifiers and separators in a
+  working database that predates them. It changes only empty and old values,
+  leaves a recorded CLDR identifier alone, and stops before writing on a row
+  it cannot fill. The generator refuses a registry with a missing or unknown
+  identifier, a separator other than `.` and U+066B, or a separator that is not
+  the one its numeral system is written with.
 
 ### Changed
 
@@ -46,6 +68,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   matchers, placeholders and version tiers. With no translations database,
   a locale whose pack carries no messages prints the interpreter's own text.
   A database still wins in a maintainer checkout. [CORE-2630]
+- `languages.numeral_system` holds CLDR identifiers. The values it held before
+  (`western_arabic`, `arabic_indic`, `devanagari` and others) are replaced.
+  Urdu is `arabext`, not Arabic-Indic, and Persian, Burmese and Kannada had no
+  value. `scripts/emit_js_client_pack.py` reads the identifier directly instead
+  of translating the old values, and refuses one the JavaScript engine does not
+  register (today `arab` and `latn`).
 
 ### Fixed
 

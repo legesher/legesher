@@ -49,6 +49,11 @@ CREATE TABLE IF NOT EXISTS terms (
 #     generated from the rows where ``in_registry = 1``.
 #   - ``has_case_distinction`` is per-language script metadata consumed by the
 #     prompt builder; it previously lived only in languages.json.
+#   - ``numeral_system`` is the CLDR numbering-system identifier of the digits
+#     the language writes natively (``latn``, ``arab``, ``arabext``, ``deva``,
+#     ...), and ``decimal_separator`` the decimal mark written with them
+#     (``.`` for ``latn``). Both flow into languages.json; the ten digits
+#     derive from the identifier. ``legesher_i18n.numerals`` defines both.
 LANGUAGES_TABLE = """
 CREATE TABLE IF NOT EXISTS languages (
     code TEXT PRIMARY KEY,
@@ -60,6 +65,7 @@ CREATE TABLE IF NOT EXISTS languages (
     direction TEXT DEFAULT 'ltr',
     script TEXT,
     numeral_system TEXT,
+    decimal_separator TEXT,
     has_case_distinction BOOLEAN DEFAULT 1,
     status TEXT DEFAULT 'experimental',
     has_yaml_pack BOOLEAN DEFAULT 0,

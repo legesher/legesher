@@ -37,21 +37,18 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from legesher_i18n.db.database import TranslationDatabase  # noqa: E402
+from legesher_i18n.numerals import is_known_numeral_system  # noqa: E402
 
 TARGET = "javascript"
 EXPECTED_SPLIT = {"keyword": 17, "builtin": 16, "member": 29}
+#: The numbering systems the JavaScript engine's ``compilePack`` accepts.
+#: A pack naming any other would be emitted and then refused there, so the
+#: emitter refuses it first; widen this when the engine registers more.
+CLIENT_NUMBERING_SYSTEMS = frozenset({"arab", "latn"})
 CATEGORY_TO_PARTITION = {
     "keyword": "keywords",
     "builtin": "builtins",
     "member": "members",
-}
-#: DB ``languages.numeral_system`` vocabulary -> CLDR numbering-system id
-#: (what ``Intl.NumberFormat`` and the editor layer speak). Extend as
-#: locales are added; unknown values fail loud rather than guess.
-NUMERAL_SYSTEM_CLDR = {
-    "arabic_indic": "arab",
-    "western": "latn",
-    "latin": "latn",
 }
 
 HEADER = """\
@@ -156,11 +153,21 @@ def main() -> int:
         language_row = db.get_language(args.language)
         if language_row is None:
             return fail(f"language {args.language!r} not in the languages registry")
-        numeral_db = language_row.get("numeral_system")
-        if numeral_db not in NUMERAL_SYSTEM_CLDR:
+        # ``languages.numeral_system`` is the CLDR numbering-system id itself
+        # (what ``Intl.NumberFormat`` and the editor layer speak); an unknown
+        # or missing value fails loud rather than guess.
+        numeral_system = language_row.get("numeral_system")
+        if not numeral_system or not is_known_numeral_system(numeral_system):
             return fail(
-                f"no CLDR mapping for numeral_system {numeral_db!r} — "
-                f"extend NUMERAL_SYSTEM_CLDR deliberately"
+                f"languages.numeral_system {numeral_system!r} is not a CLDR "
+                f"numbering-system id known to legesher_i18n.numerals "
+                f"(run scripts/set_numeral_systems.py on an older database)"
+            )
+        if numeral_system not in CLIENT_NUMBERING_SYSTEMS:
+            return fail(
+                f"languages.numeral_system {numeral_system!r} is not one the "
+                f"JavaScript engine registers {sorted(CLIENT_NUMBERING_SYSTEMS)}; "
+                f"register it there before emitting this pack"
             )
         terms = db.get_terms(programming_language=TARGET)
         if not terms:
@@ -217,7 +224,7 @@ def main() -> int:
             "_name": language_row["name"],
             "locale": language_row.get("bcp47") or args.language,
             "direction": language_row["direction"],
-            "numeral_system": NUMERAL_SYSTEM_CLDR[numeral_db],
+            "numeral_system": numeral_system,
             "stability": stability,
             "pack_version": args.pack_version,
         }
