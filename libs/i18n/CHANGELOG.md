@@ -36,10 +36,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `X.Y` numbers (`"latest"`, an empty string) now raises `ValueError`; it
   used to be compared as text and give an arbitrary answer.
 - `scripts/translate/import_yaml_to_db.py` and `scripts/translate/pipeline.py`
-  classify a term at the newest registered release. They are the two writers
-  of term rows and both used the 3.13 lists, which would have filed a
-  built-in type added by a later release as a function, or as unknown. What
-  a default pipeline run translates is unchanged.
+  classify a term at the newest registered release. They are the two places
+  that classify a term before writing its row, and both used the 3.13 lists,
+  which would have filed a built-in type added by a later release as a
+  function, or as unknown. What a default pipeline run translates is
+  unchanged, and is now named (`DEFAULT_RUN_PYTHON_VERSION`).
 - `scripts/extract_python_content.py` reports dunder built-ins:
   `__import__`, and `__lazy_import__` on Python 3.15. It skipped every name
   that starts with an underscore, so comparing two releases' extractions

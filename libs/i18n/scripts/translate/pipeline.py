@@ -204,16 +204,27 @@ class PipelineStats:
         console.print(f"\nDuration: {duration:.1f}s ({duration / 60:.1f} minutes)")
 
 
+#: The Python release whose term list a default run translates.
+#:
+#: It decides WHAT a default run translates, and so what it costs. It moves
+#: only in the change that ships the next pack file, never as a side effect of
+#: registering a release in the term inventory. Python 3.14 added no term, so
+#: the list at 3.13 is also the list of the newest file the packs ship. It is
+#: not the release a term is classified at (``python_term_category``).
+DEFAULT_RUN_PYTHON_VERSION = "3.13"
+
+
 def python_term_category(term: str) -> str:
     """The category this pipeline files a Python term's row under.
 
     Classified at the newest release the term inventory registers. That is
-    the release ``import_yaml_to_db`` builds its category table at, and the
-    two are the only writers of Python term rows: classified at different
-    releases, they would file a word a newer release added under two
-    categories, which is two rows for one pack slot. Every term the default
-    run translates classifies the same at any registered release, so the
-    release only matters for a term passed in by name.
+    the release ``import_yaml_to_db`` builds its category table at, and these
+    are the two places that classify a Python term before writing its row:
+    classified at different releases, they would file a word a newer release
+    added under two categories, which is two rows for one pack slot. Every
+    term a default run translates classifies the same at the default run's
+    release and at every later registered one, so the release only matters
+    for a term passed in by name.
 
     Args:
         term: Python term name
@@ -659,12 +670,9 @@ class TranslationPipeline:
 
         # Get all terms from term_classifier (source of truth)
         # This includes keywords, builtins, exceptions, etc.
-        #
-        # This version decides WHAT a default run translates, and so what it
-        # costs. It stays at the newest release every pack ships a file for,
-        # and moves in the change that adds the next pack file. It is not the
-        # version a term is classified at (``python_term_category``).
-        terms_by_category = get_all_terms_by_category(python_version="3.13")
+        terms_by_category = get_all_terms_by_category(
+            python_version=DEFAULT_RUN_PYTHON_VERSION
+        )
 
         # Flatten all categories into a single list (excluding helper terms)
         terms = []

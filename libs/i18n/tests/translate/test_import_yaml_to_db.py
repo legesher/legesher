@@ -301,6 +301,13 @@ def test_both_writers_of_term_rows_file_an_added_term_on_one_row(
 def test_the_importer_first_then_the_pipeline_is_one_row_too(
     db, section, category, name
 ):
+    """The importer creates the row, then the pipeline writes the same term.
+
+    This order guards the importer's side: the category it files a newer
+    release's built-in type under, and the pipeline's write reusing that row
+    rather than adding one. (The pipeline's own release is guarded by the
+    test above; this one stays green if only that moves.)
+    """
     from scripts.translate.pipeline import python_term_category
 
     def rows() -> list:
@@ -321,22 +328,80 @@ def test_the_importer_first_then_the_pipeline_is_one_row_too(
 def test_the_pipeline_classifies_every_default_term_as_it_did_at_the_pinned_release():
     """Classifying at the newest release changes nothing for a term a default run translates.
 
-    The default run's term list is built at a fixed release; each of those
-    terms must classify there exactly as the pipeline's helper classifies it.
+    The default run's term list is built at ``DEFAULT_RUN_PYTHON_VERSION``;
+    each of those terms must classify there exactly as the pipeline's helper
+    classifies it.
     """
     from legesher_i18n.term_definitions import get_all_terms_by_category
-    from scripts.translate.pipeline import python_term_category
+    from scripts.translate.pipeline import (
+        DEFAULT_RUN_PYTHON_VERSION,
+        python_term_category,
+    )
 
     default_terms = [
         term
-        for category, terms in get_all_terms_by_category(python_version="3.13").items()
+        for category, terms in get_all_terms_by_category(
+            python_version=DEFAULT_RUN_PYTHON_VERSION
+        ).items()
         if category != "helper"
         for term in terms
     ]
     assert len(default_terms) > 150, "the default term list was not read"
     moved = {
-        term: (classify_term(term, python_version="3.13"), python_term_category(term))
+        term: (
+            classify_term(term, python_version=DEFAULT_RUN_PYTHON_VERSION),
+            python_term_category(term),
+        )
         for term in default_terms
-        if classify_term(term, python_version="3.13") != python_term_category(term)
+        if classify_term(term, python_version=DEFAULT_RUN_PYTHON_VERSION)
+        != python_term_category(term)
     }
     assert moved == {}
+
+
+def test_a_default_pipeline_run_translates_the_terms_of_the_newest_pack_file(tmp_path):
+    """What a default run translates follows the pack files, not the term inventory.
+
+    Registering a release in the inventory must not make the next default run
+    translate, and bill for, words no pack has a file for. And the default
+    list must not fall behind the packs either: it is the term list of the
+    newest release ``version-index.yml`` lists, which is the newest file every
+    pack ships.
+    """
+    from legesher_i18n.term_definitions import get_all_terms_by_category
+    from legesher_i18n.version_index import VersionIndex
+    from scripts.translate.pipeline import (
+        DEFAULT_RUN_PYTHON_VERSION,
+        PipelineConfig,
+        TranslationPipeline,
+    )
+    from tests import language_packs_root
+
+    def terms_at(version: str) -> list[str]:
+        return [
+            term
+            for category, terms in get_all_terms_by_category(version).items()
+            if category != "helper"
+            for term in terms
+        ]
+
+    indexed = sorted(
+        VersionIndex.load(language_packs_root() / "version-index.yml").versions,
+        key=lambda version: tuple(int(part) for part in version.split(".")),
+    )
+    assert DEFAULT_RUN_PYTHON_VERSION in indexed
+
+    pipeline = TranslationPipeline(
+        PipelineConfig(
+            models=["claude"],
+            languages=["ar"],
+            dry_run=True,
+            output_db=tmp_path / "translations.db",
+        )
+    )
+    default_run = pipeline._get_terms_to_translate()
+    assert len(default_run) > 150, "the default term list was not read"
+    # The method really reads the named release ...
+    assert default_run == list(dict.fromkeys(terms_at(DEFAULT_RUN_PYTHON_VERSION)))
+    # ... and that is every term of the newest file the packs ship, no more.
+    assert sorted(set(default_run) ^ set(terms_at(indexed[-1]))) == []
