@@ -228,3 +228,38 @@ class TestResolveTermId:
             resolve_term_id(db, "unheardof", YAML_SECTION_CATEGORIES["keywords"])
             == term_id
         )
+
+
+def _added_section_terms() -> list:
+    """``(section, category, name)`` for every term a release after the base added."""
+    from legesher_i18n.term_definitions import (
+        TERM_TYPE_YAML_SECTIONS,
+        VERSION_ADDITIONS,
+    )
+
+    return [
+        pytest.param(
+            TERM_TYPE_YAML_SECTIONS[category],
+            category,
+            name,
+            id=f"{version}-{category}-{name}",
+        )
+        for version, by_category in VERSION_ADDITIONS.items()
+        for category, names in by_category.items()
+        for name in names
+    ]
+
+
+@pytest.mark.parametrize(("section", "category", "name"), _added_section_terms())
+def test_a_term_a_later_release_added_is_filed_in_its_own_category(
+    section, category, name
+):
+    """A pack slot for a newer release's term gets the inventory's category.
+
+    The membership table was built at a fixed Python version. A built-in type
+    added after that version was unknown to it and fell back to the section's
+    first category, a function.
+    """
+    from scripts.translate.import_yaml_to_db import _create_category
+
+    assert _create_category(name, YAML_SECTION_CATEGORIES[section]) == (category, True)

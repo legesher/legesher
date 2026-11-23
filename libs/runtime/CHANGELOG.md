@@ -68,3 +68,4 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - The `legesher-i18n` floor is now `>=0.23.0`, the first release containing
   `schema_v2.is_identity_translation`. [CORE-1777]
+- The package declares Python 3.14 and 3.15 in its classifiers.

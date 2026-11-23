@@ -13,12 +13,12 @@ This module is the canonical source for:
 The version_index.py module imports these base terms and applies version deltas
 from version-index.yml to provide complete term sets for any Python version.
 
-What each Python release added is recorded once, in ``VERSION_ADDITIONS``.
-Every version-aware accessor here reads that table, so registering a release
-is one row. The same additions are mirrored in ``version-index.yml`` once the
-packs ship a file for the release; until then this module is the only place
-that knows them. ``tests/test_baseline_against_stdlib.py`` reconciles both
-copies against the running interpreter.
+What each Python release added is recorded in ``VERSION_ADDITIONS``, one row
+per release this module has been checked against. Every version-aware accessor
+here reads that table. The same additions are mirrored in ``version-index.yml``
+once the packs ship a file for the release; until then this module is the only
+place that knows them. ``tests/test_baseline_against_stdlib.py`` reconciles
+both copies against the running interpreter.
 
 Term type to YAML section mapping is also defined here for consistency across
 the translation pipeline.
@@ -294,7 +294,9 @@ EXCEPTIONS = [
 # ``get_exceptions_for_version`` stay version-aware without importing
 # ``version_index`` (that would be a circular import). ``encodingwarning`` is
 # NOT here: it is a 3.10 term (PEP 597) and lives in the ``EXCEPTIONS`` base.
-# ``test_baseline_against_stdlib`` pins both copies to the real stdlib.
+# ``test_baseline_against_stdlib`` pins both copies to the real stdlib. The
+# index mirrors a release only once the packs ship a file for it, so the
+# newest list here can be ahead of the index.
 EXCEPTIONS_3_11 = [
     "exceptiongroup",
     "baseexceptiongroup",
@@ -387,17 +389,22 @@ YAML_SECTION_CATEGORIES: dict[str, list[str]] = {
 
 # What each Python release added, oldest first: release -> category -> terms.
 #
-# THE one place a release is registered. ``get_keywords_for_version``,
-# ``get_builtins_for_version``, ``get_exceptions_for_version``,
-# ``classify_term`` and ``get_all_terms_by_category`` all read it, so a new
-# release is one row here (plus its ``*_3_XX`` lists above). A release that
-# added nothing (3.14) has no row. ``aiter`` and ``anext`` arrived in 3.10,
-# the oldest supported release, so they sit in ``BUILTIN_FUNCTIONS``.
+# One row per release this inventory has been checked against, every minor
+# from the oldest supported one to the newest registered. A release that
+# added nothing (3.14) has an empty row: it is registered, and it added no
+# word. ``get_keywords_for_version``, ``get_builtins_for_version``,
+# ``get_exceptions_for_version``, ``classify_term`` and
+# ``get_all_terms_by_category`` all read this table and nothing else for what
+# a release added. (The pack exporter still names the per-release lists
+# itself; it learns a release when the packs get a file for it.) ``aiter`` and
+# ``anext`` arrived in 3.10, the oldest supported release, so they sit in
+# ``BUILTIN_FUNCTIONS``.
 VERSION_ADDITIONS: dict[str, dict[TermCategory, list[str]]] = {
     "3.10": {"keyword": KEYWORDS_3_10},
     "3.11": {"keyword": KEYWORDS_3_11, "exception": EXCEPTIONS_3_11},
     "3.12": {"keyword": KEYWORDS_3_12},
     "3.13": {"exception": EXCEPTIONS_3_13},
+    "3.14": {},
     "3.15": {
         "keyword": KEYWORDS_3_15,
         "builtin_func": BUILTIN_FUNCTIONS_3_15,
@@ -408,12 +415,23 @@ VERSION_ADDITIONS: dict[str, dict[TermCategory, list[str]]] = {
 
 
 def _version_key(version: str) -> tuple[int, int]:
-    """``"3.15"`` as ``(3, 15)``, so releases compare as numbers.
+    """``"3.15"`` or ``"3.15.2"`` as ``(3, 15)``, so releases compare as numbers.
 
-    Compared as text, ``"3.9"`` sorts after ``"3.10"``.
+    Compared as text, ``"3.9"`` sorts after ``"3.10"``. A bare major (``"3"``)
+    reads as its minor 0.
+
+    Raises:
+        ValueError: If the string does not start with ``major.minor`` numbers.
     """
-    major, minor = version.split(".")[:2]
-    return int(major), int(minor)
+    parts = version.split(".")
+    try:
+        return int(parts[0]), int(parts[1]) if len(parts) > 1 else 0
+    except ValueError as exc:
+        raise ValueError(f"not an X.Y version string: {version!r}") from exc
+
+
+#: The newest Python release this inventory registers.
+NEWEST_REGISTERED_VERSION: str = max(VERSION_ADDITIONS, key=_version_key)
 
 
 def _added_through(version: str, category: TermCategory) -> list[str]:
@@ -442,6 +460,9 @@ def get_keywords_for_version(version: str = "3.10") -> list[str]:
 
     Returns:
         List of keyword strings for that version
+
+    Raises:
+        ValueError: If ``version`` is not an ``X.Y`` version string
     """
     return (
         KEYWORDS_BASE.copy()
@@ -459,6 +480,9 @@ def get_builtins_for_version(version: str = "3.10") -> list[str]:
     Returns:
         List of builtin strings for that version: functions, then types, then
         special constants
+
+    Raises:
+        ValueError: If ``version`` is not an ``X.Y`` version string
     """
     return (
         _builtin_functions_for_version(version)
@@ -475,6 +499,9 @@ def get_exceptions_for_version(version: str = "3.10") -> list[str]:
 
     Returns:
         List of exception strings for that version
+
+    Raises:
+        ValueError: If ``version`` is not an ``X.Y`` version string
     """
     return EXCEPTIONS.copy() + _added_through(version, "exception")
 
@@ -502,12 +529,16 @@ def classify_term(term: str, python_version: str = "3.10") -> TermCategory:
     Args:
         term: The term to classify (case-insensitive for most terms)
         python_version: Python version the term is classified for. A term a
-            later release added is ``'unknown'`` at an earlier version.
+            later release added is not a term of that kind at an earlier
+            version (``'unknown'``, unless the name has another slot there).
 
     Returns:
         Category string: 'keyword', 'builtin_func', 'builtin_type',
                         'exception', 'special_constant', 'implicit_param',
                         'helper', or 'unknown'
+
+    Raises:
+        ValueError: If ``python_version`` is not an ``X.Y`` version string
     """
     term_lower = term.lower()
 
@@ -631,6 +662,7 @@ __all__ = [
     "EXCEPTIONS_3_13",
     "EXCEPTIONS_3_15",
     "VERSION_ADDITIONS",
+    "NEWEST_REGISTERED_VERSION",
     "SPECIAL_CONSTANTS",
     "IMPLICIT_PARAMS",
     "HELPER_TERMS",

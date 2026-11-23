@@ -429,6 +429,26 @@ class TestDunderBuiltins:
             assert hasattr(builtins, name), f"{name} is not a builtin; drop it"
         assert not self._extracted_dunders() & UNTRACKED_DUNDER_BUILTINS
 
+    def test_which_names_are_left_out(self):
+        # Asked of the rule itself, with names that need not exist: no
+        # ``builtins`` has a single-underscore name before 3.13, so a check
+        # of the extraction alone proves nothing there.
+        from extract_python_content import (
+            UNTRACKED_DUNDER_BUILTINS,
+            _is_skipped_builtin_name,
+        )
+
+        for kept in ("print", "__import__", "__lazy_import__", "__anything_new__"):
+            assert not _is_skipped_builtin_name(kept), kept
+        for skipped in (
+            "_private",
+            "_IncompleteInputError",
+            "__half_dunder",
+            "_",
+            *UNTRACKED_DUNDER_BUILTINS,
+        ):
+            assert _is_skipped_builtin_name(skipped), skipped
+
     def test_private_single_underscore_names_stay_out(self):
         extractor = PythonContentExtractor()
         names = set(extractor.extract_builtin_functions()) | set(

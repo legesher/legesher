@@ -1,19 +1,29 @@
-"""The term inventory is version-aware, one table drives every accessor.
+"""The term inventory is version-aware, and one table drives every accessor.
 
 ``term_definitions.VERSION_ADDITIONS`` records what each Python release added.
 ``get_keywords_for_version``, ``get_builtins_for_version``,
 ``get_exceptions_for_version``, ``classify_term`` and
-``get_all_terms_by_category`` all read it, so a release is registered once.
+``get_all_terms_by_category`` all read it.
 
 Nothing here names a release in an assertion: every case is taken from the
 table, so the next release is covered the day its row is added.
 """
+
+import copy
 
 import pytest
 
 from legesher_i18n import term_definitions as td
 
 CATEGORIES = ("keyword", "builtin_func", "builtin_type", "exception")
+
+#: The lists every release starts from, by category, read from the module.
+BASE = {
+    "keyword": td.KEYWORDS_BASE + td.SPECIAL_VALUES,
+    "builtin_func": td.BUILTIN_FUNCTIONS,
+    "builtin_type": td.BUILTIN_TYPES,
+    "exception": td.EXCEPTIONS,
+}
 
 
 def _key(version: str) -> tuple[int, int]:
@@ -26,6 +36,16 @@ def _previous(version: str) -> str:
     return f"{major}.{minor - 1}"
 
 
+def _next(version: str) -> str:
+    major, minor = _key(version)
+    return f"{major}.{minor + 1}"
+
+
+REGISTERED = list(td.VERSION_ADDITIONS)
+
+#: Every registered release, the one before the oldest and the one after the newest.
+VERSIONS_TO_ASK = [_previous(REGISTERED[0]), *REGISTERED, _next(REGISTERED[-1])]
+
 #: ``(version, category, term)`` for every term the table adds.
 ADDITIONS = [
     pytest.param(version, category, term, id=f"{version}-{category}-{term}")
@@ -35,15 +55,33 @@ ADDITIONS = [
 ]
 
 
+def _expected(category: str, version: str) -> list[str]:
+    """What an accessor must return, derived here from the raw table."""
+    expected = list(BASE[category])
+    for release, by_category in td.VERSION_ADDITIONS.items():
+        if _key(release) <= _key(version):
+            expected.extend(by_category.get(category, []))
+    return expected
+
+
 def _accessor(category: str, version: str) -> list[str]:
     return td.get_all_terms_by_category(version)[category]
 
 
-def test_the_table_is_not_empty_and_is_ordered_oldest_first():
-    versions = list(td.VERSION_ADDITIONS)
-    assert versions, "an empty table would make every case below vanish"
-    assert versions == sorted(versions, key=_key)
-    assert len(ADDITIONS) > len(versions)
+def test_the_table_has_a_row_for_every_minor_oldest_first():
+    assert REGISTERED, "an empty table would make every case below vanish"
+    major, first_minor = _key(REGISTERED[0])
+    last_minor = _key(REGISTERED[-1])[1]
+    # No release is skipped: one that added nothing has an empty row, so
+    # "registered and added nothing" cannot be mistaken for "never looked at".
+    assert [_key(version) for version in REGISTERED] == [
+        (major, minor) for minor in range(first_minor, last_minor + 1)
+    ]
+    assert len(ADDITIONS) > len(REGISTERED)
+
+
+def test_the_newest_registered_version_is_the_last_row():
+    assert td.NEWEST_REGISTERED_VERSION == REGISTERED[-1]
 
 
 def test_the_table_uses_only_the_four_versioned_categories():
@@ -55,13 +93,45 @@ def test_the_table_uses_only_the_four_versioned_categories():
     assert used <= set(CATEGORIES), used - set(CATEGORIES)
 
 
+def test_no_list_in_the_table_is_empty():
+    # An emptied list makes its parametrized cases disappear without a
+    # failure. A release that added nothing has an empty ROW instead.
+    empty = sorted(
+        f"{version} {category}"
+        for version, by_category in td.VERSION_ADDITIONS.items()
+        for category, terms in by_category.items()
+        if not terms
+    )
+    assert empty == [], empty
+
+
+@pytest.mark.parametrize("version", VERSIONS_TO_ASK)
+@pytest.mark.parametrize("category", CATEGORIES)
+def test_every_accessor_returns_the_base_plus_the_rows_up_to_the_version(
+    category, version
+):
+    expected = _expected(category, version)
+    assert td.get_all_terms_by_category(version)[category] == expected
+    if category == "keyword":
+        assert td.get_keywords_for_version(version) == expected
+    if category == "exception":
+        assert td.get_exceptions_for_version(version) == expected
+
+
+@pytest.mark.parametrize("version", VERSIONS_TO_ASK)
+def test_the_builtins_accessor_is_functions_then_types_then_constants(version):
+    assert td.get_builtins_for_version(version) == (
+        _expected("builtin_func", version)
+        + _expected("builtin_type", version)
+        + td.SPECIAL_CONSTANTS
+    )
+
+
 @pytest.mark.parametrize(("version", "category", "term"), ADDITIONS)
 def test_an_added_term_is_listed_from_its_release_on(version, category, term):
     assert term in _accessor(category, version)
-    newest = max(td.VERSION_ADDITIONS, key=_key)
-    assert term in _accessor(category, newest)
-    major, minor = _key(newest)
-    assert term in _accessor(category, f"{major}.{minor + 1}")
+    assert term in _accessor(category, REGISTERED[-1])
+    assert term in _accessor(category, _next(REGISTERED[-1]))
 
 
 @pytest.mark.parametrize(("version", "category", "term"), ADDITIONS)
@@ -95,48 +165,95 @@ def test_an_added_term_is_a_python_term_only_from_its_release_on(
 
 
 def test_no_term_is_listed_twice_in_one_category():
-    newest = max(td.VERSION_ADDITIONS, key=_key)
     for category in CATEGORIES:
-        terms = _accessor(category, newest)
+        terms = _accessor(category, REGISTERED[-1])
         repeated = sorted({term for term in terms if terms.count(term) > 1})
         assert repeated == [], f"{category}: {repeated}"
-
-
-def test_the_per_category_accessors_agree_with_the_category_table():
-    for version in [*td.VERSION_ADDITIONS, _previous(next(iter(td.VERSION_ADDITIONS)))]:
-        by_category = td.get_all_terms_by_category(version)
-        assert td.get_keywords_for_version(version) == by_category["keyword"]
-        assert td.get_exceptions_for_version(version) == by_category["exception"]
-        assert td.get_builtins_for_version(version) == (
-            by_category["builtin_func"]
-            + by_category["builtin_type"]
-            + by_category["special_constant"]
-        )
 
 
 def test_versions_compare_as_numbers_not_as_text():
     # As text, "3.9" sorts after "3.10", so a 3.9 request used to be handed
     # the 3.10 soft keywords.
-    oldest = next(iter(td.VERSION_ADDITIONS))
+    oldest = REGISTERED[0]
     major, minor = _key(oldest)
     assert minor >= 10, "the case below needs a two-digit minor to mean anything"
-    for term in td.VERSION_ADDITIONS[oldest].get("keyword", []):
+    added = td.VERSION_ADDITIONS[oldest].get("keyword")
+    assert added, "nothing would be checked"
+    for term in added:
         assert term not in td.get_keywords_for_version(f"{major}.9")
-    assert td.VERSION_ADDITIONS[oldest].get("keyword"), "nothing was checked"
 
 
-def test_the_accessors_hand_out_copies():
-    newest = max(td.VERSION_ADDITIONS, key=_key)
-    for accessor in (
+def test_a_patch_version_reads_as_its_minor():
+    for version in REGISTERED:
+        assert td.get_all_terms_by_category(
+            f"{version}.7"
+        ) == td.get_all_terms_by_category(version)
+
+
+def test_a_bare_major_reads_as_its_first_minor():
+    major = _key(REGISTERED[0])[0]
+    assert td.get_all_terms_by_category(str(major)) == td.get_all_terms_by_category(
+        f"{major}.0"
+    )
+
+
+@pytest.mark.parametrize("malformed", ["latest", "", "3.13rc1", "3.x", "three.ten"])
+@pytest.mark.parametrize(
+    "accessor",
+    [
         td.get_keywords_for_version,
         td.get_builtins_for_version,
         td.get_exceptions_for_version,
-    ):
-        accessor(newest).append("mutated")
-        assert "mutated" not in accessor(newest)
-    td.get_all_terms_by_category(newest)["builtin_func"].append("mutated")
-    assert "mutated" not in td.BUILTIN_FUNCTIONS
-    assert "mutated" not in td.get_all_terms_by_category(newest)["builtin_func"]
+        td.get_all_terms_by_category,
+        lambda version: td.classify_term("print", version),
+        lambda version: td.is_python_term("print", version),
+    ],
+    ids=[
+        "keywords",
+        "builtins",
+        "exceptions",
+        "by_category",
+        "classify_term",
+        "is_python_term",
+    ],
+)
+def test_a_malformed_version_is_refused_by_name(accessor, malformed):
+    # Compared as text, these used to give an arbitrary answer.
+    with pytest.raises(ValueError, match="not an X.Y version string") as excinfo:
+        accessor(malformed)
+    assert repr(malformed) in str(excinfo.value)
+
+
+@pytest.mark.parametrize("version", VERSIONS_TO_ASK)
+def test_the_accessors_hand_out_copies(version):
+    # At every version, not only the newest: below the first release that
+    # adds to a category, an accessor could hand out the module's own list.
+    before = copy.deepcopy(
+        {
+            name: value
+            for name, value in vars(td).items()
+            if name.isupper() and isinstance(value, (list, dict))
+        }
+    )
+    try:
+        for result in (
+            td.get_keywords_for_version(version),
+            td.get_builtins_for_version(version),
+            td.get_exceptions_for_version(version),
+            *td.get_all_terms_by_category(version).values(),
+        ):
+            result.append("mutated")
+            result.clear()
+        after = {name: getattr(td, name) for name in before}
+        assert after == before
+    finally:
+        # A failure here means a module list was emptied. Put the contents
+        # back in place so the tests that run after this one still mean
+        # something.
+        for name, value in before.items():
+            current = getattr(td, name)
+            if isinstance(current, list) and current != value:
+                current[:] = value
 
 
 def test_every_per_release_list_in_the_module_is_in_the_table():

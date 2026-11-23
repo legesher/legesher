@@ -157,8 +157,10 @@ EXCEPTIONS_STDLIB_ONLY = {"windowserror"}
 #  - True/False/None: tracked as keywords (their real token category)
 #  - the ``builtins`` module's own attributes (``__doc__``, ``__name__``,
 #    ``__package__``, ``__spec__``, ``__loader__``), the ``__debug__``
-#    constant, and ``__build_class__``, which the ``class`` statement calls
-#    and nobody writes. None is a word a programmer types.
+#    constant, and ``__build_class__``, which the ``class`` statement calls.
+#    They are not built-in functions or types, so they are not pack terms.
+#    ``test_no_tracked_builtin_is_on_the_interpreter_only_list`` keeps this
+#    list and the inventory apart.
 # ``type`` is tracked BOTH as a builtin (BUILTIN_TYPES) and as the PEP 695
 # keyword (@3.12) since CORE-1400 — the two are distinct pack slots.
 # NOTE: names Legesher DOES track (e.g. `help`) must NOT be listed here — an
@@ -202,6 +204,57 @@ def test_every_release_the_inventory_registers_is_indexed_or_pending():
         set(VERSION_ADDITIONS) - set(INDEXED_VERSIONS) - set(INDEX_ENTRY_PENDING)
     )
     assert unaccounted == [], unaccounted
+
+
+def test_every_indexed_release_is_registered_in_the_inventory():
+    # The index must not list a release the inventory has no row for: the
+    # row is what says the release was checked, even when it added nothing.
+    unregistered = sorted(set(INDEXED_VERSIONS) - set(VERSION_ADDITIONS))
+    assert unregistered == [], unregistered
+
+
+@pytest.mark.parametrize("version", list(VERSION_ADDITIONS))
+def test_no_tracked_builtin_is_on_the_interpreter_only_list(version):
+    # ``test_no_fabricated_builtins`` cannot see a name on
+    # ``BUILTINS_STDLIB_ONLY``: the interpreter really has it. So a name on
+    # that list must never be tracked, at any registered release, from
+    # either source.
+    tracked = {name.lower() for name in get_builtins_for_version(version)}
+    assert sorted(tracked & BUILTINS_STDLIB_ONLY) == []
+    if version in INDEXED_VERSIONS:
+        indexed = {name.lower() for name in _index().get_all_builtins(version)}
+        assert sorted(indexed & BUILTINS_STDLIB_ONLY) == []
+
+
+def test_a_built_in_added_after_the_base_is_filed_as_what_the_interpreter_says():
+    # For the base lists the split between functions and types follows the
+    # library reference's table and is settled. For anything a later release
+    # adds, the interpreter decides: a class is a type. The category is part
+    # of a term's identity in the translations database, so a wrong one is
+    # not cosmetic. Only releases this interpreter has can be checked; the
+    # count below says how many were.
+    checked = 0
+    for version, by_category in VERSION_ADDITIONS.items():
+        for category in ("builtin_func", "builtin_type"):
+            for name in by_category.get(category, []):
+                real_name = next(
+                    (n for n in dir(builtins) if n.lower() == name.lower()), None
+                )
+                if real_name is None:
+                    continue
+                is_class = isinstance(getattr(builtins, real_name), type)
+                assert is_class == (category == "builtin_type"), (
+                    f"{version} {name}: registered as {category}, the "
+                    f"interpreter says {'class' if is_class else 'function'}"
+                )
+                checked += 1
+    expected = sum(
+        len(by_category.get(category, []))
+        for version, by_category in VERSION_ADDITIONS.items()
+        if _version_key(version) <= _version_key(RUNNING_VERSION)
+        for category in ("builtin_func", "builtin_type")
+    )
+    assert checked == expected
 
 
 @pytest.mark.parametrize("version", INDEXED_VERSIONS)

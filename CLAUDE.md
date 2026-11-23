@@ -97,9 +97,10 @@ Where this and generic testing advice disagree, this wins.
   it. Loosening an assertion, commenting out a case or adding a print-and-continue path is a defect in the test.
 - **Ledgers in the tree:** `KNOWN_ROUND_TRIP_FAILURES` in `libs/core/tests/integration/test_every_pack.py` (same
   shape in `libs/mcp/tests/test_roundtrip_sweep.py`); the interpreter-gap ledger in
-  `libs/core/tests/interpreter_gaps.py` (CPython 3.10/3.11 tokenizer and pre-Unicode-15.1 identifier rules); and
-  `STALE_VERSION_MAX` in `libs/core/tests/integration/test_all_languages_parametrized.py`. Add to an existing
-  ledger before inventing a new one.
+  `libs/core/tests/interpreter_gaps.py` (CPython 3.10/3.11 tokenizer and pre-Unicode-15.1 identifier rules);
+  `STALE_VERSION_MAX` in `libs/core/tests/integration/test_all_languages_parametrized.py`; and
+  `INDEX_ENTRY_PENDING` in `libs/i18n/tests/test_baseline_against_stdlib.py` (a Python release the term inventory
+  registers before `version-index.yml` lists it). Add to an existing ledger before inventing a new one.
 - **Parametrize language coverage from `get_active_language_codes()`.** A frozen `["es", "ar"]` with the rest
   commented out passes while testing almost nothing.
 - **One corpus.** Cross-pack constructs go in `libs/core/tests/fixtures/corpus/`, registered in

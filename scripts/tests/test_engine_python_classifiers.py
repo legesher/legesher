@@ -5,7 +5,9 @@ their own tiers). Each carries a hand-kept list of
 ``Programming Language :: Python :: 3.X`` classifiers. A new Python release
 has to reach all six; this guard fails when one is forgotten, when a list has
 a hole in it, or when the lists stop short of the newest release the term
-inventory registers.
+inventory registers. The inventory has a row for every release it has been
+checked against, including one that added no word, so "newest registered" is
+not "newest that added something".
 """
 
 from __future__ import annotations
@@ -14,7 +16,7 @@ import re
 from pathlib import Path
 
 import pytest
-from legesher_i18n.term_definitions import VERSION_ADDITIONS
+from legesher_i18n.term_definitions import NEWEST_REGISTERED_VERSION
 
 ROOT = Path(__file__).resolve().parents[2]
 ENGINE_PACKAGES = (
@@ -91,12 +93,8 @@ def test_all_engine_packages_declare_the_same_versions() -> None:
 def test_classifiers_reach_the_newest_release_the_inventory_registers(
     package: str,
 ) -> None:
-    registered = [
-        (int(major), int(minor))
-        for major, minor in (version.split(".") for version in VERSION_ADDITIONS)
-    ]
-    assert registered, "the term inventory registers no release"
-    newest = max(registered)
+    major, minor = NEWEST_REGISTERED_VERSION.split(".")
+    newest = (int(major), int(minor))
     assert _declared(package)[-1] >= newest, (
         f"libs/{package}/pyproject.toml stops at {_declared(package)[-1]}; the term "
         f"inventory registers Python {newest[0]}.{newest[1]}"

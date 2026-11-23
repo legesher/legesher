@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- The package declares Python 3.14 and 3.15 in its classifiers.
+
 ## [0.3.0] - 2026-11-03
 
 ### Fixed

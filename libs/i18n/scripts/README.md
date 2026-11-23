@@ -27,7 +27,8 @@ python extract_python_content.py --version 3.14 --output python-content-3.14.jso
 python extract_python_content.py --version 3.14 --method github --output python-content-3.14.json
 ```
 
-**Output:** JSON file with 114 items (39 keywords + 49 builtins + 26 types)
+**Output:** a JSON file with that Python's keywords, built-in functions (dunder ones such as `__import__`
+included) and built-in types. The counts differ from one Python release to the next.
 
 ### 2. `monitor_python.py`
 

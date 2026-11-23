@@ -159,17 +159,15 @@ def _as_numbers(version: str) -> tuple[int, ...]:
 
 
 def test_the_fallback_list_reaches_the_newest_release_the_term_inventory_registers() -> None:
-    """A pack-less install offers every Python release the engine knows the words of.
+    """A pack-less install offers every Python release the term inventory registers.
 
     The fallback list is kept by hand, so a new release has to be added to it.
-    The term inventory is where a release is registered first; tied to it, the
-    list cannot be left behind.
+    The term inventory is where a release is registered first, and this ties
+    the list to it.
     """
-    from legesher_i18n.term_definitions import VERSION_ADDITIONS
+    from legesher_i18n.term_definitions import NEWEST_REGISTERED_VERSION
 
-    registered = [_as_numbers(version) for version in VERSION_ADDITIONS]
-    assert registered, "the term inventory registers no release"
-    assert _as_numbers(_FALLBACK_VERSIONS[-1]) >= max(registered)
+    assert _as_numbers(_FALLBACK_VERSIONS[-1]) >= _as_numbers(NEWEST_REGISTERED_VERSION)
 
 
 def test_the_fallback_list_is_every_minor_in_order() -> None:

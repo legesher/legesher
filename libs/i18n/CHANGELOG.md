@@ -21,8 +21,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   English. The `version-index.yml` entry for 3.15 arrives with the 3.15 pack
   files, because the index is also the list of files every pack ships.
 - **`VERSION_ADDITIONS`** in `term_definitions`: one table of what each
-  Python release added. Every version-aware accessor reads it, so a new
-  release is registered in one place.
+  Python release added, with a row for every release from 3.10 to the newest
+  one registered (`NEWEST_REGISTERED_VERSION`). Every version-aware accessor
+  in the module reads it.
 
 ### Changed
 
@@ -31,7 +32,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   the same built-ins for every version, which was correct while no supported
   release had added one.
 - Version arguments to the `term_definitions` accessors compare as numbers.
-  Compared as text, `"3.9"` sorted after `"3.10"`.
+  Compared as text, `"3.9"` sorted after `"3.10"`. A version that is not
+  `X.Y` numbers (`"latest"`, an empty string) now raises `ValueError`; it
+  used to be compared as text and give an arbitrary answer.
+- `scripts/translate/import_yaml_to_db.py` files a new pack slot using the
+  newest registered release's term lists. It used the 3.13 lists, which
+  would have filed a built-in type added by a later release as a function.
 - `scripts/extract_python_content.py` reports dunder built-ins:
   `__import__`, and `__lazy_import__` on Python 3.15. It skipped every name
   that starts with an underscore, so comparing two releases' extractions
