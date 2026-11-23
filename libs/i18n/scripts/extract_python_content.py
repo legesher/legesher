@@ -56,6 +56,26 @@ except ImportError:
     )
 
 
+#: Dunder names in ``builtins`` that are not words a programmer writes: the
+#: function the ``class`` statement calls, and the module's own loader class.
+#: Every OTHER callable dunder is extracted. ``__import__`` is a pack term,
+#: and Python 3.15 added ``__lazy_import__`` beside it; skipping every
+#: underscore name hid both, so a diff of two releases' extractions
+#: under-reported what the newer one added.
+UNTRACKED_DUNDER_BUILTINS = frozenset({"__build_class__", "__loader__"})
+
+
+def _is_skipped_builtin_name(name: str) -> bool:
+    """Whether a name in ``builtins`` is left out of the extraction.
+
+    Private names (one leading underscore) are implementation details.
+    Dunder names are kept unless :data:`UNTRACKED_DUNDER_BUILTINS` names them.
+    """
+    if name.startswith("__") and name.endswith("__"):
+        return name in UNTRACKED_DUNDER_BUILTINS
+    return name.startswith("_")
+
+
 class PythonContentExtractor:
     """Extract localizable content from Python."""
 
@@ -102,7 +122,7 @@ class PythonContentExtractor:
         functions = {}
 
         for name in dir(builtins):
-            if name.startswith("_"):
+            if _is_skipped_builtin_name(name):
                 continue
 
             obj = getattr(builtins, name)
@@ -133,7 +153,7 @@ class PythonContentExtractor:
         types = {}
 
         for name in dir(builtins):
-            if name.startswith("_"):
+            if _is_skipped_builtin_name(name):
                 continue
 
             obj = getattr(builtins, name)

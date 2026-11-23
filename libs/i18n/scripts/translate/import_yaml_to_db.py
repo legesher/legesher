@@ -44,6 +44,7 @@ from legesher_i18n.pack_messages import (
 )
 from legesher_i18n.term_definitions import (
     YAML_SECTION_CATEGORIES,
+    NEWEST_REGISTERED_VERSION,
     get_all_terms_by_category,
 )
 from scripts.seed_message_templates import missing_locales, probe_database
@@ -62,13 +63,16 @@ SKIP_LANGUAGES = {"en"}
 
 # Canonical membership per category, lowercased. This is the data that says
 # which of a section's categories a name really belongs to, so a row created
-# from a pack does not have to guess. Version 3.13 covers every shipped pack
-# version; the multi-category ``builtins`` section is version-independent
-# anyway (BUILTIN_FUNCTIONS / BUILTIN_TYPES / SPECIAL_CONSTANTS are fixed
-# lists, and they are disjoint, so at most one category can match).
+# from a pack does not have to guess. Built at the newest release the term
+# inventory registers, so it covers every pack file there can be: the
+# multi-category ``builtins`` section gained members in Python 3.15, and a
+# fixed older version would file a new built-in type as a function. The
+# section's categories stay disjoint, so at most one can match.
 _CATEGORY_MEMBERS: dict[str, frozenset[str]] = {
     category: frozenset(name.lower() for name in names)
-    for category, names in get_all_terms_by_category(python_version="3.13").items()
+    for category, names in get_all_terms_by_category(
+        python_version=NEWEST_REGISTERED_VERSION
+    ).items()
 }
 
 

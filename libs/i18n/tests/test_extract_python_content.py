@@ -374,3 +374,92 @@ class TestEdgeCases:
     def test_github_fetch_failure(self):
         """Test handling of GitHub fetch failures (skipped - requires complex mocking)."""
         pass
+
+
+class TestDunderBuiltins:
+    """Dunder builtins are extracted, so a release that adds one is not under-reported.
+
+    ``__import__`` is a pack term, and Python 3.15 added ``__lazy_import__``
+    beside it. An extractor that skipped every underscore name reported
+    neither, so a diff of two releases' extractions missed the new one.
+    """
+
+    @staticmethod
+    def _extracted_dunders() -> set[str]:
+        extractor = PythonContentExtractor()
+        names = set(extractor.extract_builtin_functions()) | set(
+            extractor.extract_builtin_types()
+        )
+        return {name for name in names if name.startswith("__")}
+
+    def test_the_extraction_reports_the_dunders_the_inventory_tracks(self):
+        from legesher_i18n.term_definitions import get_builtins_for_version
+
+        running = f"{sys.version_info.major}.{sys.version_info.minor}"
+        tracked = {
+            name for name in get_builtins_for_version(running) if name.startswith("__")
+        }
+        assert tracked, "the inventory tracks __import__ on every release"
+        # Equality, both ways: a tracked dunder the extractor drops is the old
+        # bug, and an extracted dunder the inventory does not track is a new
+        # builtin somebody has to decide about.
+        assert self._extracted_dunders() == tracked
+
+    def test_a_dunder_is_extracted_exactly_when_the_interpreter_has_it(self):
+        import builtins
+
+        from extract_python_content import UNTRACKED_DUNDER_BUILTINS
+
+        present = {
+            name
+            for name in dir(builtins)
+            if name.startswith("__")
+            and callable(getattr(builtins, name))
+            and name not in UNTRACKED_DUNDER_BUILTINS
+        }
+        assert self._extracted_dunders() == present
+
+    def test_the_untracked_dunders_are_real_and_are_left_out(self):
+        import builtins
+
+        from extract_python_content import UNTRACKED_DUNDER_BUILTINS
+
+        assert UNTRACKED_DUNDER_BUILTINS, "nothing would be checked"
+        for name in UNTRACKED_DUNDER_BUILTINS:
+            assert hasattr(builtins, name), f"{name} is not a builtin; drop it"
+        assert not self._extracted_dunders() & UNTRACKED_DUNDER_BUILTINS
+
+    def test_which_names_are_left_out(self):
+        # Asked of the rule itself, with names that need not exist: no
+        # ``builtins`` has a single-underscore name before 3.13, so a check
+        # of the extraction alone proves nothing there.
+        from extract_python_content import (
+            UNTRACKED_DUNDER_BUILTINS,
+            _is_skipped_builtin_name,
+        )
+
+        for kept in ("print", "__import__", "__lazy_import__", "__anything_new__"):
+            assert not _is_skipped_builtin_name(kept), kept
+        for skipped in (
+            "_private",
+            "_IncompleteInputError",
+            "__half_dunder",
+            "_",
+            *UNTRACKED_DUNDER_BUILTINS,
+        ):
+            assert _is_skipped_builtin_name(skipped), skipped
+
+    def test_private_single_underscore_names_stay_out(self):
+        extractor = PythonContentExtractor()
+        names = set(extractor.extract_builtin_functions()) | set(
+            extractor.extract_builtin_types()
+        )
+        private = sorted(
+            name for name in names if name.startswith("_") and not name.startswith("__")
+        )
+        assert private == []
+
+    def test_an_extracted_dunder_carries_the_same_fields_as_any_function(self):
+        functions = PythonContentExtractor().extract_builtin_functions()
+        assert functions["__import__"].keys() == functions["print"].keys()
+        assert functions["__import__"]["name"] == "__import__"

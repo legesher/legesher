@@ -152,3 +152,34 @@ async def test_terms_resource_version_cannot_traverse_paths(client: ClientSessio
     with pytest.raises(McpError) as excinfo:
         await client.read_resource(AnyUrl("legesher://languages/es/terms/..%2F..%2Fetc"))
     assert_sanitized(str(excinfo.value))
+
+
+def _as_numbers(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in version.split("."))
+
+
+def test_the_fallback_list_reaches_the_newest_release_the_term_inventory_registers() -> None:
+    """A pack-less install offers every Python release the term inventory registers.
+
+    The fallback list is kept by hand, so a new release has to be added to it.
+    The term inventory is where a release is registered first, and this ties
+    the list to it.
+    """
+    from legesher_i18n.term_definitions import NEWEST_REGISTERED_VERSION
+
+    assert _as_numbers(_FALLBACK_VERSIONS[-1]) >= _as_numbers(NEWEST_REGISTERED_VERSION)
+
+
+def test_the_fallback_list_is_every_minor_in_order() -> None:
+    """No release is skipped or repeated, and the list is oldest first."""
+    as_numbers = [_as_numbers(version) for version in _FALLBACK_VERSIONS]
+    major, first_minor = as_numbers[0]
+    assert as_numbers == [(major, minor) for minor in range(first_minor, as_numbers[-1][1] + 1)]
+
+
+def test_the_fallback_list_covers_every_tier_the_packs_ship() -> None:
+    """With no packs installed the server must not offer less than it does with them."""
+    on_disk = LanguagePackLoader().list_available_versions("python")
+    assert on_disk, "no pack tier was discovered"
+    assert set(on_disk) <= set(_FALLBACK_VERSIONS)
+    assert DEFAULT_PYTHON_VERSION in _FALLBACK_VERSIONS

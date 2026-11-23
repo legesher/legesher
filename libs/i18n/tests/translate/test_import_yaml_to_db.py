@@ -228,3 +228,180 @@ class TestResolveTermId:
             resolve_term_id(db, "unheardof", YAML_SECTION_CATEGORIES["keywords"])
             == term_id
         )
+
+
+def _added_section_terms() -> list:
+    """``(section, category, name)`` for every term a release after the base added."""
+    from legesher_i18n.term_definitions import (
+        TERM_TYPE_YAML_SECTIONS,
+        VERSION_ADDITIONS,
+    )
+
+    return [
+        pytest.param(
+            TERM_TYPE_YAML_SECTIONS[category],
+            category,
+            name,
+            id=f"{version}-{category}-{name}",
+        )
+        for version, by_category in VERSION_ADDITIONS.items()
+        for category, names in by_category.items()
+        for name in names
+    ]
+
+
+@pytest.mark.parametrize(("section", "category", "name"), _added_section_terms())
+def test_a_term_a_later_release_added_is_filed_in_its_own_category(
+    section, category, name
+):
+    """A pack slot for a newer release's term gets the inventory's category.
+
+    The membership table was built at a fixed Python version. A built-in type
+    added after that version was unknown to it and fell back to the section's
+    first category, a function.
+    """
+    from scripts.translate.import_yaml_to_db import _create_category
+
+    assert _create_category(name, YAML_SECTION_CATEGORIES[section]) == (category, True)
+
+
+@pytest.mark.parametrize(("section", "category", "name"), _added_section_terms())
+def test_both_writers_of_term_rows_file_an_added_term_on_one_row(
+    db, section, category, name
+):
+    """The generation pipeline and this importer agree on a newer release's term.
+
+    They are the two places that classify a Python term before writing its
+    row. Classifying at different Python releases, one filed ``frozendict`` as
+    ``unknown`` and the other as ``builtin_type``: two rows for one pack slot.
+    """
+    from scripts.translate.pipeline import python_term_category, resolve_read_category
+
+    def rows() -> list:
+        return [
+            row
+            for row in db.get_terms(programming_language="python")
+            if row["name"] == name
+        ]
+
+    section_categories = YAML_SECTION_CATEGORIES[section]
+
+    # The pipeline writes first, the importer resolves the same slot.
+    written = db.get_or_create_term(
+        name=name, programming_language="python", category=python_term_category(name)
+    )
+    assert resolve_term_id(db, name, section_categories) == written
+    assert [row["category"] for row in rows()] == [category]
+
+    # And the pipeline's skip-existing read lands on that row.
+    assert resolve_read_category(db, name) == category
+
+
+@pytest.mark.parametrize(("section", "category", "name"), _added_section_terms())
+def test_the_importer_first_then_the_pipeline_is_one_row_too(
+    db, section, category, name
+):
+    """The importer creates the row, then the pipeline writes the same term.
+
+    This order guards the importer's side: the category it files a newer
+    release's built-in type under, and the pipeline's write reusing that row
+    rather than adding one. (The pipeline's own release is guarded by the
+    test above; this one stays green if only that moves.)
+    """
+    from scripts.translate.pipeline import python_term_category
+
+    def rows() -> list:
+        return [
+            row
+            for row in db.get_terms(programming_language="python")
+            if row["name"] == name
+        ]
+
+    imported = resolve_term_id(db, name, YAML_SECTION_CATEGORIES[section])
+    written = db.get_or_create_term(
+        name=name, programming_language="python", category=python_term_category(name)
+    )
+    assert written == imported
+    assert [row["category"] for row in rows()] == [category]
+
+
+def test_the_pipeline_classifies_every_default_term_as_it_did_at_the_pinned_release():
+    """Classifying at the newest release changes nothing for a term a default run translates.
+
+    The default run's term list is built at ``DEFAULT_RUN_PYTHON_VERSION``;
+    each of those terms must classify there exactly as the pipeline's helper
+    classifies it.
+    """
+    from legesher_i18n.term_definitions import get_all_terms_by_category
+    from scripts.translate.pipeline import (
+        DEFAULT_RUN_PYTHON_VERSION,
+        python_term_category,
+    )
+
+    default_terms = [
+        term
+        for category, terms in get_all_terms_by_category(
+            python_version=DEFAULT_RUN_PYTHON_VERSION
+        ).items()
+        if category != "helper"
+        for term in terms
+    ]
+    assert len(default_terms) > 150, "the default term list was not read"
+    moved = {
+        term: (
+            classify_term(term, python_version=DEFAULT_RUN_PYTHON_VERSION),
+            python_term_category(term),
+        )
+        for term in default_terms
+        if classify_term(term, python_version=DEFAULT_RUN_PYTHON_VERSION)
+        != python_term_category(term)
+    }
+    assert moved == {}
+
+
+def test_a_default_pipeline_run_translates_the_terms_of_the_newest_pack_file(tmp_path):
+    """What a default run translates follows the pack files, not the term inventory.
+
+    Registering a release in the inventory must not make the next default run
+    translate, and bill for, words no pack has a file for. And the default
+    list must not fall behind the packs either: it is the term list of the
+    newest release ``version-index.yml`` lists, which is the newest file every
+    pack ships.
+    """
+    from legesher_i18n.term_definitions import get_all_terms_by_category
+    from legesher_i18n.version_index import VersionIndex
+    from scripts.translate.pipeline import (
+        DEFAULT_RUN_PYTHON_VERSION,
+        PipelineConfig,
+        TranslationPipeline,
+    )
+    from tests import language_packs_root
+
+    def terms_at(version: str) -> list[str]:
+        return [
+            term
+            for category, terms in get_all_terms_by_category(version).items()
+            if category != "helper"
+            for term in terms
+        ]
+
+    indexed = sorted(
+        VersionIndex.load(language_packs_root() / "version-index.yml").versions,
+        key=lambda version: tuple(int(part) for part in version.split(".")),
+    )
+    assert DEFAULT_RUN_PYTHON_VERSION in indexed
+
+    pipeline = TranslationPipeline(
+        PipelineConfig(
+            models=["claude"],
+            languages=["ar"],
+            dry_run=True,
+            output_db=tmp_path / "translations.db",
+        )
+    )
+    default_run = pipeline._get_terms_to_translate()
+    assert len(default_run) > 150, "the default term list was not read"
+    # The method really reads the named release ...
+    assert default_run == list(dict.fromkeys(terms_at(DEFAULT_RUN_PYTHON_VERSION)))
+    # ... and that is every term of the newest file the packs ship, no more.
+    assert sorted(set(default_run) ^ set(terms_at(indexed[-1]))) == []
