@@ -263,3 +263,80 @@ def test_a_term_a_later_release_added_is_filed_in_its_own_category(
     from scripts.translate.import_yaml_to_db import _create_category
 
     assert _create_category(name, YAML_SECTION_CATEGORIES[section]) == (category, True)
+
+
+@pytest.mark.parametrize(("section", "category", "name"), _added_section_terms())
+def test_both_writers_of_term_rows_file_an_added_term_on_one_row(
+    db, section, category, name
+):
+    """The generation pipeline and this importer agree on a newer release's term.
+
+    They are the only two writers of Python term rows. Classifying at
+    different Python releases, one filed ``frozendict`` as ``unknown`` and the
+    other as ``builtin_type``: two rows for one pack slot.
+    """
+    from scripts.translate.pipeline import python_term_category, resolve_read_category
+
+    def rows() -> list:
+        return [
+            row
+            for row in db.get_terms(programming_language="python")
+            if row["name"] == name
+        ]
+
+    section_categories = YAML_SECTION_CATEGORIES[section]
+
+    # The pipeline writes first, the importer resolves the same slot.
+    written = db.get_or_create_term(
+        name=name, programming_language="python", category=python_term_category(name)
+    )
+    assert resolve_term_id(db, name, section_categories) == written
+    assert [row["category"] for row in rows()] == [category]
+
+    # And the pipeline's skip-existing read lands on that row.
+    assert resolve_read_category(db, name) == category
+
+
+@pytest.mark.parametrize(("section", "category", "name"), _added_section_terms())
+def test_the_importer_first_then_the_pipeline_is_one_row_too(
+    db, section, category, name
+):
+    from scripts.translate.pipeline import python_term_category
+
+    def rows() -> list:
+        return [
+            row
+            for row in db.get_terms(programming_language="python")
+            if row["name"] == name
+        ]
+
+    imported = resolve_term_id(db, name, YAML_SECTION_CATEGORIES[section])
+    written = db.get_or_create_term(
+        name=name, programming_language="python", category=python_term_category(name)
+    )
+    assert written == imported
+    assert [row["category"] for row in rows()] == [category]
+
+
+def test_the_pipeline_classifies_every_default_term_as_it_did_at_the_pinned_release():
+    """Classifying at the newest release changes nothing for a term a default run translates.
+
+    The default run's term list is built at a fixed release; each of those
+    terms must classify there exactly as the pipeline's helper classifies it.
+    """
+    from legesher_i18n.term_definitions import get_all_terms_by_category
+    from scripts.translate.pipeline import python_term_category
+
+    default_terms = [
+        term
+        for category, terms in get_all_terms_by_category(python_version="3.13").items()
+        if category != "helper"
+        for term in terms
+    ]
+    assert len(default_terms) > 150, "the default term list was not read"
+    moved = {
+        term: (classify_term(term, python_version="3.13"), python_term_category(term))
+        for term in default_terms
+        if classify_term(term, python_version="3.13") != python_term_category(term)
+    }
+    assert moved == {}

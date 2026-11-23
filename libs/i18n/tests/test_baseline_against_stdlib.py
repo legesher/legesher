@@ -158,7 +158,8 @@ EXCEPTIONS_STDLIB_ONLY = {"windowserror"}
 #  - the ``builtins`` module's own attributes (``__doc__``, ``__name__``,
 #    ``__package__``, ``__spec__``, ``__loader__``), the ``__debug__``
 #    constant, and ``__build_class__``, which the ``class`` statement calls.
-#    They are not built-in functions or types, so they are not pack terms.
+#    None of them is in the library reference's list of built-in functions
+#    and types, so none is a pack term.
 #    ``test_no_tracked_builtin_is_on_the_interpreter_only_list`` keeps this
 #    list and the inventory apart.
 # ``type`` is tracked BOTH as a builtin (BUILTIN_TYPES) and as the PEP 695

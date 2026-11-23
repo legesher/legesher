@@ -14,7 +14,9 @@ the repository root, which is said where it applies.
   `3.14.yml` each `extends:` the previous file and hold only that version's additions. `version-index.yml` records
   what each Python version added. A new Python release is registered first in `legesher_i18n/term_definitions.py`
   (`VERSION_ADDITIONS`); the index gains its entry in the change that ships the pack files for that release, because
-  the pack tests and the review-template contract read the index as the list of files every pack has. Sections:
+  the pack tests and the review-template contract read the index as the list of files every pack has. A release's
+  row is checked against the interpreter only when the tests run on that release, so run
+  `tests/test_baseline_against_stdlib.py` on the new interpreter before trusting a new row. Sections:
   `keywords`, `builtins`, `exceptions`, `implicit_params` (`self`/`cls`), the optional vocabulary sections `symbols`
   and `variable_conventions` (`docs/pack-vocabulary.md`), and the optional `messages` section for localized error
   messages (`docs/pack-messages.md`; es and ar carry it).

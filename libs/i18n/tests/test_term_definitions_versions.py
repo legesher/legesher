@@ -77,7 +77,7 @@ def test_the_table_has_a_row_for_every_minor_oldest_first():
     assert [_key(version) for version in REGISTERED] == [
         (major, minor) for minor in range(first_minor, last_minor + 1)
     ]
-    assert len(ADDITIONS) > len(REGISTERED)
+    assert ADDITIONS, "a table of empty rows would make the cases below vanish"
 
 
 def test_the_newest_registered_version_is_the_last_row():

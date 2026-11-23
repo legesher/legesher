@@ -293,7 +293,7 @@ python generate_language_pack.py \
 ```text
 monitor_python.py → Detects Python 3.14
       ↓
-extract_python_content.py → Extracts 114 items
+extract_python_content.py → Extracts keywords, built-ins and types
       ↓
 translate_content.py → Translates new items (95%+ reuse)
       ↓
@@ -318,10 +318,11 @@ GitHub Actions → Creates PR for review
 
 ### Comprehensive Content
 
-- **39 keywords**: All hard + soft keywords
-- **49 built-in functions**: With docstrings for hover
-- **26 built-in types**: Core types (exceptions deferred to Phase 2)
-- **Total: 114 items** per language pack
+- **Keywords**: All hard + soft keywords
+- **Built-in functions**: With docstrings for hover
+- **Built-in types**
+
+The number of each differs from one Python release to the next.
 
 ## Maintenance
 
