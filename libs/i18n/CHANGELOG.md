@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.28.2] - 2026-11-23
+
 ### Added
 
 - **The term inventory knows the words Python 3.15 added.**

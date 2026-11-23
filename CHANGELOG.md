@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.28.2] - 2026-11-23
+
 ### Changed
 
 - **core**, **i18n**, **legesher**, **runtime**, **language-server**,
@@ -1808,9 +1810,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.28.1  | Yes      |
-| legesher-i18n            | 0.28.1  | Yes      |
-| legesher (CLI)           | 0.28.1  | —        |
+| legesher-core            | 0.28.2  | Yes      |
+| legesher-i18n            | 0.28.2  | Yes      |
+| legesher (CLI)           | 0.28.2  | —        |
 | legesher-language-server | 0.3.0   | Yes      |
 | legesher-vscode          | 0.1.8   | —        |
 
