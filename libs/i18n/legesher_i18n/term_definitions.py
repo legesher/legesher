@@ -393,7 +393,7 @@ YAML_SECTION_CATEGORIES: dict[str, list[str]] = {
 # release is one row here (plus its ``*_3_XX`` lists above). A release that
 # added nothing (3.14) has no row. ``aiter`` and ``anext`` arrived in 3.10,
 # the oldest supported release, so they sit in ``BUILTIN_FUNCTIONS``.
-VERSION_ADDITIONS: dict[str, dict[str, list[str]]] = {
+VERSION_ADDITIONS: dict[str, dict[TermCategory, list[str]]] = {
     "3.10": {"keyword": KEYWORDS_3_10},
     "3.11": {"keyword": KEYWORDS_3_11, "exception": EXCEPTIONS_3_11},
     "3.12": {"keyword": KEYWORDS_3_12},
@@ -416,7 +416,7 @@ def _version_key(version: str) -> tuple[int, int]:
     return int(major), int(minor)
 
 
-def _added_through(version: str, category: str) -> list[str]:
+def _added_through(version: str, category: TermCategory) -> list[str]:
     """Every *category* term added by a release at or before *version*."""
     requested = _version_key(version)
     added: list[str] = []

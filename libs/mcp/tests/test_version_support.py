@@ -154,24 +154,29 @@ async def test_terms_resource_version_cannot_traverse_paths(client: ClientSessio
     assert_sanitized(str(excinfo.value))
 
 
-def _classifier_versions() -> tuple[str, ...]:
-    """The Python minors this package's ``pyproject.toml`` classifiers declare."""
-    import re
-    from pathlib import Path
-
-    text = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(encoding="utf-8")
-    return tuple(re.findall(r'"Programming Language :: Python :: (\d+\.\d+)"', text))
+def _as_numbers(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in version.split("."))
 
 
-def test_the_fallback_list_is_the_versions_the_package_declares() -> None:
-    """A pack-less install publishes exactly the Pythons the package says it supports.
+def test_the_fallback_list_reaches_the_newest_release_the_term_inventory_registers() -> None:
+    """A pack-less install offers every Python release the engine knows the words of.
 
-    Both are hand-kept lists, and a new Python release has to reach both: tied
-    together, one cannot be widened without the other.
+    The fallback list is kept by hand, so a new release has to be added to it.
+    The term inventory is where a release is registered first; tied to it, the
+    list cannot be left behind.
     """
-    declared = _classifier_versions()
-    assert declared, "no Python classifiers were read from pyproject.toml"
-    assert _FALLBACK_VERSIONS == declared
+    from legesher_i18n.term_definitions import VERSION_ADDITIONS
+
+    registered = [_as_numbers(version) for version in VERSION_ADDITIONS]
+    assert registered, "the term inventory registers no release"
+    assert _as_numbers(_FALLBACK_VERSIONS[-1]) >= max(registered)
+
+
+def test_the_fallback_list_is_every_minor_in_order() -> None:
+    """No release is skipped or repeated, and the list is oldest first."""
+    as_numbers = [_as_numbers(version) for version in _FALLBACK_VERSIONS]
+    major, first_minor = as_numbers[0]
+    assert as_numbers == [(major, minor) for minor in range(first_minor, as_numbers[-1][1] + 1)]
 
 
 def test_the_fallback_list_covers_every_tier_the_packs_ship() -> None:

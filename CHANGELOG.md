@@ -14,12 +14,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **core**, **i18n**, **legesher**, **runtime**, **language-server**,
   **mcp**: the packages declare Python 3.14 and 3.15 in their classifiers.
   On 3.15 the CLI works since 0.28.0, which serves each language pack's
-  newest file to a newer Python.
-- **i18n**: the term inventory registers the words Python 3.15 added
-  (`lazy`, `frozendict`, `sentinel`, `__lazy_import__`,
-  `ImportCycleError`). No pack translates them yet, so they stay in English
-  in translated code.
-
+  newest file to a newer Python. The words Python 3.15 added (`lazy`,
+  `frozendict`, `sentinel`, `__lazy_import__`, `ImportCycleError`) are not
+  translated yet and stay in English.
 - **install**: the one-line installers install `legesher` 0.28.1, with
   `legesher-core` and `legesher-i18n` 0.28.1. Running one again over an
   earlier install upgrades it.
