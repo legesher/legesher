@@ -271,9 +271,9 @@ def test_both_writers_of_term_rows_file_an_added_term_on_one_row(
 ):
     """The generation pipeline and this importer agree on a newer release's term.
 
-    They are the only two writers of Python term rows. Classifying at
-    different Python releases, one filed ``frozendict`` as ``unknown`` and the
-    other as ``builtin_type``: two rows for one pack slot.
+    They are the two places that classify a Python term before writing its
+    row. Classifying at different Python releases, one filed ``frozendict`` as
+    ``unknown`` and the other as ``builtin_type``: two rows for one pack slot.
     """
     from scripts.translate.pipeline import python_term_category, resolve_read_category
 
