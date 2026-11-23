@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- With no language pack installed, the `python_version` enum the tools
+  publish runs through 3.15 (it stopped at 3.14). With packs installed the
+  enum still comes from the pack files, as before.
+- The package declares Python 3.14 and 3.15 in its classifiers.
+
 ## [0.3.2] - 2026-11-19
 
 ### Added

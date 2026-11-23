@@ -9,6 +9,35 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **The term inventory knows the words Python 3.15 added.**
+  `term_definitions` registers the soft keyword `lazy`, the built-ins
+  `frozendict`, `sentinel` and `__lazy_import__`, and the exception
+  `ImportCycleError`. `classify_term`, `get_keywords_for_version`,
+  `get_builtins_for_version`, `get_exceptions_for_version` and
+  `get_all_terms_by_category` return them from 3.15 on and not before. No
+  pack translates them yet, so code that uses them keeps those words in
+  English. The `version-index.yml` entry for 3.15 arrives with the 3.15 pack
+  files, because the index is also the list of files every pack ships.
+- **`VERSION_ADDITIONS`** in `term_definitions`: one table of what each
+  Python release added. Every version-aware accessor reads it, so a new
+  release is registered in one place.
+
+### Changed
+
+- `get_builtins_for_version`, `classify_term` and
+  `get_all_terms_by_category` are version-aware for built-ins. They returned
+  the same built-ins for every version, which was correct while no supported
+  release had added one.
+- Version arguments to the `term_definitions` accessors compare as numbers.
+  Compared as text, `"3.9"` sorted after `"3.10"`.
+- `scripts/extract_python_content.py` reports dunder built-ins:
+  `__import__`, and `__lazy_import__` on Python 3.15. It skipped every name
+  that starts with an underscore, so comparing two releases' extractions
+  missed a new one. `__build_class__` and `__loader__` stay out.
+- The package declares Python 3.14 and 3.15 in its classifiers.
+
 ## [0.28.1] - 2026-11-19
 
 ## [0.28.0] - 2026-11-19

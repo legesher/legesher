@@ -152,3 +152,31 @@ async def test_terms_resource_version_cannot_traverse_paths(client: ClientSessio
     with pytest.raises(McpError) as excinfo:
         await client.read_resource(AnyUrl("legesher://languages/es/terms/..%2F..%2Fetc"))
     assert_sanitized(str(excinfo.value))
+
+
+def _classifier_versions() -> tuple[str, ...]:
+    """The Python minors this package's ``pyproject.toml`` classifiers declare."""
+    import re
+    from pathlib import Path
+
+    text = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(encoding="utf-8")
+    return tuple(re.findall(r'"Programming Language :: Python :: (\d+\.\d+)"', text))
+
+
+def test_the_fallback_list_is_the_versions_the_package_declares() -> None:
+    """A pack-less install publishes exactly the Pythons the package says it supports.
+
+    Both are hand-kept lists, and a new Python release has to reach both: tied
+    together, one cannot be widened without the other.
+    """
+    declared = _classifier_versions()
+    assert declared, "no Python classifiers were read from pyproject.toml"
+    assert _FALLBACK_VERSIONS == declared
+
+
+def test_the_fallback_list_covers_every_tier_the_packs_ship() -> None:
+    """With no packs installed the server must not offer less than it does with them."""
+    on_disk = LanguagePackLoader().list_available_versions("python")
+    assert on_disk, "no pack tier was discovered"
+    assert set(on_disk) <= set(_FALLBACK_VERSIONS)
+    assert DEFAULT_PYTHON_VERSION in _FALLBACK_VERSIONS

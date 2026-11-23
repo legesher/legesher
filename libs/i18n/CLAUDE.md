@@ -12,9 +12,12 @@ the repository root, which is said where it applies.
   `api/` (optional translation providers, the `[api]` extra).
 - `language-packs/python/<lang>/legesher_i18n_python_<lang>/packs/3.10.yml` is the full base. `3.11.yml` to
   `3.14.yml` each `extends:` the previous file and hold only that version's additions. `version-index.yml` records
-  what each Python version added. Sections: `keywords`, `builtins`, `exceptions`, `implicit_params` (`self`/`cls`),
-  the optional vocabulary sections `symbols` and `variable_conventions` (`docs/pack-vocabulary.md`), and the
-  optional `messages` section for localized error messages (`docs/pack-messages.md`; es and ar carry it).
+  what each Python version added. A new Python release is registered first in `legesher_i18n/term_definitions.py`
+  (`VERSION_ADDITIONS`); the index gains its entry in the change that ships the pack files for that release, because
+  the pack tests and the review-template contract read the index as the list of files every pack has. Sections:
+  `keywords`, `builtins`, `exceptions`, `implicit_params` (`self`/`cls`), the optional vocabulary sections `symbols`
+  and `variable_conventions` (`docs/pack-vocabulary.md`), and the optional `messages` section for localized error
+  messages (`docs/pack-messages.md`; es and ar carry it).
 - `scripts/` (this package's): DB writers, the regen gate, migrations, exporters. `scripts/translate/`: the
   generation pipeline, `yaml_exporter.py`, prompts. Root `scripts/` holds the REFERENCE.md and README-count
   generators.

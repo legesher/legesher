@@ -25,7 +25,7 @@ DEFAULT_PYTHON_VERSION = "3.13"
 #: no language packs yet. Publishing an empty enum would make every tool
 #: call unschedulable; publishing the documented baseline lets calls through
 #: to the engine, which answers with a sanitized ``language_pack_not_found``.
-_FALLBACK_VERSIONS: tuple[str, ...] = ("3.10", "3.11", "3.12", "3.13", "3.14")
+_FALLBACK_VERSIONS: tuple[str, ...] = ("3.10", "3.11", "3.12", "3.13", "3.14", "3.15")
 
 
 def _version_sort_key(version: str) -> tuple[int, ...]:

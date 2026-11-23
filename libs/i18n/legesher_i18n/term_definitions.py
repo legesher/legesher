@@ -13,6 +13,13 @@ This module is the canonical source for:
 The version_index.py module imports these base terms and applies version deltas
 from version-index.yml to provide complete term sets for any Python version.
 
+What each Python release added is recorded once, in ``VERSION_ADDITIONS``.
+Every version-aware accessor here reads that table, so registering a release
+is one row. The same additions are mirrored in ``version-index.yml`` once the
+packs ship a file for the release; until then this module is the only place
+that knows them. ``tests/test_baseline_against_stdlib.py`` reconciles both
+copies against the running interpreter.
+
 Term type to YAML section mapping is also defined here for consistency across
 the translation pipeline.
 """
@@ -69,6 +76,11 @@ KEYWORDS_3_11 = [
 # Python 3.12+ Keywords (PEP 695: Type Parameter Syntax)
 KEYWORDS_3_12 = [
     "type",  # Note: 'type' is also a builtin, but becomes keyword in 3.12
+]
+
+# Python 3.15+ Keywords (PEP 810: Explicit Lazy Imports)
+KEYWORDS_3_15 = [
+    "lazy",  # Soft keyword: ``lazy import x`` / ``lazy from x import y``
 ]
 
 # Special Values (also considered keywords in Python)
@@ -138,6 +150,15 @@ BUILTIN_FUNCTIONS = [
     "zip",
 ]
 
+# Built-in functions added in Python 3.15.
+#
+# ``__lazy_import__`` (PEP 810) is the function behind ``lazy import``, as
+# ``__import__`` is the one behind ``import``. It is a pack term for the same
+# reason ``__import__`` is.
+BUILTIN_FUNCTIONS_3_15 = [
+    "__lazy_import__",
+]
+
 # Built-in Types (constructors)
 BUILTIN_TYPES = [
     "bool",
@@ -166,7 +187,13 @@ BUILTIN_TYPES = [
     "type",
 ]
 
-# All Python Built-in Exceptions (Python 3.13)
+# Built-in types added in Python 3.15.
+BUILTIN_TYPES_3_15 = [
+    "frozendict",  # PEP 814: an immutable mapping
+    "sentinel",  # PEP 661: sentinel values
+]
+
+# All Python Built-in Exceptions (the 3.10 base; later releases add below)
 # Organized by hierarchy for clarity
 # See: https://docs.python.org/3/library/exceptions.html
 EXCEPTIONS = [
@@ -275,6 +302,9 @@ EXCEPTIONS_3_11 = [
 EXCEPTIONS_3_13 = [
     "pythonfinalizationerror",
 ]
+EXCEPTIONS_3_15 = [
+    "importcycleerror",  # PEP 810: a lazy import that would import itself
+]
 
 # Special Constants
 SPECIAL_CONSTANTS = [
@@ -355,63 +385,98 @@ YAML_SECTION_CATEGORIES: dict[str, list[str]] = {
 }
 
 
+# What each Python release added, oldest first: release -> category -> terms.
+#
+# THE one place a release is registered. ``get_keywords_for_version``,
+# ``get_builtins_for_version``, ``get_exceptions_for_version``,
+# ``classify_term`` and ``get_all_terms_by_category`` all read it, so a new
+# release is one row here (plus its ``*_3_XX`` lists above). A release that
+# added nothing (3.14) has no row. ``aiter`` and ``anext`` arrived in 3.10,
+# the oldest supported release, so they sit in ``BUILTIN_FUNCTIONS``.
+VERSION_ADDITIONS: dict[str, dict[str, list[str]]] = {
+    "3.10": {"keyword": KEYWORDS_3_10},
+    "3.11": {"keyword": KEYWORDS_3_11, "exception": EXCEPTIONS_3_11},
+    "3.12": {"keyword": KEYWORDS_3_12},
+    "3.13": {"exception": EXCEPTIONS_3_13},
+    "3.15": {
+        "keyword": KEYWORDS_3_15,
+        "builtin_func": BUILTIN_FUNCTIONS_3_15,
+        "builtin_type": BUILTIN_TYPES_3_15,
+        "exception": EXCEPTIONS_3_15,
+    },
+}
+
+
+def _version_key(version: str) -> tuple[int, int]:
+    """``"3.15"`` as ``(3, 15)``, so releases compare as numbers.
+
+    Compared as text, ``"3.9"`` sorts after ``"3.10"``.
+    """
+    major, minor = version.split(".")[:2]
+    return int(major), int(minor)
+
+
+def _added_through(version: str, category: str) -> list[str]:
+    """Every *category* term added by a release at or before *version*."""
+    requested = _version_key(version)
+    added: list[str] = []
+    for release, by_category in VERSION_ADDITIONS.items():
+        if _version_key(release) <= requested:
+            added.extend(by_category.get(category, []))
+    return added
+
+
+def _builtin_functions_for_version(version: str) -> list[str]:
+    return BUILTIN_FUNCTIONS.copy() + _added_through(version, "builtin_func")
+
+
+def _builtin_types_for_version(version: str) -> list[str]:
+    return BUILTIN_TYPES.copy() + _added_through(version, "builtin_type")
+
+
 def get_keywords_for_version(version: str = "3.10") -> list[str]:
     """Get all keywords applicable to a specific Python version.
 
     Args:
-        version: Python version string (e.g., '3.10', '3.11', '3.12', '3.13')
+        version: Python version string (e.g., '3.10', '3.13', '3.15')
 
     Returns:
         List of keyword strings for that version
     """
-    keywords = KEYWORDS_BASE.copy() + SPECIAL_VALUES.copy()
-
-    # Add version-specific keywords
-    if version >= "3.10":
-        keywords.extend(KEYWORDS_3_10)
-
-    if version >= "3.11":
-        keywords.extend(KEYWORDS_3_11)
-
-    if version >= "3.12":
-        keywords.extend(KEYWORDS_3_12)
-
-    return keywords
+    return (
+        KEYWORDS_BASE.copy()
+        + SPECIAL_VALUES.copy()
+        + _added_through(version, "keyword")
+    )
 
 
 def get_builtins_for_version(version: str = "3.10") -> list[str]:
     """Get all builtins applicable to a specific Python version.
 
     Args:
-        version: Python version string (e.g., '3.10', '3.11', '3.12', '3.13')
+        version: Python version string (e.g., '3.10', '3.13', '3.15')
 
     Returns:
-        List of builtin strings for that version
+        List of builtin strings for that version: functions, then types, then
+        special constants
     """
-    # All builtins are available in 3.10+
-    # aiter/anext were added in 3.10 but are in our base list
-    return BUILTIN_FUNCTIONS.copy() + BUILTIN_TYPES.copy() + SPECIAL_CONSTANTS.copy()
+    return (
+        _builtin_functions_for_version(version)
+        + _builtin_types_for_version(version)
+        + SPECIAL_CONSTANTS.copy()
+    )
 
 
 def get_exceptions_for_version(version: str = "3.10") -> list[str]:
     """Get all exceptions applicable to a specific Python version.
 
     Args:
-        version: Python version string (e.g., '3.10', '3.11', '3.12', '3.13')
+        version: Python version string (e.g., '3.10', '3.13', '3.15')
 
     Returns:
         List of exception strings for that version
     """
-    exceptions = EXCEPTIONS.copy()
-
-    # Add version-specific exceptions (mirrored in version-index.yml).
-    if version >= "3.11":
-        exceptions.extend(EXCEPTIONS_3_11)
-
-    if version >= "3.13":
-        exceptions.extend(EXCEPTIONS_3_13)
-
-    return exceptions
+    return EXCEPTIONS.copy() + _added_through(version, "exception")
 
 
 def get_implicit_params_for_version(version: str = "3.10") -> list[str]:
@@ -436,7 +501,8 @@ def classify_term(term: str, python_version: str = "3.10") -> TermCategory:
 
     Args:
         term: The term to classify (case-insensitive for most terms)
-        python_version: Python version for keyword classification
+        python_version: Python version the term is classified for. A term a
+            later release added is ``'unknown'`` at an earlier version.
 
     Returns:
         Category string: 'keyword', 'builtin_func', 'builtin_type',
@@ -450,16 +516,18 @@ def classify_term(term: str, python_version: str = "3.10") -> TermCategory:
     if term in all_keywords or term_lower in [k.lower() for k in all_keywords]:
         return "keyword"
 
-    # Check built-in functions
-    if term_lower in [f.lower() for f in BUILTIN_FUNCTIONS]:
+    # Check built-in functions (version-aware: ``__lazy_import__`` @3.15)
+    if term_lower in [
+        f.lower() for f in _builtin_functions_for_version(python_version)
+    ]:
         return "builtin_func"
 
-    # Check built-in types
-    if term_lower in [t.lower() for t in BUILTIN_TYPES]:
+    # Check built-in types (version-aware: ``frozendict``, ``sentinel`` @3.15)
+    if term_lower in [t.lower() for t in _builtin_types_for_version(python_version)]:
         return "builtin_type"
 
     # Check exceptions (version-aware: includes exception groups @3.11,
-    # ``pythonfinalizationerror`` @3.13)
+    # ``pythonfinalizationerror`` @3.13, ``importcycleerror`` @3.15)
     if term_lower in get_exceptions_for_version(python_version):
         return "exception"
 
@@ -485,15 +553,15 @@ def get_all_terms_by_category(
     """Get all terms organized by category.
 
     Args:
-        python_version: Python version for keyword classification
+        python_version: Python version the lists are built for
 
     Returns:
         Dictionary mapping category -> list of terms
     """
     return {
         "keyword": get_keywords_for_version(python_version),
-        "builtin_func": BUILTIN_FUNCTIONS.copy(),
-        "builtin_type": BUILTIN_TYPES.copy(),
+        "builtin_func": _builtin_functions_for_version(python_version),
+        "builtin_type": _builtin_types_for_version(python_version),
         "exception": get_exceptions_for_version(python_version),
         "special_constant": SPECIAL_CONSTANTS.copy(),
         "implicit_param": IMPLICIT_PARAMS.copy(),
@@ -506,7 +574,7 @@ def is_python_term(term: str, python_version: str = "3.10") -> bool:
 
     Args:
         term: The term to check
-        python_version: Python version for keyword classification
+        python_version: Python version the term is classified for
 
     Returns:
         True if term is a Python keyword, builtin, exception, or special constant
@@ -552,12 +620,17 @@ __all__ = [
     "KEYWORDS_3_10",
     "KEYWORDS_3_11",
     "KEYWORDS_3_12",
+    "KEYWORDS_3_15",
     "SPECIAL_VALUES",
     "BUILTIN_FUNCTIONS",
+    "BUILTIN_FUNCTIONS_3_15",
     "BUILTIN_TYPES",
+    "BUILTIN_TYPES_3_15",
     "EXCEPTIONS",
     "EXCEPTIONS_3_11",
     "EXCEPTIONS_3_13",
+    "EXCEPTIONS_3_15",
+    "VERSION_ADDITIONS",
     "SPECIAL_CONSTANTS",
     "IMPLICIT_PARAMS",
     "HELPER_TERMS",
