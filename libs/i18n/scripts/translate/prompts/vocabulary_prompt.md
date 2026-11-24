@@ -91,10 +91,11 @@ enforces them again at the write boundary.
 
 - **A valid Python identifier** per PEP 3131 — this is a name someone will
   type into real code.
-- **Parses on CPython 3.10.** No character that only became
-  identifier-legal in CPython 3.13 (Unicode 15.1 XID). Unlike a pack
-  translation, a recommended name has no version-overlay file to be tiered
-  into, so the constraint is absolute rather than managed.
+- **Parses on CPython 3.10.** No character that became identifier-legal in
+  a later CPython: 3.13 (Unicode 15.1), 3.14 (Unicode 16.0) and 3.15
+  (Unicode 17.0) each added some. Unlike a pack translation, a recommended
+  name has no version-overlay file to be tiered into, so the constraint is
+  absolute rather than managed.
 - **Not a Python keyword.** `for`, `class`, `in` are SyntaxErrors as
   variable names. (`_` is fine and is the expected answer for
   `throwaway`.)
@@ -151,8 +152,9 @@ codebase.
 
 Each value must be a valid Python identifier, must not be a Python
 keyword, and must parse on CPython 3.10 (avoid characters that only became
-identifier-legal in CPython 3.13). Keep them short — brevity is the whole
-point of these names.
+identifier-legal in a later CPython: 3.13 (Unicode 15.1), 3.14 (Unicode
+16.0) and 3.15 (Unicode 17.0) each added some). Keep them short: brevity is
+the whole point of these names.
 
 {convention_inventory}
 

@@ -813,9 +813,9 @@ tables:
       collides_en_keyword: |
         1 when the rendering would shadow an English keyword.
       min_interpreter_ok: |
-        1 when the rendering uses no character that only became valid in
-        identifiers in CPython 3.13, so it runs on the oldest supported
-        interpreter.
+        1 when the rendering uses no character that became valid in
+        identifiers after CPython 3.10 (the 3.13, 3.14 and 3.15 releases each
+        added some), so it runs on the oldest supported interpreter.
       format_chars_clean: |
         The CORE-2029 format-char net: no forbidden format / Default_Ignorable
         character outside the locale's allowed_format_chars policy: the intake

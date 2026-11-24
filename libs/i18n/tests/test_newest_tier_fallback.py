@@ -32,8 +32,8 @@ from legesher_i18n import pack_loader
 from legesher_i18n.exceptions import PackNotFoundError, UnsupportedInterpreterError
 from legesher_i18n.language_registry import get_active_language_codes
 from legesher_i18n.pack_loader import LanguagePackLoader
-from legesher_i18n.schema_validator import SchemaValidator
-from tests.interpreter_gaps import NEEDS_UNICODE_15_1
+from legesher_i18n.schema_validator import interpreter_needed_for_identifier
+from tests.interpreter_gaps import needs_identifier_rules_of
 
 LOGGER = "legesher_i18n.pack_loader"
 
@@ -53,22 +53,28 @@ NEWER = _shift(NEWEST, 1)
 OLDER = _shift(OLDEST, -1)
 
 
-def _needs_unicode_15_1(language: str) -> bool:
-    """Whether ``language``'s pack files carry a character only CPython 3.13+ accepts.
+def _release_the_packs_need(language: str) -> tuple[int, int] | None:
+    """The newest CPython release a character in ``language``'s pack files needs.
 
-    Read from the files themselves, so the marker follows the data: the
-    validator checks identifiers with the running interpreter, and on 3.10 to
-    3.12 it rejects those tiers (``tests/interpreter_gaps.py``).
+    Read from the files themselves and from every release's table, so the
+    marker follows the data: the validator checks identifiers with the running
+    interpreter, and an interpreter older than that release rejects those
+    tiers (``tests/interpreter_gaps.py``). ``None`` when no file carries a
+    character newer than the 3.10 floor.
     """
     packs_dir = LanguagePackLoader()._discover_packs()[f"python-{language}"] / "packs"
     text = "".join(path.read_text(encoding="utf-8") for path in packs_dir.glob("*.yml"))
-    return any(ch in SchemaValidator._XID_ONLY_FROM_CPYTHON_313 for ch in text)
+    return interpreter_needed_for_identifier(text)
 
 
-LANGUAGES = [
-    pytest.param(code, marks=NEEDS_UNICODE_15_1) if _needs_unicode_15_1(code) else code
-    for code in get_active_language_codes()
-]
+def _language_case(code: str):
+    needed = _release_the_packs_need(code)
+    if needed is None:
+        return code
+    return pytest.param(code, marks=needs_identifier_rules_of(needed))
+
+
+LANGUAGES = [_language_case(code) for code in get_active_language_codes()]
 
 
 @pytest.fixture(autouse=True)

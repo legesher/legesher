@@ -38,6 +38,7 @@ from pathlib import Path
 
 import pytest
 
+from legesher_i18n.db import schema_v2
 from legesher_i18n.db.schema_v2 import apply_schema_v2, option_uid
 from legesher_i18n.surface_validation import (
     VALIDATOR_VERSION,
@@ -46,6 +47,7 @@ from legesher_i18n.surface_validation import (
     validate_surface,
 )
 from scripts import repair_v2_audit_findings as repair
+from tests.interpreter_gaps import NEWER_IDENTIFIER_SAMPLES
 from scripts.correct_canon_review_rung import correct
 from scripts.export_canon import map_decider_role
 from scripts.migrate_to_v2 import migrate
@@ -293,6 +295,336 @@ def test_repair_lands_all_three_phases(dbs: tuple[Path, Path]) -> None:
     }
     assert "trg_validations_frozen_under_canon" in triggers
     assert "trg_validations_no_delete_under_canon" in triggers
+
+
+def _stamp_as_an_older_validator(v2: Path, sql: str | None = None) -> None:
+    """Put every stamp back to an older validator, as a database written
+    before the version moved carries it. ``sql`` runs under the same lifted
+    freeze, for a test that also needs to edit a stored verdict."""
+    conn = sqlite3.connect(v2)
+    for name in schema_v2._VALIDATION_FREEZE_TRIGGERS:
+        conn.execute(f"DROP TRIGGER IF EXISTS {name}")
+    conn.execute("UPDATE option_validations SET validator_version = 'py-identifier-v3'")
+    if sql is not None:
+        conn.execute(sql)
+    for kind, name, statement in schema_v2._fresh_schema_objects():
+        if kind == "trigger" and name in schema_v2._VALIDATION_FREEZE_TRIGGERS:
+            conn.execute(statement)
+    conn.commit()
+    conn.close()
+
+
+def _stamps(v2: Path) -> list[str]:
+    return [
+        row[0]
+        for row in _query(
+            v2, "SELECT DISTINCT validator_version FROM option_validations"
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    "release",
+    sorted(NEWER_IDENTIFIER_SAMPLES),
+    ids=lambda release: f"{release[0]}.{release[1]}",
+)
+def test_the_backfill_flips_a_rendering_that_needs_any_newer_release(
+    dbs: tuple[Path, Path], release: tuple[int, int]
+) -> None:
+    # The backfill read only the 3.13 table, so a rendering that needs 3.14
+    # or 3.15 kept its schema-default "fine on 3.10".
+    v2, v1 = dbs
+    surface = f"glo{NEWER_IDENTIFIER_SAMPLES[release]}bal"
+    conn = sqlite3.connect(v2)
+    conn.execute("PRAGMA foreign_keys = ON")
+    uid = _seed_option(conn, "globals", "da", surface, "da")
+    conn.commit()
+    conn.close()
+
+    assert repair.main(["--db", str(v2), "--v1-db", str(v1)]) == 0
+    row = _query(
+        v2,
+        "SELECT min_interpreter_ok, validator_version FROM option_validations"
+        " WHERE option_uid = ?",
+        uid,
+    )[0]
+    assert row["min_interpreter_ok"] == 0
+    assert row["validator_version"] == VALIDATOR_VERSION
+
+
+def test_an_older_stamp_is_recomputed_and_restamped(dbs: tuple[Path, Path]) -> None:
+    """The recompute after a validator-version change: every row, no verdict lost."""
+    v2, v1 = dbs
+    assert repair.main(["--db", str(v2), "--v1-db", str(v1)]) == 0
+    before = _query(
+        v2,
+        "SELECT option_uid, min_interpreter_ok, identifier_valid, nfkc_stable,"
+        " script_consistent, collides_en_keyword, format_chars_clean"
+        " FROM option_validations ORDER BY option_uid",
+    )
+    assert len(before) > 3
+    assert {row["min_interpreter_ok"] for row in before} == {0, 1}
+
+    _stamp_as_an_older_validator(v2)
+
+    results, _ = repair.run(v2, v1)
+    assert results["backfill"].backfilled == len(before)
+    after = _query(
+        v2,
+        "SELECT option_uid, min_interpreter_ok, identifier_valid, nfkc_stable,"
+        " script_consistent, collides_en_keyword, format_chars_clean"
+        " FROM option_validations ORDER BY option_uid",
+    )
+    assert [tuple(row) for row in after] == [tuple(row) for row in before]
+    stamps = _query(v2, "SELECT DISTINCT validator_version FROM option_validations")
+    assert [row[0] for row in stamps] == [VALIDATOR_VERSION]
+
+    # And then it is settled: a third run writes nothing.
+    results, _ = repair.run(v2, v1)
+    assert results["backfill"].backfilled == 0
+
+
+def _as_an_earlier_revision_repaired_it(v2: Path) -> None:
+    """Move the starred mirror's canon row onto a python-scoped option id.
+
+    An earlier revision of the script minted the mirror python-scoped, and a
+    database it repaired still ratifies that id. The current script mints the
+    unscoped id, finds canon on the other one, and refuses in phase 1.
+    """
+    conn = sqlite3.connect(v2)
+    conn.execute("PRAGMA foreign_keys = ON")
+    concept_id = conn.execute(
+        "SELECT id FROM concepts WHERE slug = 'except*'"
+    ).fetchone()[0]
+    scoped = option_uid("except*", "da", DA_STARRED, "python")
+    conn.execute(
+        "INSERT INTO options (uid, concept_id, locale, surface_form,"
+        " programming_language) VALUES (?, ?, 'da', ?, 'python')",
+        (scoped, concept_id, DA_STARRED),
+    )
+    _seed_validation(
+        conn, scoped, DA_STARRED, "except*", "da", version=VALIDATOR_VERSION
+    )
+    removed = conn.execute(
+        "DELETE FROM canon_selections WHERE concept_id = ? AND locale = 'da'",
+        (concept_id,),
+    ).rowcount
+    assert removed == 1
+    conn.execute(
+        "INSERT INTO canon_selections (concept_id, locale,"
+        " programming_language, option_uid, surface_form, status,"
+        " decided_by, decision_reason, source_file)"
+        " VALUES (?, 'da', 'python', ?, ?, 'machine', 'automated',"
+        " 'earlier revision', 'libs/i18n/canon/da.toml')",
+        (concept_id, scoped, DA_STARRED),
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_validations_only_recomputes_a_database_the_full_repair_refuses(
+    dbs: tuple[Path, Path],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    v2, v1 = dbs
+    assert repair.main(["--db", str(v2), "--v1-db", str(v1)]) == 0
+    _as_an_earlier_revision_repaired_it(v2)
+    rows = _query(v2, "SELECT COUNT(*) FROM option_validations")[0][0]
+    _stamp_as_an_older_validator(v2)
+    # The refusal is the script's own, from the data: nothing is patched.
+    with pytest.raises(repair.RepairRefused, match="minted it python-scoped"):
+        repair.main(["--db", str(v2), "--v1-db", str(v1)])
+    assert _stamps(v2) == ["py-identifier-v3"]
+    capsys.readouterr()
+
+    # No v1 database is needed, and the audit phases are never reached.
+    assert repair.main(["--db", str(v2), "--validations-only"]) == 0
+    summary = capsys.readouterr().out
+    assert summary.startswith("validations only: ")
+    assert f"{rows} validation row(s) stamped {VALIDATOR_VERSION}" in summary
+    assert "(0 with a changed min_interpreter_ok" in summary
+    assert _stamps(v2) == [VALIDATOR_VERSION]
+
+    # Settled: nothing left to do.
+    assert repair.main(["--db", str(v2), "--validations-only"]) == 0
+    assert "0 validation row(s) stamped" in capsys.readouterr().out
+
+
+def _freeze_triggers(v2: Path) -> set[str]:
+    return {
+        row[0]
+        for row in _query(v2, "SELECT name FROM sqlite_master WHERE type = 'trigger'")
+    } & set(schema_v2._VALIDATION_FREEZE_TRIGGERS)
+
+
+def test_validations_only_leaves_the_freeze_in_force(dbs: tuple[Path, Path]) -> None:
+    # The run lifts the freeze to write. Afterwards a canon-selected
+    # validation can again be neither revalidated nor deleted.
+    v2, v1 = dbs
+    assert repair.main(["--db", str(v2), "--v1-db", str(v1)]) == 0
+    _stamp_as_an_older_validator(v2)
+    assert repair.main(["--db", str(v2), "--validations-only"]) == 0
+
+    assert _freeze_triggers(v2) == set(schema_v2._VALIDATION_FREEZE_TRIGGERS)
+    conn = sqlite3.connect(v2)
+    try:
+        (ratified,) = conn.execute(
+            "SELECT option_uid FROM canon_selections ORDER BY option_uid LIMIT 1"
+        ).fetchone()
+        with pytest.raises(sqlite3.DatabaseError, match="canon-selected"):
+            conn.execute(
+                "UPDATE option_validations SET min_interpreter_ok ="
+                " 1 - min_interpreter_ok WHERE option_uid = ?",
+                (ratified,),
+            )
+        with pytest.raises(sqlite3.DatabaseError, match="canon-selected"):
+            conn.execute(
+                "DELETE FROM option_validations WHERE option_uid = ?", (ratified,)
+            )
+    finally:
+        conn.close()
+
+
+def test_validations_only_refuses_when_the_freeze_is_not_restored(
+    dbs: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A schema that no longer ships the freeze triggers under these names
+    # would leave the run with nothing to recreate. It must not commit a
+    # database with the freeze gone.
+    v2, v1 = dbs
+    assert repair.main(["--db", str(v2), "--v1-db", str(v1)]) == 0
+    _stamp_as_an_older_validator(v2)
+    backfill = repair.backfill_min_interpreter
+
+    def backfill_without_the_shipped_triggers(conn: sqlite3.Connection):
+        shipped = schema_v2._fresh_schema_objects()
+        monkeypatch.setattr(
+            schema_v2,
+            "_fresh_schema_objects",
+            lambda: [
+                entry
+                for entry in shipped
+                if entry[1] not in schema_v2._VALIDATION_FREEZE_TRIGGERS
+            ],
+        )
+        try:
+            return backfill(conn)
+        finally:
+            monkeypatch.setattr(schema_v2, "_fresh_schema_objects", lambda: shipped)
+
+    monkeypatch.setattr(
+        repair, "backfill_min_interpreter", backfill_without_the_shipped_triggers
+    )
+    with pytest.raises(repair.RepairRefused, match="freeze trigger .* is missing"):
+        repair.main(["--db", str(v2), "--validations-only"])
+    # Rolled back whole: the old stamps and the freeze are both still there.
+    assert _stamps(v2) == ["py-identifier-v3"]
+    assert _freeze_triggers(v2) == set(schema_v2._VALIDATION_FREEZE_TRIGGERS)
+
+
+def test_validations_only_refuses_when_a_row_keeps_another_stamp(
+    dbs: tuple[Path, Path],
+) -> None:
+    # A validation row the recompute cannot reach (its option is gone) keeps
+    # its old stamp. "Every row carries the current validator" would then be
+    # untrue, so the run refuses instead of committing.
+    v2, v1 = dbs
+    assert repair.main(["--db", str(v2), "--v1-db", str(v1)]) == 0
+    _stamp_as_an_older_validator(v2)
+    conn = sqlite3.connect(v2)
+    conn.execute("PRAGMA foreign_keys = OFF")
+    _seed_validation(
+        conn, "no-such-option", "ord", "print", "da", version="py-identifier-v3"
+    )
+    conn.commit()
+    conn.close()
+
+    with pytest.raises(
+        repair.RepairRefused, match="1 validation row.s. are not stamped"
+    ):
+        repair.main(["--db", str(v2), "--validations-only"])
+    assert _stamps(v2) == ["py-identifier-v3"]
+
+
+def test_validations_only_dry_run_writes_nothing(
+    dbs: tuple[Path, Path], capsys: pytest.CaptureFixture[str]
+) -> None:
+    v2, v1 = dbs
+    assert repair.main(["--db", str(v2), "--v1-db", str(v1)]) == 0
+    _stamp_as_an_older_validator(v2)
+    before = v2.read_bytes()
+    capsys.readouterr()
+
+    assert repair.main(["--db", str(v2), "--validations-only", "--dry-run"]) == 0
+    summary = capsys.readouterr().out
+    assert summary.startswith("[dry-run, discarded] validations only: ")
+    assert f"stamped {VALIDATOR_VERSION}" in summary
+    assert v2.read_bytes() == before
+    assert _stamps(v2) == ["py-identifier-v3"]
+
+
+def test_validations_only_counts_a_verdict_that_changes(
+    dbs: tuple[Path, Path], capsys: pytest.CaptureFixture[str]
+) -> None:
+    # The count the maintainer reads before the real run: how many rows are
+    # more than a re-stamp.
+    v2, v1 = dbs
+    assert repair.main(["--db", str(v2), "--v1-db", str(v1)]) == 0
+    not_ok = _query(
+        v2, "SELECT COUNT(*) FROM option_validations WHERE min_interpreter_ok = 0"
+    )[0][0]
+    assert not_ok > 0
+    # As the 3.13-only rule left a rendering that needs a newer release.
+    _stamp_as_an_older_validator(
+        v2, "UPDATE option_validations SET min_interpreter_ok = 1"
+    )
+    capsys.readouterr()
+
+    assert repair.main(["--db", str(v2), "--validations-only"]) == 0
+    report = capsys.readouterr().out
+    assert f"({not_ok} with a changed min_interpreter_ok" in report
+    # Each one is named, with the canon-selected ones marked: the write is
+    # made with the freeze lifted, so it is the maintainer who reads it.
+    changed = [line for line in report.splitlines() if line.startswith("  changed: ")]
+    assert len(changed) == not_ok
+    ratified = {row[0] for row in _query(v2, "SELECT option_uid FROM canon_selections")}
+    for line in changed:
+        assert "min_interpreter_ok 1 -> 0" in line
+        uid = line.removeprefix("  changed: ").split(" ", 1)[0]
+        assert line.endswith(", canon-selected") is (uid in ratified), line
+    assert any(line.endswith(", canon-selected") for line in changed)
+    assert (
+        _query(
+            v2, "SELECT COUNT(*) FROM option_validations WHERE min_interpreter_ok = 0"
+        )[0][0]
+        == not_ok
+    )
+
+
+def test_validations_only_refuses_when_another_stored_verdict_would_change(
+    dbs: tuple[Path, Path],
+) -> None:
+    v2, v1 = dbs
+    assert repair.main(["--db", str(v2), "--v1-db", str(v1)]) == 0
+    _stamp_as_an_older_validator(
+        v2, "UPDATE option_validations SET nfkc_stable = 1 - nfkc_stable"
+    )
+    rows = "SELECT * FROM option_validations ORDER BY option_uid"
+    before = [tuple(row) for row in _query(v2, rows)]
+
+    with pytest.raises(repair.RepairRefused, match="nfkc_stable"):
+        repair.main(["--db", str(v2), "--validations-only"])
+    # No row was written. (The file itself may differ: opening the database
+    # re-creates its views and triggers, as every intake entry point does.)
+    assert [tuple(row) for row in _query(v2, rows)] == before
+    assert _stamps(v2) == ["py-identifier-v3"]
+
+
+def test_the_full_repair_still_needs_the_v1_database(dbs: tuple[Path, Path]) -> None:
+    v2, _ = dbs
+    with pytest.raises(SystemExit) as excinfo:
+        repair.main(["--db", str(v2)])
+    assert excinfo.value.code == 2
 
 
 def test_second_run_is_a_noop(dbs: tuple[Path, Path]) -> None:

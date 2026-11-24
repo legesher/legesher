@@ -9,18 +9,23 @@ mechanical checks over the ``Suggested`` column:
 
 * ``identifier``: a valid Python identifier AT THE PINNED PYTHON VERSION, made
   term-aware (``except*`` keeps its ``*``). The running interpreter's tables
-  answer for itself only, so the one measured gap is emulated: a character
-  CPython 3.13 added to XID (Sinhala ZWJ, U+30FB and 5,672 others, pinned in
-  ``schema_validator``) is invalid at a 3.10 to 3.12 pin and valid at 3.13+.
+  answer for itself only, so the release a word needs is read from the pinned
+  per-release tables in ``schema_validator`` (the characters CPython 3.13,
+  3.14 and 3.15 each added: Sinhala ZWJ, U+30FB and the rest). Below that
+  release the word is not an identifier, wherever the check runs. At or above
+  it the running interpreter judges, and one whose Unicode tables predate
+  the character reports that it cannot, naming the release to run on.
 * ``nfkc``: NFKC-stable, with the canon gate's SARA AM allowance as a warning.
 * ``script`` and ``format-chars``: the per-locale checks the canon trigger gates on.
 * ``collision``: not the current word of another row, not another suggestion
   in the same file, and not a live Python keyword, soft keyword or builtin
   other than the row's own English term. ``keywords.type`` and
   ``builtins.type`` may share a word, as the packs do on purpose.
-* ``version-tier`` (warning): a word that is an identifier only from CPython
-  3.13, on a row the pack also ships for 3.10 to 3.12, needs a second spelling
-  for the earlier tier (the Sinhala ZWJ case, CORE-1521).
+* ``version-tier`` (warning): a word that is an identifier only from a newer
+  CPython release than the row's earliest one needs a second spelling for the
+  earlier versions (the Sinhala ZWJ case, CORE-1521). The pack exporter
+  writes one across the 3.13 boundary only, so for a character 3.14 or 3.15
+  added the warning says the word cannot be exported as written.
 
 The result is one report naming every failing row by its key.
 """
@@ -42,7 +47,13 @@ from legesher_i18n.intake.review_parser import (
     template_words,
 )
 from legesher_i18n.intake.review_template import check_review_pin
-from legesher_i18n.schema_validator import _XID_CHARS_ADDED_BY_CPYTHON_313
+from legesher_i18n.schema_validator import (
+    _UNICODE_OF_CPYTHON,
+    TIERED_IDENTIFIER_RELEASE,
+    describe_newer_identifier_characters,
+    identifier_characters_newer_than,
+    interpreter_needed_for_identifier,
+)
 from legesher_i18n.surface_validation import (
     allowed_format_chars_for,
     allowed_scripts_for,
@@ -56,11 +67,9 @@ _LIVE_NAMES = (
     | frozenset(keyword.softkwlist)
     | frozenset(dir(_builtins))
 ) - {"_"}
-_UNICODE_15_1 = tuple(int(part) for part in unicodedata.unidata_version.split(".")) >= (
-    15,
-    1,
-)
+_RUNNING_UNICODE = tuple(int(part) for part in unicodedata.unidata_version.split("."))
 _VERSION_RE = re.compile(r"\d+\.\d+")
+_PIN_RE = re.compile(r"(\d+)\.(\d+)")
 _EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 _SHARED_TERMS = frozenset({"type"})
 _TIER_WORD_RE = re.compile(r"\d+\.\d+ to \d+\.\d+: `([^`]+)`")
@@ -68,6 +77,17 @@ _TIER_WORD_RE = re.compile(r"\d+\.\d+ to \d+\.\d+: `([^`]+)`")
 
 def _version(text: str) -> tuple[int, ...]:
     return tuple(int(part) for part in text.split("."))
+
+
+def _pin_release(python: str) -> tuple[int, int] | None:
+    """The pinned Python as ``(major, minor)``, or ``None`` when it is not one.
+
+    The review file is untrusted. A pin that does not read as a version is
+    already a ``pin`` finding, so the row checks carry on without it and the
+    gate still returns a report.
+    """
+    match = _PIN_RE.match(python.strip())
+    return (int(match[1]), int(match[2])) if match else None
 
 
 @dataclass(frozen=True)
@@ -152,18 +172,30 @@ class GateReport:
         return "\n".join(lines) + "\n"
 
 
-def _identifier_at(surface: str, term: str, python: str) -> bool | None:
-    """Term-aware identifier validity at *python*, the 3.13 XID gap emulated.
+def _can_judge(release: tuple[int, int]) -> bool:
+    """Whether this interpreter's Unicode tables know the characters *release* added."""
+    needed = tuple(int(part) for part in _UNICODE_OF_CPYTHON[release].split("."))
+    return _RUNNING_UNICODE[: len(needed)] >= needed
 
-    ``None`` when this interpreter cannot say: a 3.13+ pin on a word using a
-    character CPython 3.13 added, judged on older Unicode tables. Substituting
-    a stand-in would be wrong both ways (ZWJ may continue a name but never
-    start one), so the gate reports it instead of guessing.
+
+def _identifier_at(surface: str, term: str, python: str) -> bool | None:
+    """Term-aware identifier validity at *python*, the per-release XID gaps emulated.
+
+    The release a word needs comes from the pinned tables, never from the
+    running interpreter, so the answer is the same wherever the gate runs:
+    ``False`` when the word uses a character a CPython release newer than
+    *python* added. ``None`` when this interpreter cannot say: the pin is new
+    enough, but the word uses a character this interpreter's older Unicode
+    tables do not know. Substituting a stand-in would be wrong both ways (ZWJ
+    may continue a name but never start one), so the gate reports it instead
+    of guessing. A pin that does not read as a version says nothing about
+    "newer than", so the word is judged on the tables alone.
     """
-    newer = {char for char in surface if char in _XID_CHARS_ADDED_BY_CPYTHON_313}
-    if newer and _version(python) < (3, 13):
+    needed = interpreter_needed_for_identifier(surface)
+    pinned = _pin_release(python)
+    if needed is not None and pinned is not None and pinned < needed:
         return False
-    if newer and not _UNICODE_15_1:
+    if needed is not None and not _can_judge(needed):
         return None
     return validate_surface(surface, term, frozenset()).identifier_valid
 
@@ -242,21 +274,30 @@ def gate_review_file(
         verdict = validate_surface(surface, term, allowed_scripts, allowed_format)
         shown = code_span(surface)
         valid = _identifier_at(surface, term, meta.python)
+        needed = interpreter_needed_for_identifier(surface)
         if valid is None:
+            release = f"{needed[0]}.{needed[1]}"
             add(
                 key,
                 "identifier",
                 "fail",
-                f"{shown} uses a character only Python 3.13+ reads as part of a name, "
-                f"and this interpreter ({unicodedata.unidata_version} Unicode tables) "
-                "cannot judge it; run the check on Python 3.13 or newer",
+                f"{shown} uses a character only Python {release}+ reads as part of a "
+                f"name, and this interpreter ({unicodedata.unidata_version} Unicode "
+                f"tables) cannot judge it; run the check on Python {release} or newer",
             )
         elif not valid:
+            pinned = _pin_release(meta.python)
+            too_new = (
+                describe_newer_identifier_characters(surface, floor=pinned)
+                if needed is not None and pinned is not None
+                else ""
+            )
             add(
                 key,
                 "identifier",
                 "fail",
-                f"{shown} is not a valid Python identifier on Python {meta.python}",
+                f"{shown} is not a valid Python identifier on Python {meta.python}"
+                + (f": it uses {too_new}" if too_new else ""),
             )
         if not verdict.nfkc_stable:
             folded = unicodedata.normalize("NFKC", surface)
@@ -319,24 +360,39 @@ def gate_review_file(
                 "fail",
                 f"{shown} is the live Python name `{folded}`, which this pack must not shadow",
             )
-        newer = sorted(
-            {char for char in surface if char in _XID_CHARS_ADDED_BY_CPYTHON_313}
-        )
+        # The row ships from its earliest version on. A character a later
+        # release added cannot be read there, whichever release that is.
         earliest = min(
-            (_version(v) for v in _VERSION_RE.findall(applies_to)), default=(3, 13)
+            (_version(v)[:2] for v in _VERSION_RE.findall(applies_to)),
+            default=needed or (3, 13),
         )
-        if newer and earliest < (3, 13):
-            names = ", ".join(
-                f"U+{ord(c):04X} {unicodedata.name(c, 'unnamed')}" for c in newer
+        if needed is not None and identifier_characters_newer_than(
+            surface, floor=earliest
+        ):
+            newer = identifier_characters_newer_than(surface, floor=earliest)
+            names = describe_newer_identifier_characters(surface, floor=earliest)
+            several = sum(len(characters) for characters in newer.values()) > 1
+            first = f"{earliest[0]}.{earliest[1]}"
+            last = f"{needed[0]}.{needed[1] - 1}"
+            older = first if first == last else f"{first} to {last}"
+            detail = (
+                f"{shown} uses {names}, "
+                + (
+                    "identifier characters only from the Python releases named"
+                    if several
+                    else "an identifier character only from the Python release named"
+                )
+                + f"; this row also ships for Python {older}, so the pack needs a "
+                "second spelling for that tier"
             )
-            add(
-                key,
-                "version-tier",
-                "warn",
-                f"{shown} uses {names}, an identifier character only from Python 3.13; "
-                "this row also ships for Python 3.10 to 3.12, so the pack needs a "
-                "second spelling for that tier",
-            )
+            if needed > TIERED_IDENTIFIER_RELEASE:
+                tiered = ".".join(str(part) for part in TIERED_IDENTIFIER_RELEASE)
+                detail += (
+                    f". The pack exporter writes a second spelling across the "
+                    f"Python {tiered} boundary only, so it refuses this word as "
+                    "written"
+                )
+            add(key, "version-tier", "warn", detail)
 
     free_text = [row.comments for row in review.rows] + [
         review.locale_notes or "",

@@ -212,13 +212,53 @@ repair: the five corrections sit at `machine` where a repaired copy has
 every value it writes from the v1 database, refuses rather than replace a
 canon row that has moved off `machine` to anything but the correction, and is
 idempotent. Run it after the rung correction, the order the durable database
-went through, and on CPython 3.13 or later, the interpreter the durable
-verdicts were computed on:
+went through, and on CPython 3.13, the interpreter the durable verdicts were
+computed on. (A newer interpreter gives the same result for as long as no
+stored rendering carries a character Python 3.14 or 3.15 added. With one, it
+reads that rendering differently from the stored verdict and the run refuses
+before writing.)
 
 ```bash
 uv run python scripts/repair_v2_audit_findings.py \
     --db build/translations_v2.db --v1-db legesher_i18n/db/translations.db
 ```
+
+After the validator version changes (`VALIDATOR_VERSION` in
+`legesher_i18n/surface_validation.py`), the stored verdicts of an existing
+database are brought up to date by the same script's third phase alone:
+
+```bash
+uv run python scripts/repair_v2_audit_findings.py \
+    --db build/translations_v2.db --validations-only --dry-run
+```
+
+It recomputes `min_interpreter_ok` for every row whose stamp is not the
+current validator's and re-stamps it, and it refuses the whole run if any
+other stored verdict would change. It needs no v1 database. Run it on CPython
+3.13, as above. Before the real run, know what it writes:
+
+- The summary says how many rows were re-stamped and how many of those had a
+  different `min_interpreter_ok`. Each of those is listed under it, with
+  `canon-selected` on the ones canon ratifies. The freeze on canon-selected
+  validations is lifted for this write, so reading that list is the review.
+- Every re-stamped row gets a new `validator_version` and `checked_at`. The
+  corpus export carries both columns, so the next published corpus differs in
+  them on every row even when no verdict changed.
+
+Then run the command again without `--dry-run`, and finish with the
+durable-home push in `libs/i18n/CLAUDE.md`. No later step checks that this
+one ran, so confirm it before a publish: one stamp, the current one.
+
+```bash
+sqlite3 "file:build/translations_v2.db?mode=ro" \
+    "select validator_version, count(*) from option_validations group by 1"
+```
+
+The full command above does the same recompute in its third phase, and its
+audit phases find nothing left to do. The one database it cannot be used on
+is one that an earlier revision of the script repaired: there its first phase
+refuses, because canon ratifies the starred `except*` mirror under the option
+id that revision minted. Use `--validations-only` there.
 
 Last, verify the rebuilt file against the durable copy — BEFORE section 2:
 

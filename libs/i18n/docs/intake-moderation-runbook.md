@@ -76,8 +76,11 @@ For a review pull request, triage happens **before the merge**, because the
 merge is the acceptance. Run the mechanical check on the pull request's files
 from a checkout of its branch, on Python 3.13 or newer, and read the report it
 prints (the same report the pull-request check shows in its job summary once
-that check is switched on). Older interpreters lack the Unicode 15.1 identifier
-rules, so the check refuses to judge a 3.13-only spelling there and fails it:
+that check is switched on). Which Python release a spelling needs is read from
+fixed tables, so that answer is the same on every interpreter. Whether the
+spelling is then a well-formed name needs an interpreter that knows its
+characters: one with older Unicode tables refuses to judge it, fails it, and
+names the Python release to run the check on:
 
 ```bash
 git -C <checkout> fetch origin
@@ -94,8 +97,13 @@ history.
 It names every failing row by its key (an edited current word, an invalid or
 colliding suggestion) and every file-level problem (an unticked box, a file
 name that is not the author's, a pin that does not exist).
-Rows marked `version-tier` are warnings: a Python 3.13+ spelling (a Sinhala
-joiner, say) the pack would also need in a 3.10 to 3.12 form. Merge a markdown
+Rows marked `version-tier` are warnings: a spelling that needs a newer Python
+than the row's earliest version (a Sinhala joiner needs 3.13, say), which the
+pack would also need in a form the earlier versions can read. The pack
+exporter writes that second form across the 3.13 boundary only. For a
+character Python 3.14 or 3.15 added, the warning says the exporter refuses
+the word as written: it cannot ship until it is respelled, so settle the
+spelling with the reviewer before the merge. Merge a markdown
 review only when its report has no failing rows. A JSON bundle has no checker in
 this command yet (it reports the file as unchecked, a failing result): read the
 bundle against its schema by hand before merging it, until the bundle lane adds

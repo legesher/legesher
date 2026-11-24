@@ -67,13 +67,14 @@ from legesher_i18n.intake.moderation import (
     ModerationGate,
     OptionScreenPlan,
 )
-from legesher_i18n.schema_validator import SchemaValidator
+from legesher_i18n.schema_validator import describe_newer_identifier_characters
 from legesher_i18n.script_policy import BIDI_EMBEDDINGS
 from legesher_i18n.surface_validation import (
     VALIDATOR_VERSION,
     allowed_format_chars_for,
     allowed_scripts_for,
     format_char_violations,
+    min_interpreter_ok,
     validate_surface,
 )
 
@@ -990,10 +991,7 @@ class BundleImporter:
             verdict = validate_surface(
                 info["surface"], info["term_name"], allowed, allowed_fmt
             )
-            min_ok = not any(
-                ch in SchemaValidator._XID_ONLY_FROM_CPYTHON_313
-                for ch in info["surface"]
-            )
+            min_ok = min_interpreter_ok(info["surface"])
             info["validation"] = verdict
             info["min_interpreter_ok"] = min_ok
             problems = []
@@ -1031,19 +1029,13 @@ class BundleImporter:
                     "for this locale"
                 )
             if not min_ok:
-                offending = ", ".join(
-                    f"U+{ord(ch):04X}"
-                    for ch in sorted(
-                        {
-                            ch
-                            for ch in info["surface"]
-                            if ch in SchemaValidator._XID_ONLY_FROM_CPYTHON_313
-                        }
-                    )
-                )
+                # Every character newer than the 3.10 floor, each with the
+                # CPython release that first reads it as part of a name.
+                offending = describe_newer_identifier_characters(info["surface"])
                 details.append(
-                    f"{info['surface']!r}: uses {offending} — identifier-valid "
-                    "only on CPython 3.13+ (version-tiered, not invalid)"
+                    f"{info['surface']!r}: uses {offending}; identifier-valid "
+                    "only from the CPython release named (version-tiered, not "
+                    "invalid)"
                 )
             if problems:
                 status = "warn"

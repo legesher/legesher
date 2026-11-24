@@ -113,9 +113,9 @@ handled by the exporter's interpreter-floor tiering, which strips it for the
 pre-3.13 files and restores it in a 3.13 overlay. A **recommended name** has no
 overlay to be tiered into, so the constraint is absolute rather than managed.
 
-A character that Python 3.14 or 3.15 added is not tiered yet. The exporter
-tiers on the 3.13 boundary only, so a term translation carrying one is written
-to a file whose floor cannot parse it and fails the interpreter-floor gate.
+A character that Python 3.14 or 3.15 added is not tiered. The exporter tiers
+on the 3.13 boundary only, so it refuses a term translation carrying one and
+names the character and the release it needs.
 
 The NFKC rule exists because Python folds identifiers at parse time: advice to
 name your loop variable fullwidth `ｉ` would be advice about an identifier the

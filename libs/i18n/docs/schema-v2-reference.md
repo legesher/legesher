@@ -1463,9 +1463,9 @@ per-row review data, per CORE-1505).
 
 - **`min_interpreter_ok`** · `INTEGER` · not null · default `1`
 
-  1 when the rendering uses no character that only became valid in
-  identifiers in CPython 3.13, so it runs on the oldest supported
-  interpreter.
+  1 when the rendering uses no character that became valid in
+  identifiers after CPython 3.10 (the 3.13, 3.14 and 3.15 releases each
+  added some), so it runs on the oldest supported interpreter.
 
   Allowed values: `0`, `1`.
 
