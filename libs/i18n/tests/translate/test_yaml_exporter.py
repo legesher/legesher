@@ -1289,6 +1289,28 @@ class TestValuesBeyondTiering:
         assert f"(CPython {release[0]}.{release[1]}+)" in message
         assert not (temp_output_dir / "ar").exists()
 
+    def test_every_too_new_selection_is_named_in_one_refusal(self, exporter, temp_db):
+        # A maintainer fixes them in one pass, not one export run at a time.
+        ids = _populate_full_language(temp_db, "ar")
+        for name, release in (("while", (3, 14)), ("for", (3, 15))):
+            if release not in NEWER_IDENTIFIER_SAMPLES:
+                pytest.skip(f"no sample character for {release}")
+            _store_selection_directly(
+                temp_db,
+                ids,
+                "ar",
+                "keyword",
+                name,
+                f"t_{name}{NEWER_IDENTIFIER_SAMPLES[release]}x",
+            )
+
+        with pytest.raises(UnstrippableXIDError) as excinfo:
+            exporter.export_language("ar", overwrite=True)
+        message = str(excinfo.value)
+        assert " keywords.while = " in message and "keywords.for = " in message
+        assert "(CPython 3.14+)" in message and "(CPython 3.15+)" in message
+        assert message.endswith("Respell these terms.")
+
     @pytest.mark.parametrize(
         "value",
         [

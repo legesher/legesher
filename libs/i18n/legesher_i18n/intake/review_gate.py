@@ -82,7 +82,10 @@ def _version(text: str) -> tuple[int, ...]:
 
 
 def _pin_release(python: str) -> tuple[int, int] | None:
-    """The pinned Python as ``(major, minor)``, or ``None`` when it is not one.
+    """The ``(major, minor)`` the pin starts with, or ``None`` when it has none.
+
+    ``3.14.1`` reads as 3.14, and only the first three digits of each part
+    are read.
 
     The review file is untrusted. A pin that does not read as a version is
     already a ``pin`` finding, so the row checks carry on without it and the

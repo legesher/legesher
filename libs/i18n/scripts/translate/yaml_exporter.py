@@ -181,9 +181,11 @@ _XID_STRIP_TABLE = {ord(ch): None for ch in _XID_STRIPPABLE_BELOW_313}
 #
 # Tiering exists for ONE boundary, 3.13: the pre-3.13 files carry the stripped
 # form and the 3.13 file restores the canonical one. A value that needs a
-# newer release than that is not tiered, so it is refused
-# (``_refuse_values_tiering_cannot_place``) rather than written into files
-# that older interpreters read. The review check reads the same boundary.
+# newer release than that is not tiered, so it is refused when the selections
+# are loaded (``_load_selected_slots``), with a second check on the finished
+# payload behind it (``_refuse_values_tiering_cannot_place``), rather than
+# written into files that older interpreters read. The review check reads the
+# same boundary.
 _TIERED_RELEASE = TIERED_IDENTIFIER_RELEASE
 _TIERING_KNOWS_ONE_BOUNDARY = (
     "The exporter can tier a value across the "
@@ -428,8 +430,8 @@ class YAMLExporter:
         selection made on a newer interpreter as a corrupt one. The tables
         say the same thing on every interpreter, so the refusal names the
         character and the release wherever the export runs. It covers every
-        selected term, written to a pack file or not: no file this exporter
-        writes can carry the value.
+        selected term, written to a pack file or not: the exporter has no
+        way to place such a value.
 
         Raises:
             CorruptSelectionError: If any selected value fails the publish
@@ -465,8 +467,13 @@ class YAMLExporter:
         if beyond_tiering:
             raise UnstrippableXIDError(
                 f"'{language_code}' {'; '.join(beyond_tiering)}. "
-                f"{_TIERING_KNOWS_ONE_BOUNDARY}, so no pack file it writes can "
-                "carry a value that needs a newer release. Respell the term."
+                f"{_TIERING_KNOWS_ONE_BOUNDARY}, so it cannot place a value "
+                "that needs a newer release. "
+                + (
+                    "Respell the term."
+                    if len(beyond_tiering) == 1
+                    else "Respell these terms."
+                )
             )
         return slots
 
@@ -958,6 +965,8 @@ class YAMLExporter:
         Raises:
             CorruptSelectionError: When a canonical selection fails the
                 publish gate.
+            UnstrippableXIDError: When a canonical selection needs an
+                identifier character tiering cannot place.
             IncompleteSelectionError: In strict mode, when selections
                 don't cover the full term inventory.
             InterpreterFloorCollisionError: When interpreter-floor
