@@ -112,6 +112,8 @@ also be on. The extension does not send this label yet: the
 
 ## For client authors
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 Python:
 
 ```python

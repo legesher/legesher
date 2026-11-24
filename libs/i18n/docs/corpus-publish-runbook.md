@@ -2,6 +2,8 @@
 
 > **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
 >
+> Walking it needs publish rights to the corpus dataset.
+>
 > It is published openly on purpose: the gates below are the technical basis
 > for the consent and privacy commitments the dataset card makes, and those
 > claims should be auditable rather than taken on trust.

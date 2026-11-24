@@ -1,6 +1,6 @@
 # Translation API Quick Start Guide
 
-> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+> **Audience:** Users, who install and use Legesher.
 
 Get up and running with the Legesher Translation API in 5 minutes.
 

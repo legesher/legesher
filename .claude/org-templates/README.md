@@ -1,6 +1,6 @@
 # Claude Code templates
 
-> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
 
 This directory holds a starting point for Claude Code configuration in other
 projects.

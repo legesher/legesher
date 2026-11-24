@@ -184,6 +184,8 @@ These context documents integrate with:
 
 ## Contributing
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 When adding or updating context documents:
 
 1. Follow the Tier 1 template structure (11 sections)

@@ -410,5 +410,5 @@ Apache License 2.0 - see [LICENSE](LICENSE) file
 
 - [Legesher Monorepo](../../README.md)
 - [Translation API](docs/translation-api.md)
-- [Validation](docs/VALIDATION.md)
-- [Quality gates](docs/quality-gates.md)
+- [Validation](docs/VALIDATION.md), for contributors
+- [Quality gates](docs/quality-gates.md), for maintainers

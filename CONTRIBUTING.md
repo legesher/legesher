@@ -221,8 +221,8 @@ pnpm dev
 
 #### Who each document is for
 
-Every Markdown document in this repository says who it is for in one line, directly under its title. There are three
-audiences, and each has one fixed line:
+Every Markdown document in this repository says who it is for in one line, directly under its `#` title. There are
+three audiences, and each has one fixed line:
 
 | Audience | The line under the title |
 | --- | --- |
@@ -231,15 +231,16 @@ audiences, and each has one fixed line:
 | Maintainers | `> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.` |
 
 A document takes the line of its main reader. A section written for a different reader takes that reader's line,
-directly under the section's heading, as the Development section of a package README does.
+directly under the section's heading, as the Development section of a package README does. Leave a blank line after
+the line, or a bare `>` line if the quote goes on. Pages for contributors and maintainers may cite work-tracker ids
+that a reader outside the team cannot look up.
 
-Some files carry no line. Files written for coding agents (`CLAUDE.md`, the agents in `.claude/agents/`, the MCP
-server's `SKILL.md`) are read by agents, not people. The others are changelogs, language pack files, the
-documentation site's pages, the translation briefs in `libs/i18n/context/`, templates copied into a pull request or
-another repository, prompt text written for a model, the pages of the VS Code walkthrough, `CONTRIBUTORS.md`, and the
-community health files (`CODE_OF_CONDUCT.md`, `LICENSING.md`, `.github/SECURITY.md`).
-`scripts/tests/test_doc_audience.py` holds the exact rules and fails on a document in scope whose line is missing or
-is not in this table.
+Some files carry no line: files written for coding agents (`CLAUDE.md`, the agents in `.claude/agents/`, the MCP
+server's `SKILL.md`), changelogs, the files of each language pack, the documentation site's pages, the translation
+briefs listed in each `libs/i18n/context/*/index.json`, templates and forms that are copied or filled in elsewhere,
+prompt text written for a model, the pages of the VS Code walkthrough, `CONTRIBUTORS.md`, and the community and
+policy pages (`CODE_OF_CONDUCT.md`, `LICENSING.md`, `.github/SECURITY.md`). `scripts/tests/test_doc_audience.py`
+holds the exact rules and fails on a document in scope whose line is missing, misplaced or not in this table.
 
 ### 4. AI-Assisted Work
 

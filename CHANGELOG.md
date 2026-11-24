@@ -14,7 +14,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **docs**: every Markdown document says who it is for, in one line under its
   title: users, contributors or maintainers. `CONTRIBUTING.md` ("Who each
   document is for") gives the three lines and the files that carry none, and
-  `scripts/tests/test_doc_audience.py` fails on a document without its line.
+  `scripts/tests/test_doc_audience.py` fails on a document whose line is
+  missing, misplaced or not one of the three.
 
 ### Removed
 

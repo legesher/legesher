@@ -181,7 +181,7 @@ See [libs/vs-code/README.md](libs/vs-code/README.md) for full documentation.
 
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute
 - **[CHANGELOG.md](CHANGELOG.md)** - What's new
-- **[CLAUDE.md](CLAUDE.md)** - Developer guide for contributors
+- **[DEVELOPMENT.md](DEVELOPMENT.md)** - Developer guide for contributors
 
 ## Features
 

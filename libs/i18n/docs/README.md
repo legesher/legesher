@@ -43,17 +43,6 @@ so a rebuild cannot undo the erasure. No published dataset changes.
 
 **Use this for:** Responding to a privacy or withdrawal request (CORE-1780)
 
-### [linguistic-standards.md](./linguistic-standards.md)
-
-Establishes consistent linguistic conventions for translating Python terms:
-
-- Word type classification (verb, noun, adjective, etc.)
-- Form recommendations by language family
-- Examples from existing language packs
-- Translation checklist
-
-**Use this for:** Understanding what form translations should take
-
 ### [context-template-tier1.md](./context-template-tier1.md) / [context-template-tier2.md](./context-template-tier2.md)
 
 Templates for creating comprehensive context documents for each Python term:
@@ -77,6 +66,17 @@ templates, what a pack load checks, how the section merges across Python
 versions, and which `legesher-i18n` releases can read it.
 
 **Use this for:** Reading or changing how packs carry error messages (CORE-2630)
+
+### [linguistic-standards.md](./linguistic-standards.md)
+
+Establishes consistent linguistic conventions for translating Python terms:
+
+- Word type classification (verb, noun, adjective, etc.)
+- Form recommendations by language family
+- Examples from existing language packs
+- Translation checklist
+
+**Use this for:** Understanding what form translations should take
 
 ## Translation Workflow
 

@@ -1,6 +1,6 @@
 # Translation API Documentation
 
-> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+> **Audience:** Users, who install and use Legesher.
 
 The Legesher Translation API provides dynamic translation capabilities with multi-provider support,
 intelligent quality-based fallback, comprehensive usage tracking, and cost monitoring.
