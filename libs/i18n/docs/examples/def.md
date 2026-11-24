@@ -1,5 +1,7 @@
 # Python Keyword: `def` - Comprehensive Reference (Tier 2)
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 **Category:** keyword
 **Type:** verb (action keyword)
 **Python Version:** 1.0+ (all versions)

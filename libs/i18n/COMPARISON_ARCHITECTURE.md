@@ -1,5 +1,7 @@
 # Translation Comparison System - Architecture
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 Visual overview of the Legesher translation comparison system architecture.
 
 ## System Architecture

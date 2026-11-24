@@ -1,5 +1,7 @@
 # Script-inclusion threat model
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 **Scope:** every surface where "additional scripts" — code, or data that shapes how code renders or executes — can
 enter a Legesher product. One section per surface: attack classes, existing mitigations (with file citations where the
 code lives here), gaps,

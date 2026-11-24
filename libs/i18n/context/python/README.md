@@ -1,5 +1,7 @@
 # Python Context Documents
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 This directory contains comprehensive translation context documents for Python keywords,
 builtin types, and builtin functions. Each document provides detailed linguistic and
 technical guidance to help AI translation models and human translators create accurate,

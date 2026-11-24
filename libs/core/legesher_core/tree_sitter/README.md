@@ -1,5 +1,7 @@
 # Tree-sitter Integration
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 This module provides tree-sitter-based parsing for Legesher's Python code translation.
 
 ## Overview

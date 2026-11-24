@@ -1,5 +1,7 @@
 # AI Translation Pipeline (CORE-394)
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 Automated pipeline to generate translations for Python terms using multiple AI models.
 
 ## Overview

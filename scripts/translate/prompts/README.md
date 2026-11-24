@@ -1,5 +1,7 @@
 # Translation Prompts - Model-Specific Approaches
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 **Version:** 1.0
 **Last Updated:** 2025-10-28
 **Purpose:** Model-optimized prompts for translating Python keywords and builtins

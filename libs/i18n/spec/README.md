@@ -1,5 +1,7 @@
 # Pack spec — per-target profiles
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 The per-programming-language half of the pack contract (CORE-1503). Each
 target owns a directory under `targets/`:
 

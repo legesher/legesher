@@ -1,5 +1,7 @@
 # Translation Comparison System - Quick Reference
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 One-page reference for the Legesher translation comparison system.
 
 ## Installation

@@ -1,5 +1,7 @@
 # One-line installers
 
+> **Audience:** Users, who install and use Legesher.
+
 Install the Legesher CLI (`legesher`), the language server (`legesher-lsp`) and,
 when VS Code's `code` command is on your PATH, the VS Code extension.
 
@@ -63,6 +65,8 @@ Both installers stop there with a message, before changing anything. Install by
 hand on those: see [Installation](../README.md#installation).
 
 ## Changing a pinned version
+
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
 
 Edit `requirements.in`, then regenerate the pins in `constraints.txt` and in
 both scripts:

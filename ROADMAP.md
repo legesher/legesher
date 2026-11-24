@@ -1,5 +1,7 @@
 # Legesher Roadmap
 
+> **Audience:** Users, who install and use Legesher.
+
 **Vision:** you should be able to write and read code in your heart language.
 
 Programming today assumes English. Legesher removes that assumption: the code you write in your

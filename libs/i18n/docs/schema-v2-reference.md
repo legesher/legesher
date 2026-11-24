@@ -5,6 +5,8 @@
 
 # Translations Schema v2 Reference
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+>
 > **Generated from the schema. Do not edit this page.** Tables, columns, types,
 > keys, indexes, triggers and views are parsed from
 > [`schema_v2.sql`](../legesher_i18n/db/schema_v2.sql); every description comes

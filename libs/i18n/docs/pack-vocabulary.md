@@ -1,5 +1,7 @@
 # Pack vocabulary: symbols and variable conventions
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 Two pack sections, added in CORE-1396, holding knowledge that is
 **vocabulary rather than rules**:
 

@@ -1,5 +1,7 @@
 # Pack maturity ladder
 
+> **Audience:** Users, who install and use Legesher.
+
 What each maturity stamp on a language pack means, what it does **not** mean,
 and which parts are still open.
 

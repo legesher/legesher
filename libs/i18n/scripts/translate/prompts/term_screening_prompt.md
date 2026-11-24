@@ -1,5 +1,7 @@
 # Term-Screening Prompt (CORE-401)
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 Specification for the offensive/unfortunate-translation screen run over
 every language pack's term surface. Pairs with
 `scripts/translate/screen_terms.py`: `--collect` produces the input, this

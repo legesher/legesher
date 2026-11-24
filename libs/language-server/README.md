@@ -1,5 +1,7 @@
 # Legesher Language Server
 
+> **Audience:** Users, who install and use Legesher.
+>
 > Language Server Protocol implementation for multilingual Python programming
 
 **Status**: Pre-Beta | **Python**: 3.10-3.14 | **Languages**: 56 | **Version**: see `pyproject.toml`
@@ -229,6 +231,8 @@ None for users. This is an internal dependency upgrade with no API changes.
 If you encounter import errors with `pygls.server.LanguageServer`, update to use `pygls.lsp.server.LanguageServer`.
 
 ## Development
+
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
 
 ### Running Tests
 

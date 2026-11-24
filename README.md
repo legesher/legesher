@@ -1,5 +1,7 @@
 # Legesher
 
+> **Audience:** Users, who install and use Legesher.
+
 **Code in Your Native Language** - Programming tools that break down the English language barrier
 
 [![All Contributors](https://img.shields.io/github/all-contributors/legesher/legesher?color=ee8449&style=flat-square)](#contributors)

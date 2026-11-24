@@ -1,5 +1,7 @@
 # legesher-i18n
 
+> **Audience:** Users, who install and use Legesher.
+
 Industrial-strength internationalization infrastructure with 56 language packs, version-aware inheritance,
 and multi-provider translation API for multilingual programming.
 
@@ -356,6 +358,8 @@ jobs:
 This repository runs that audit in `.github/workflows/validate-packs.yml`.
 
 ## Development
+
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
 
 ### Running Tests
 

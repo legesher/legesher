@@ -1,5 +1,7 @@
 # Legesher style guides
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 A **style guide** is a set of rules (currently in English) plus a language/script
 **profile** proposing best-practice Python for one target language — how identifiers are
 formed, which naming conventions the script can express, and the constraints its

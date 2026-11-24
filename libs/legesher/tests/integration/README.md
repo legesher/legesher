@@ -1,5 +1,7 @@
 # Legesher CLI Integration Tests
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 Comprehensive integration tests for the Legesher CLI with semantic equivalence verification.
 
 ## Quick Start

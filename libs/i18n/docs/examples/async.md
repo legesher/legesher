@@ -1,5 +1,7 @@
 # Python Keyword: `async` - Comprehensive Reference (Tier 2)
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 **Category:** keyword (modifier/prefix)
 **Type:** adjective/modifier (transforms function into coroutine)
 **Python Version:** 3.5+ (introduced in PEP 492)

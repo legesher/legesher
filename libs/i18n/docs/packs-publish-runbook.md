@@ -1,5 +1,7 @@
 # Packs publish runbook (`legesher/language-packs`)
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 How a pinned revision of the packs dataset is built and published. The
 counterpart for the evidence layer is [`corpus-publish-runbook.md`](corpus-publish-runbook.md),
 and for the decision layer [`legesher/language-canon`](https://huggingface.co/datasets/legesher/language-canon).

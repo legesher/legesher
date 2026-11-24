@@ -1,5 +1,7 @@
 # Example Outputs - What You'll Get From Each Model
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 **Purpose:** Show what the API responses look like and how they're processed into final language packs
 
 ---

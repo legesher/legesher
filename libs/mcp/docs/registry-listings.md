@@ -1,5 +1,7 @@
 # Registry listings
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 The same server, listed everywhere people who build with agents look for
 tools. This page holds the canonical listing copy and what each directory
 reads, so every listing says the same thing and none of it is written on

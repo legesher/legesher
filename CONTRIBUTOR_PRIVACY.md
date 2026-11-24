@@ -1,5 +1,7 @@
 # Your contributions and your data
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 **Version 1.0 — 2026-08-10**
 
 When you offer a translation to Legesher, two things happen: your word joins a public research

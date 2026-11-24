@@ -1,5 +1,7 @@
 # Resume Translation Work Later
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 **Status:** Translation infrastructure complete, ready to pause
 **When to resume:** In 1-2 weeks when ready to generate real translations
 

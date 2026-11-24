@@ -1,5 +1,7 @@
 # Integration Guide - Translation Comparison System Documentation
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 **Task**: CORE-396, Task 8 - Update Documentation for Translation Comparison System
 **Status**: Complete
 **Date**: 2025-11-11

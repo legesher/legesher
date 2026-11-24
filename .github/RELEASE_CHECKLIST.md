@@ -1,5 +1,7 @@
 # Release Checklist
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 Quick reference checklist for releasing Legesher packages.
 
 ## Pre-Release Checklist

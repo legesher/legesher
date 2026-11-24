@@ -1,5 +1,7 @@
 # Repository attribution
 
+> **Audience:** Users, who install and use Legesher.
+
 Repository attribution is opt-in usage attribution. When you switch it on, a
 Legesher client attaches a label for the current repository to its calls to
 Legesher's hosted service, so usage can be attributed to a repository. The

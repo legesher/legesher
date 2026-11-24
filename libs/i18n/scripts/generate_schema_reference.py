@@ -1504,6 +1504,11 @@ def render(schema: Schema, desc: dict, v1_tables: list[str]) -> str:
         "",
         "# Translations Schema v2 Reference",
         "",
+        # The audience line every document carries (CONTRIBUTING.md, "Who each
+        # document is for"); scripts/tests/test_doc_audience.py checks it.
+        "> **Audience:** Maintainers, who run releases, regenerate packs and write to"
+        " the translations database.",
+        ">",
         "> **Generated from the schema. Do not edit this page.** Tables, columns, types,",
         "> keys, indexes, triggers and views are parsed from",
         "> [`schema_v2.sql`](../legesher_i18n/db/schema_v2.sql); every description comes",

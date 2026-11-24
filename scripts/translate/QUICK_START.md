@@ -1,5 +1,7 @@
 # Quick Start - Manual Testing in Claude Desktop
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 **Ready to test? Follow these 4 steps:**
 
 ---

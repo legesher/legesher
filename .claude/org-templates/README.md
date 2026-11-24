@@ -1,5 +1,7 @@
 # Claude Code templates
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 This directory holds a starting point for Claude Code configuration in other
 projects.
 

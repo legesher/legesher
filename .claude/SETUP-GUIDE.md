@@ -1,5 +1,7 @@
 # Claude Code setup
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 This guide is for contributors who want to use Claude Code in this
 repository. Claude Code is optional. For what each file in `.claude/` does,
 see [README.md](README.md).

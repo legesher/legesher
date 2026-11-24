@@ -1,5 +1,7 @@
 # Python Builtin: `print` - Comprehensive Reference (Tier 2)
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 **Category:** builtin
 **Type:** verb (action/function - outputs data)
 **Python Version:** All versions (syntax changed Python 2→3)

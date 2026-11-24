@@ -1,5 +1,7 @@
 # Legesher Core
 
+> **Audience:** Users, who install and use Legesher.
+
 Production-ready translation engine for multilingual Python with two complete translator backends.
 
 **Status**: Pre-Beta | **Python**: 3.10-3.14 | **Version**: see `pyproject.toml`
@@ -121,6 +123,8 @@ spanish = translator.translate_code(code, "en", "es")
 ```
 
 ## Testing
+
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
 
 ### Run all tests
 

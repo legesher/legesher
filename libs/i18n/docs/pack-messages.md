@@ -1,8 +1,6 @@
 # Pack messages: localized error-message templates
 
-> **Maintainer notes, not newcomer documentation.** Written for someone already
-> working in this code. It may cite work-tracker ids (`CORE-####`) an outside
-> reader cannot resolve.
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
 
 A pack version file may carry a `messages` section: the localized wording of
 the traceback structure ("Traceback (most recent call last):") and of the

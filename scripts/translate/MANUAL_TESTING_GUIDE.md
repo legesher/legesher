@@ -1,5 +1,7 @@
 # Manual Testing Guide - Claude Desktop
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 **Purpose:** Test translation prompts in Claude Desktop before committing to API costs
 **Estimated Time:** 5-10 minutes per translation
 **Cost:** $0 (included in Claude Pro)

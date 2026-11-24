@@ -1,5 +1,7 @@
 # Error-Message Template Prompt (CORE-1881)
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 Specification for generating localized error-message templates — the
 `message_translations` rows behind localized tracebacks (CORE-1679).
 Companion to `vocabulary_prompt.md` and shaped the same way: conceptual

@@ -1,5 +1,7 @@
 # JavaScript Context Documents
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 Per-term translation-context briefs for the JavaScript terms Legesher localizes,
 mirroring `context/python/`. Each document guides an AI translation model (and a
 human reviewer) toward an accurate, consistent native-language term.

@@ -1,11 +1,6 @@
 # Intake moderation runbook: screening community submissions (CORE-1828)
 
-<!-- disposition: MAINTAINER (CORE-1724 audit, 2026-08-11) -->
-
-> **Maintainer-only.** This is not a contributor workflow. It is the sequence a
-> maintainer walks over the community intake queue, on a cadence rather than
-> per submission. If you are looking for how to contribute a translation, start
-> with [`REVIEWING.md`](../REVIEWING.md).
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
 >
 > It is published openly on purpose: `REVIEWING.md` and the issue forms promise
 > contributors that a human screens every submission before it becomes visible,

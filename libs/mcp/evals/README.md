@@ -1,5 +1,7 @@
 # Grounding evals
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 Measures whether a model **relays** this server's engine facts or **invents**
 them.
 

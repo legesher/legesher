@@ -1,5 +1,7 @@
 # Claude Code configuration
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 This directory holds the project configuration for
 [Claude Code](https://docs.claude.com/en/docs/claude-code/overview). Claude
 Code loads it when you open the repository. You do not need Claude Code to

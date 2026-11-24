@@ -1,5 +1,7 @@
 # Pack Vocabulary Prompt (CORE-1396)
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 Specification for filling the two vocabulary sections of a language pack —
 `symbols` and `variable_conventions` — for every supported language.
 Companion to `reserved_words_prompt.md`, and deliberately shaped the same

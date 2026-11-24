@@ -1,5 +1,7 @@
 # Round-trip verification — the owning implementation
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 **Status**: design v2, amended 2026-08-17 after adversarial review, and on
 2026-11-03 for names a byte-identical trip cannot vouch for (CORE-2237) ·
 **Ticket**: CORE-1813

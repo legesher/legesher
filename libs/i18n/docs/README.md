@@ -1,15 +1,11 @@
 # Translation Documentation
 
-> **Maintainer notes — not newcomer documentation.** Written for someone already
-> working in this code: it assumes repo context, uses internal vocabulary, and
-> may cite work-tracker ids (`CORE-####`) an outside reader cannot resolve.
-> Public on purpose, but not part of the documentation site and not localized —
-> newcomer-facing documentation lives at [docs.legesher.io](https://docs.legesher.io).
-> <!-- disposition: MAINTAINER (CORE-1724 audit, 2026-08-11) -->
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
 
-This directory contains the foundation documents for creating high-quality Python translations.
+This directory contains the foundation documents for creating high-quality Python translations. The entries
+below are grouped by who they are for.
 
-## Contents
+## For maintainers
 
 ### [schema-v2-reference.md](./schema-v2-reference.md)
 
@@ -21,14 +17,6 @@ fails when the page is stale or when the SQL and the descriptions disagree.
 Covers v2 only; the v1 pack database (`schema.py`) is not described there.
 
 **Use this for:** Looking up what a v2 table or column means before querying or changing it (CORE-2232)
-
-### [pack-messages.md](./pack-messages.md)
-
-The `messages` section of a pack: localized traceback and error-message
-templates, what a pack load checks, how the section merges across Python
-versions, and which `legesher-i18n` releases can read it.
-
-**Use this for:** Reading or changing how packs carry error messages (CORE-2630)
 
 ### [corpus-publish-runbook.md](./corpus-publish-runbook.md)
 
@@ -77,6 +65,18 @@ Templates for creating comprehensive context documents for each Python term:
 - Translation guidance for non-English speakers
 
 **Use this for:** Creating context documents that AI models and human translators use
+
+## For contributors
+
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
+### [pack-messages.md](./pack-messages.md)
+
+The `messages` section of a pack: localized traceback and error-message
+templates, what a pack load checks, how the section merges across Python
+versions, and which `legesher-i18n` releases can read it.
+
+**Use this for:** Reading or changing how packs carry error messages (CORE-2630)
 
 ## Translation Workflow
 

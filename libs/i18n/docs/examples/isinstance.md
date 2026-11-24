@@ -1,5 +1,7 @@
 # Python Builtin: `isinstance` - Comprehensive Reference (Tier 2)
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 **Category:** builtin (function)
 **Type:** compound term (verb + noun: "is" + "instance")
 **Python Version:** All versions (1.5+)
