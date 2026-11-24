@@ -9,6 +9,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **ci**: the `Monitor Python Releases` workflow is removed. It could only be
+  started by hand, it called a script that no longer exists, and it would
+  have written pack files outside the translations database. What a new
+  Python version needs is now a page, `libs/i18n/docs/new-python-version.md`,
+  and `libs/i18n/scripts/README.md` describes the scripts that exist.
+
 ## [0.28.3] - 2026-11-24
 
 ### Fixed

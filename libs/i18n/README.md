@@ -408,3 +408,4 @@ Apache License 2.0 - see [LICENSE](LICENSE) file
 - [Translation API](docs/translation-api.md)
 - [Validation](docs/VALIDATION.md)
 - [Quality gates](docs/quality-gates.md)
+- [Supporting a new Python version](docs/new-python-version.md)

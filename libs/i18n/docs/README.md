@@ -22,6 +22,15 @@ Covers v2 only; the v1 pack database (`schema.py`) is not described there.
 
 **Use this for:** Looking up what a v2 table or column means before querying or changing it (CORE-2232)
 
+### [new-python-version.md](./new-python-version.md)
+
+What a new Python minor version needs here, in order: measuring what the
+release added, the lock, the term inventory, the identifier table, the pack
+file for the release, messages, CI and the supported-version prose. Each step
+names its files and its check, and says whether it has been run for 3.15.
+
+**Use this for:** Supporting Python 3.16 and later without working the list out again
+
 ### [pack-messages.md](./pack-messages.md)
 
 The `messages` section of a pack: localized traceback and error-message

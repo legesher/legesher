@@ -14,8 +14,9 @@ Usage:
     # Extract from current Python
     python extract_python_content.py
 
-    # Extract from specific installed version
-    python extract_python_content.py --python-version 3.13
+    # Extract from a specific installed version: run the script under it.
+    # --version only labels the output.
+    uv run --no-project --python 3.13 python extract_python_content.py --version 3.13
 
     # Fetch from GitHub (works without local installation)
     python extract_python_content.py --version 3.14 --method github
