@@ -143,6 +143,13 @@ def _language_names(language_code: str) -> tuple[str, str]:
 
 # Categories tried, in order, when resolving a builtins-section slot.
 _BUILTIN_CATEGORIES = ("builtin_func", "builtin_type", "special_constant")
+#: The pack section each selection category is written to.
+_SECTION_OF_CATEGORY = {
+    "keyword": "keywords",
+    **dict.fromkeys(_BUILTIN_CATEGORIES, "builtins"),
+    "exception": "exceptions",
+    "implicit_param": "implicit_params",
+}
 
 # Characters valid in identifiers only on CPython 3.13+ (Unicode 15.1 XID)
 # WHOSE REMOVAL LEAVES THE SAME WORD. Canonical values containing one are
@@ -178,6 +185,10 @@ _XID_STRIP_TABLE = {ord(ch): None for ch in _XID_STRIPPABLE_BELOW_313}
 # (``_refuse_values_tiering_cannot_place``) rather than written into files
 # that older interpreters read. The review check reads the same boundary.
 _TIERED_RELEASE = TIERED_IDENTIFIER_RELEASE
+_TIERING_KNOWS_ONE_BOUNDARY = (
+    "The exporter can tier a value across the "
+    f"{_TIERED_RELEASE[0]}.{_TIERED_RELEASE[1]} boundary only"
+)
 _XID_ADDED_BY_TIERED_RELEASE = _XID_ADDED_BY_CPYTHON[_TIERED_RELEASE]
 
 
@@ -411,38 +422,51 @@ class YAMLExporter:
         """Load canonical selections as a (category, term_name) -> value map.
 
         A value that needs a CPython release newer than tiering knows is
-        loaded even where the publish gate refuses it. That gate asks the
+        refused here, before the publish gate is asked. That gate asks the
         running interpreter, and an interpreter older than the release reads
         such a value as no identifier at all, which would report a sound
         selection made on a newer interpreter as a corrupt one. The tables
-        say the same thing on every interpreter, so the verdict is left to
-        ``_refuse_values_tiering_cannot_place``, which names the character
-        and the release.
+        say the same thing on every interpreter, so the refusal names the
+        character and the release wherever the export runs. It covers every
+        selected term, written to a pack file or not: no file this exporter
+        writes can carry the value.
 
         Raises:
             CorruptSelectionError: If any selected value fails the publish
                 gate (should be impossible — ``set_selected`` enforces it —
                 but export must never propagate a dirty value).
+            UnstrippableXIDError: If a selected value needs a CPython release
+                newer than the one boundary tiering knows.
         """
         slots: dict[tuple[str, str], str] = {}
         invalid: list[str] = []
+        beyond_tiering: list[str] = []
         for row in self.db.get_all_selected(language_code=language_code):
             if row.get("programming_language") not in (None, "python"):
                 continue
             name = row["term_name"]
             value = row["translation"]
-            needed = interpreter_needed_for_identifier(value)
-            beyond_tiering = needed is not None and needed > _TIERED_RELEASE
-            if not beyond_tiering and not is_valid_pack_value(
-                name, value, language_code
-            ):
+            category = row["term_category"]
+            too_new = self._beyond_tiering(
+                _SECTION_OF_CATEGORY.get(category, category), name, value
+            )
+            if too_new is not None:
+                beyond_tiering.append(too_new)
+                continue
+            if not is_valid_pack_value(name, value, language_code):
                 invalid.append(f"{name} -> {value!r}")
                 continue
-            slots[(row["term_category"], name)] = value
+            slots[(category, name)] = value
         if invalid:
             raise CorruptSelectionError(
                 f"Selected translations for '{language_code}' fail the "
                 f"publish gate (selection layer corrupt?): {invalid}"
+            )
+        if beyond_tiering:
+            raise UnstrippableXIDError(
+                f"'{language_code}' {'; '.join(beyond_tiering)}. "
+                f"{_TIERING_KNOWS_ONE_BOUNDARY}, so no pack file it writes can "
+                "carry a value that needs a newer release. Respell the term."
             )
         return slots
 
@@ -779,32 +803,41 @@ class YAMLExporter:
     ) -> None:
         """Refuse a value that needs a CPython release newer than tiering knows.
 
-        Reads the finished payload, every value of every section of every
-        file, so the check covers whatever is about to be written with no
-        list of slots to keep in step. The value named is the one that file
-        would carry.
+        The backstop behind ``_load_selected_slots``, for slots that reach
+        ``_build_version_sections`` some other way. It reads the finished
+        payload, every value of every section of every file, so it covers
+        whatever is about to be written with no list of slots to keep in
+        step. The value named is the one that file would carry.
 
         Raises:
             UnstrippableXIDError: Naming the file, the slot, the character
                 and the release it needs.
         """
-        boundary = f"{_TIERED_RELEASE[0]}.{_TIERED_RELEASE[1]}"
         for version, by_section in sections.items():
             for section, values in by_section.items():
                 for name, value in values.items():
-                    needed = interpreter_needed_for_identifier(value)
-                    if needed is None or needed <= _TIERED_RELEASE:
+                    too_new = YAMLExporter._beyond_tiering(section, name, value)
+                    if too_new is None:
                         continue
-                    newer = describe_newer_identifier_characters(
-                        value, floor=_TIERED_RELEASE
-                    )
                     raise UnstrippableXIDError(
-                        f"'{language_code}' {section}.{name} = {value!r} uses "
-                        f"{newer}. The exporter can tier a value across the "
-                        f"{boundary} boundary only, so this one would be written "
-                        f"into {version}.yml and the files that extend it, which "
-                        "older interpreters read. Respell the term."
+                        f"'{language_code}' {too_new}. "
+                        f"{_TIERING_KNOWS_ONE_BOUNDARY}, so this one would be "
+                        f"written into {version}.yml and the files that extend "
+                        "it, which older interpreters read. Respell the term."
                     )
+
+    @staticmethod
+    def _beyond_tiering(section: str, name: str, value: str) -> str | None:
+        """Name a value that needs a release newer than tiering knows, or ``None``.
+
+        ``keywords.while = 't_x...' uses U+0897 ARABIC PEPET (CPython 3.14+)``.
+        Read from the pinned tables, never from the running interpreter.
+        """
+        needed = interpreter_needed_for_identifier(value)
+        if needed is None or needed <= _TIERED_RELEASE:
+            return None
+        newer = describe_newer_identifier_characters(value, floor=_TIERED_RELEASE)
+        return f"{section}.{name} = {value!r} uses {newer}"
 
     @staticmethod
     def _raise_unstrippable(

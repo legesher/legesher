@@ -58,13 +58,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
     release a word needs it is not an identifier, on any interpreter. At or
     above that release the running interpreter judges, and one with older
     Unicode tables says it cannot and names the release to run the check on.
-    The `version-tier` warning names the release, counts from the row's own
-    first version, and says when the exporter will refuse the word.
+    The `version-tier` warning names the release and counts from the row's
+    own first version. For a character 3.14 or 3.15 added it also says the
+    exporter refuses the word as written.
   - `scripts/translate/yaml_exporter.py`, run on an interpreter new enough to
     accept the value, wrote it into the slot's pack file, which every later
     file extends. Run on an older interpreter it reported the selection as
-    corrupt. It now refuses on any interpreter, naming the file, the slot,
-    the code point and the release.
+    corrupt. It now refuses on any interpreter, when the selections are
+    loaded, naming the slot, the code point and the release.
   - `scripts/repair_v2_audit_findings.py` recomputed the stored verdict with
     the 3.13 table only.
 

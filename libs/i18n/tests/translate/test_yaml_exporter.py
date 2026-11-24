@@ -1235,7 +1235,8 @@ class TestValuesBeyondTiering:
         # The selection is already in the database, as an interpreter that
         # reads the character stored it. An older interpreter reads the value
         # as no identifier at all, and used to report the selection as
-        # corrupt instead of naming the character and the release.
+        # corrupt instead of naming the character and the release. Refused
+        # when the selections are loaded, before anything is resolved.
         newer = NEWER_IDENTIFIER_SAMPLES[release]
         ids = _populate_full_language(temp_db, "ar")
         _store_selection_directly(
@@ -1250,14 +1251,60 @@ class TestValuesBeyondTiering:
         assert f"(CPython {release[0]}.{release[1]}+)" in message
         assert not (temp_output_dir / "ar").exists()
 
-    def test_a_value_no_interpreter_reads_is_still_a_corrupt_selection(
-        self, exporter, temp_db
+    @pytest.mark.parametrize(
+        "release",
+        _RELEASES_BEYOND_TIERING,
+        ids=lambda release: f"{release[0]}.{release[1]}",
+    )
+    @pytest.mark.parametrize("shape", ["{newer}", "bad value{newer}"])
+    def test_a_term_the_exporter_does_not_write_is_refused_too(
+        self, exporter, temp_db, temp_output_dir, release, shape
     ):
-        # Loading past the interpreter's verdict is for the too-new character
-        # alone. A value that is no identifier anywhere is still refused at
-        # load, as a corrupt selection.
+        # A selection for a term no pack file carries yet. Skipping the
+        # publish gate for it and writing the rest would let a damaged
+        # selection through unseen, so the export stops here as well.
+        newer = NEWER_IDENTIFIER_SAMPLES[release]
         ids = _populate_full_language(temp_db, "ar")
-        _store_selection_directly(temp_db, ids, "ar", "keyword", "while", "two words")
+        term_id = temp_db.get_or_create_term(
+            "not_in_any_file", "python", "keyword", allow_duplicate_name=True
+        )
+        temp_db.add_translation(
+            term_id=term_id, language_code="ar", translation="t_plain", source="test"
+        )
+        temp_db.set_selected(term_id=term_id, language_code="ar", translation="t_plain")
+        ids[("keyword", "not_in_any_file")] = term_id
+        _store_selection_directly(
+            temp_db,
+            ids,
+            "ar",
+            "keyword",
+            "not_in_any_file",
+            "t_x" + shape.format(newer=newer),
+        )
+
+        with pytest.raises(UnstrippableXIDError) as excinfo:
+            exporter.export_language("ar", overwrite=True)
+        message = str(excinfo.value)
+        assert " keywords.not_in_any_file = " in message
+        assert f"(CPython {release[0]}.{release[1]}+)" in message
+        assert not (temp_output_dir / "ar").exists()
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("two words", id="no-newer-character"),
+            pytest.param(f"t_whi{ZWJ}le bad", id="a-3.13-character"),
+        ],
+    )
+    def test_a_value_no_interpreter_reads_is_still_a_corrupt_selection(
+        self, exporter, temp_db, value
+    ):
+        # The refusal ahead of the publish gate is for a character past the
+        # tiered boundary alone. A 3.13 character is tiering's own business,
+        # so a value carrying one still meets the publish gate, and a value
+        # that is no identifier anywhere is still a corrupt selection.
+        ids = _populate_full_language(temp_db, "ar")
+        _store_selection_directly(temp_db, ids, "ar", "keyword", "while", value)
         with pytest.raises(CorruptSelectionError, match="while"):
             exporter.export_language("ar", overwrite=True)
 

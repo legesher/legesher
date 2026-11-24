@@ -569,6 +569,13 @@ def test_validations_only_counts_a_verdict_that_changes(
     # The count the maintainer reads before the real run: how many rows are
     # more than a re-stamp.
     v2, v1 = dbs
+    # A second rendering that needs a newer release, one canon does not
+    # ratify, so the list below holds a marked row and an unmarked one.
+    conn = sqlite3.connect(v2)
+    conn.execute("PRAGMA foreign_keys = ON")
+    _seed_option(conn, "globals", "si", SI_ZWJ, "si")
+    conn.commit()
+    conn.close()
     assert repair.main(["--db", str(v2), "--v1-db", str(v1)]) == 0
     not_ok = _query(
         v2, "SELECT COUNT(*) FROM option_validations WHERE min_interpreter_ok = 0"
@@ -593,6 +600,7 @@ def test_validations_only_counts_a_verdict_that_changes(
         uid = line.removeprefix("  changed: ").split(" ", 1)[0]
         assert line.endswith(", canon-selected") is (uid in ratified), line
     assert any(line.endswith(", canon-selected") for line in changed)
+    assert any(not line.endswith(", canon-selected") for line in changed)
     assert (
         _query(
             v2, "SELECT COUNT(*) FROM option_validations WHERE min_interpreter_ok = 0"
@@ -618,6 +626,22 @@ def test_validations_only_refuses_when_another_stored_verdict_would_change(
     # re-creates its views and triggers, as every intake entry point does.)
     assert [tuple(row) for row in _query(v2, rows)] == before
     assert _stamps(v2) == ["py-identifier-v3"]
+
+
+def test_the_full_repair_lists_the_verdicts_it_changed(
+    dbs: tuple[Path, Path], capsys: pytest.CaptureFixture[str]
+) -> None:
+    # The same list on the full run: its backfill is the same write.
+    v2, v1 = dbs
+    assert repair.main(["--db", str(v2), "--v1-db", str(v1)]) == 0
+    report = capsys.readouterr().out
+    changed = [line for line in report.splitlines() if line.startswith("  changed: ")]
+    not_ok = _query(
+        v2, "SELECT COUNT(*) FROM option_validations WHERE min_interpreter_ok = 0"
+    )[0][0]
+    assert not_ok > 0
+    assert len(changed) == not_ok
+    assert all("min_interpreter_ok 1 -> 0" in line for line in changed)
 
 
 def test_the_full_repair_still_needs_the_v1_database(dbs: tuple[Path, Path]) -> None:

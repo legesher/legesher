@@ -427,11 +427,26 @@ def test_the_tier_warning_counts_the_characters_it_names() -> None:
     assert f"U+{ord(old):04X}" in detail and f"U+{ord(new):04X}" in detail
     assert "identifier characters only from the Python releases named" in detail
 
+    # Two characters one release added: several characters, one release.
+    report = gate(fill(template, {"keywords.is": (f"`هو{old}ء\u200c`", "")}), "ar")
+    detail = _tier_findings(report)["keywords.is"].detail
+    assert "U+200C" in detail and "U+200D" in detail
+    assert "identifier characters only from the Python release named" in detail
+
 
 # --- a pin that is not a version ----------------------------------------------
 
 
-@pytest.mark.parametrize("pin", ["3.x", "x", "3"])
+@pytest.mark.parametrize(
+    "pin",
+    [
+        "3.x",
+        "x",
+        "3",
+        # Longer than ``int`` will parse: a digit run past its length limit.
+        pytest.param("3." + "9" * 5000, id="5000-digits"),
+    ],
+)
 @pytest.mark.parametrize(
     "word",
     [
@@ -459,3 +474,14 @@ def test_a_pin_that_is_not_a_version_is_a_report_not_an_exception(
     assert [f for f in report.findings if f.check == "pin" and f.severity == "fail"]
     if " " in word:
         assert "keywords.is" in failing(report, "identifier")
+
+
+def test_a_pin_that_is_not_a_version_does_not_stop_a_sound_file() -> None:
+    # The pin is read for every suggestion, valid ones included.
+    base = template_text("ar")
+    current = parse_metadata_line(base).python
+    template = base.replace(f"python={current}", "python=3." + "9" * 5000, 1)
+    report = gate(
+        fill(template, {"keywords.is": ("`هو`", "")}), "ar", template_text=template
+    )
+    assert {f.check for f in report.findings if f.severity == "fail"} == {"pin"}

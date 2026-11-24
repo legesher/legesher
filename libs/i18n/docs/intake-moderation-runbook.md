@@ -100,10 +100,11 @@ name that is not the author's, a pin that does not exist).
 Rows marked `version-tier` are warnings: a spelling that needs a newer Python
 than the row's earliest version (a Sinhala joiner needs 3.13, say), which the
 pack would also need in a form the earlier versions can read. The pack
-exporter writes that second form across the 3.13 boundary only. For a
-character Python 3.14 or 3.15 added, the warning says the exporter refuses
-the word as written: it cannot ship until it is respelled, so settle the
-spelling with the reviewer before the merge. Merge a markdown
+exporter writes that second form across the 3.13 boundary only, and only by
+dropping a joiner or a katakana middle dot. It refuses any other 3.13
+character, and every character Python 3.14 or 3.15 added. For the 3.14 and
+3.15 case the warning says so. Either way the word cannot ship until it is
+respelled, so settle the spelling with the reviewer before the merge. Merge a markdown
 review only when its report has no failing rows. A JSON bundle has no checker in
 this command yet (it reports the file as unchecked, a failing result): read the
 bundle against its schema by hand before merging it, until the bundle lane adds

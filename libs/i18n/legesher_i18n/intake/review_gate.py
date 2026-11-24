@@ -23,9 +23,9 @@ mechanical checks over the ``Suggested`` column:
   ``builtins.type`` may share a word, as the packs do on purpose.
 * ``version-tier`` (warning): a word that is an identifier only from a newer
   CPython release than the row's earliest one needs a second spelling for the
-  earlier versions (the Sinhala ZWJ case, CORE-1521). The pack exporter
-  writes one across the 3.13 boundary only, so for a character 3.14 or 3.15
-  added the warning says the word cannot be exported as written.
+  earlier versions (the Sinhala ZWJ case). The pack exporter writes one
+  across the 3.13 boundary only, so for a character 3.14 or 3.15 added the
+  warning says the exporter refuses the word as written.
 
 The result is one report naming every failing row by its key.
 """
@@ -69,7 +69,9 @@ _LIVE_NAMES = (
 ) - {"_"}
 _RUNNING_UNICODE = tuple(int(part) for part in unicodedata.unidata_version.split("."))
 _VERSION_RE = re.compile(r"\d+\.\d+")
-_PIN_RE = re.compile(r"(\d+)\.(\d+)")
+# Bounded and ASCII-only: ``int`` raises on a digit run past its length limit,
+# and the pin comes from the review file.
+_PIN_RE = re.compile(r"(\d{1,3})\.(\d{1,3})", re.ASCII)
 _EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 _SHARED_TERMS = frozenset({"type"})
 _TIER_WORD_RE = re.compile(r"\d+\.\d+ to \d+\.\d+: `([^`]+)`")
@@ -84,7 +86,7 @@ def _pin_release(python: str) -> tuple[int, int] | None:
 
     The review file is untrusted. A pin that does not read as a version is
     already a ``pin`` finding, so the row checks carry on without it and the
-    gate still returns a report.
+    gate still returns a report. Never raises, whatever the text.
     """
     match = _PIN_RE.match(python.strip())
     return (int(match[1]), int(match[2])) if match else None
@@ -189,7 +191,8 @@ def _identifier_at(surface: str, term: str, python: str) -> bool | None:
     tables do not know. Substituting a stand-in would be wrong both ways (ZWJ
     may continue a name but never start one), so the gate reports it instead
     of guessing. A pin that does not read as a version says nothing about
-    "newer than", so the word is judged on the tables alone.
+    "newer than", so that test is skipped and the running interpreter judges
+    the word, where its tables can.
     """
     needed = interpreter_needed_for_identifier(surface)
     pinned = _pin_release(python)
@@ -371,17 +374,20 @@ def gate_review_file(
         ):
             newer = identifier_characters_newer_than(surface, floor=earliest)
             names = describe_newer_identifier_characters(surface, floor=earliest)
-            several = sum(len(characters) for characters in newer.values()) > 1
+            characters = sum(len(found) for found in newer.values())
             first = f"{earliest[0]}.{earliest[1]}"
             last = f"{needed[0]}.{needed[1] - 1}"
             older = first if first == last else f"{first} to {last}"
             detail = (
                 f"{shown} uses {names}, "
                 + (
-                    "identifier characters only from the Python releases named"
-                    if several
-                    else "an identifier character only from the Python release named"
+                    "identifier characters"
+                    if characters > 1
+                    else "an identifier character"
                 )
+                + " only from the Python "
+                + ("releases" if len(newer) > 1 else "release")
+                + " named"
                 + f"; this row also ships for Python {older}, so the pack needs a "
                 "second spelling for that tier"
             )

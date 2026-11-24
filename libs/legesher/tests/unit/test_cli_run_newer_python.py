@@ -88,9 +88,9 @@ def _xfail_where_the_newest_tier_cannot_load(request, lang: str) -> None:
     ``str.isidentifier()``. Before Unicode 15.1 (CPython 3.10 to 3.12) that
     rejects ZWJ, ZWNJ and the katakana middle dot, so a pack whose later tiers
     spell words with them does not load at those tiers at all (core's gap 2,
-    CORE-1521). The same holds for a character a later release added, on any
-    interpreter older than that release. Decided from the pack's own files
-    and every release's table, not a list of languages.
+    CORE-1521). Decided from the pack's own files, not a list of languages.
+    The same holds for a character a later release added, on any interpreter
+    older than that release, so every release's table is read.
     """
     packs = LanguagePackLoader()._discover_packs()[f"python-{lang}"] / "packs"
     for tier in TIERS:
