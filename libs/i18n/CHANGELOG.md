@@ -9,6 +9,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- `scripts/README.md` describes the scripts that exist. It described a
+  pipeline whose last step called a script that is no longer in the
+  repository. The docstring of `scripts/extract_python_content.py` says what
+  `--version` and `--versions` do: with the default runtime method they only
+  label the output, and the names come from the interpreter that runs it.
+
 ## [0.28.3] - 2026-11-24
 
 ### Added

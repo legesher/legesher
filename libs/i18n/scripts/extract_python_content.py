@@ -5,32 +5,35 @@ Extract localizable content from Python.
 This script extracts keywords, built-in functions, built-in types, and docstrings
 from Python for use in Legesher language packs.
 
-Supports three extraction methods:
-1. Runtime extraction (default) - Uses current Python installation
-2. GitHub fetch - Downloads from CPython repository for specific versions
-3. Multi-version - Extracts from multiple installed Python versions
+Supports two extraction methods:
+1. Runtime extraction (default) - Reads the interpreter that runs the script
+2. GitHub fetch - Downloads the keyword list for a version from the CPython
+   repository. Keywords only: built-ins need a running interpreter.
+
+With the runtime method the names always come from the running interpreter.
+--version and --versions only label the output, so to read several versions
+run the script once under each of them.
 
 Usage:
     # Extract from current Python
     python extract_python_content.py
 
-    # Extract from specific installed version
-    python extract_python_content.py --python-version 3.13
+    # Extract from a specific installed version: run the script under it.
+    # --version only labels the output.
+    uv run --no-project --python 3.13 python extract_python_content.py --version 3.13
 
-    # Fetch from GitHub (works without local installation)
+    # Fetch the keyword list from GitHub (works without local installation)
     python extract_python_content.py --version 3.14 --method github
-
-    # Extract from multiple versions
-    python extract_python_content.py --versions 3.10,3.11,3.12,3.13
 
 Output:
     JSON file with all extracted content:
     {
-        "python_version": "3.13.0",
+        "python_version": "3.13",
+        "python_full_version": "3.13.0",
         "keywords": [...],
         "builtins": {...},
         "types": {...},
-        "docstrings": {...},
+        "statistics": {...},
         "metadata": {...}
     }
 """
