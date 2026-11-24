@@ -97,7 +97,7 @@ Two scripts help, neither required:
   means "nothing new" or "the lookup failed"; a failed lookup also prints an `[ERROR]` line
   to standard error. `--show-current`
   prints the newest indexed version and needs no network.
-- `libs/i18n/scripts/extract_python_content.py --output content-X.Y.json --pretty`, run
+- `libs/i18n/scripts/extract_python_content.py --output /tmp/content-X.Y.json --pretty`, run
   under the new interpreter, writes the keywords, built-in functions and built-in types
   with their docstrings, and signatures for the functions. That is context a translator
   needs for step 8. It is not the measurement: it leaves a few names out.
@@ -399,6 +399,11 @@ Places that hold the list of pack files and move together:
   newest file the packs ship. The exporter keeps the value a file already has, so changing
   its default moves no existing pack. That is how 25 packs came to say 3.13 while shipping a
   3.14 file; they sit in that test's `STALE_VERSION_MAX` ledger.
+- The engine's round-trip corpus, `libs/core/tests/fixtures/corpus/`. On the `X.Y`
+  interpreter, `libs/core/tests/integration/test_every_pack.py` requires it to use every
+  keyword, built-in and exception the English pack has for that version. A new keyword needs
+  a file that uses its statement form, with its lowest Python in `manifest.json`. New
+  built-ins and exceptions go in `vocabulary.py`, one name per line.
 - Each pack's `pyproject.toml` classifiers. Most packs stop at 3.13 today, and no test ties
   them to the files a pack ships.
 - Counts written into prose: "five version files" in `libs/i18n/CLAUDE.md`, and the number
