@@ -21,8 +21,9 @@ underscores, such as `__import__`, are included.
 
 ```bash
 # From the repository root. The interpreter that runs the script is the one that is read.
+# Write the output outside the checkout: nothing here ignores it.
 uv run --no-project --python 3.15 python libs/i18n/scripts/extract_python_content.py \
-    --output python-content-3.15.json --pretty
+    --output /tmp/python-content-3.15.json --pretty
 ```
 
 - With the default `--method runtime` the script reads the interpreter it runs under.
@@ -102,7 +103,8 @@ for its options.
 
 The pipeline that proposes translations, the prompts it follows, the term screening, and
 `yaml_exporter.py`, which writes pack files from the database. It has its own
-[`translate/README.md`](translate/README.md).
+[`translate/README.md`](translate/README.md), which still describes an earlier run (105
+terms, 24 languages); read the scripts for what they do today.
 
 **Comparing translations**
 

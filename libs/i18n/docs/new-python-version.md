@@ -9,7 +9,7 @@ says so, and lists what is known to move. Rewrite a step from the real run when 
 and add what this page turned out to be missing.
 
 `X.Y` below is the new version and `X.W` the one before it. Paths are from the repository
-root, and so are the commands.
+root, and so are the commands, except the measurements in steps 1 and 5.
 
 ## The steps
 
@@ -36,8 +36,8 @@ Three things hold for every step:
   `X.Y` is the only evidence for steps 1, 4 and 5. Quote it in the pull request.
 - **Run the measurements in a scratch directory.** They write files, and nothing in this
   repository ignores them.
-- **Watch `uv.lock`.** A `uv` older than the one that wrote the lock rewrites it at a lower
-  `revision` on any `uv run` or `uv sync`. Compare the first lines of the file before and
+- **Watch `uv.lock`.** A `uv` older than the one that wrote the lock can rewrite it at a
+  lower `revision` on a `uv run` or `uv sync`. Compare the first lines of the file before and
   after. With an older `uv`, add `UV_FROZEN=1` to the commands here and restore the file if
   it changed (`git checkout -- uv.lock`).
 
@@ -94,7 +94,8 @@ Two scripts help, neither required:
 
 - `libs/i18n/scripts/monitor_python.py` prints `X.Y` when CPython has tagged `vX.Y.0` and
   the version index does not list it yet. It asks GitHub without a token. An empty line
-  means "nothing new" or "the lookup failed"; `--verbose` says which. `--show-current`
+  means "nothing new" or "the lookup failed"; a failed lookup also prints an `[ERROR]` line
+  to standard error. `--show-current`
   prints the newest indexed version and needs no network.
 - `libs/i18n/scripts/extract_python_content.py --output content-X.Y.json --pretty`, run
   under the new interpreter, writes the keywords, built-in functions and built-in types
@@ -324,7 +325,8 @@ to be green.
 What to decide with it:
 
 - **Which runners.** The matrix `exclude` block keeps 3.10 off macOS and Windows. A new
-  version with no such entry runs on all three on every push.
+  version with no such entry runs on all three on pushes to `main`. Pull requests run Ubuntu
+  only.
 - **Coverage** is uploaded from the Ubuntu 3.13 leg only. Leave that alone.
 - **The prose.** The matrix is described in the root `CLAUDE.md`, `CONTRIBUTING.md` and
   `DEVELOPMENT.md`.
@@ -351,13 +353,21 @@ from the statement's first keyword. So a statement form that starts with a new k
 not read as what it is. For 3.15, `lazy import input` is not read as an import, and the
 module name is no longer left as written.
 
-Two more lists are for display and have the same shape: the hover tables in
-`libs/language-server/legesher_language_server/utils/keyword_docs.py`, and
-`libs/vs-code/src/languagePackLoader.ts`.
+A fourth list is the tree-sitter backend's: the keyword nodes it rewrites, in
+`libs/core/legesher_core/tree_sitter/translator.py`. No test ties it to the inventory, and
+`lazy` is not in it. That backend parses with the `tree-sitter-python` grammar, a
+dependency, so a new statement form also needs a grammar release that knows it.
 
-**Check:** for each statement form from step 1, `name_positions` keeps the same names with
-the new keyword as without it. Add the test that compares these sets with the inventory when
-you do this step; it does not exist yet.
+Four more lists are for display and have the same shape: the hover tables in
+`libs/language-server/legesher_language_server/utils/keyword_docs.py`,
+`libs/vs-code/src/languagePackLoader.ts`, the usage table in
+`libs/core/legesher_core/ai_context.py`, and `KEYWORD_DOCS` in
+`libs/i18n/legesher_i18n/cli.py`.
+
+**Check:** for each statement form from step 1, `kept_names` in `name_positions` keeps the
+same names with the new keyword as without it (`libs/core/tests/unit/test_name_positions.py`
+is where the case goes), and the tree-sitter backend translates the keyword. Add the test
+that compares these lists with the inventory when you do this step; it does not exist yet.
 
 ## 8. Add the pack file for the release
 
@@ -372,8 +382,11 @@ its own pull request, started only when no other pack regeneration is in flight.
 Places that hold the list of pack files and move together:
 
 - `libs/i18n/scripts/translate/yaml_exporter.py`: `_PACK_VERSIONS`, the sections built in
-  `_build_version_sections`, the plan of files in `export_language`, and the templates it
-  uses for a new pack's `pyproject.toml` and README.
+  `_build_version_sections`, the plan of files in `export_language`, the default
+  `python_version_max` it gives a file that has no metadata, and the templates it uses for a
+  new pack's `pyproject.toml`, README, package docstring and changelog. With the default
+  left as it is, every `X.Y.yml` says minimum `X.Y` and maximum `X.W`, and
+  `libs/core/tests/integration/test_version_inheritance.py` fails for every language.
 - `libs/i18n/scripts/verify_pack_regen.py`: `EXPECTED_VERSIONS`.
 - `libs/i18n/scripts/export_packs.py`: `VERSIONS`.
 - `libs/i18n/language-packs/python/version-index.yml`: the entry for `X.Y`, with the same
@@ -391,11 +404,12 @@ Places that hold the list of pack files and move together:
 - Counts written into prose: "five version files" in `libs/i18n/CLAUDE.md`, and the number
   of shipped pack files in [packs-publish-runbook.md](./packs-publish-runbook.md).
 
-One gate goes red in this pull request and cannot be fixed inside it. The documentation's
-feature stories are checked against a released Legesher on every Python the English pack
-has a file for (`docs/scripts/reproduce_stories.py`, and
-`docs/scripts/tests/test_story_records.py`). A new pack file adds a Python that no released
-version covers yet. Decide how to bridge that before opening the pull request.
+One gate goes red in this pull request until its records are run again. The
+documentation's feature stories are checked against a released Legesher on every Python the
+English pack has a file for (`docs/scripts/reproduce_stories.py`, and
+`docs/scripts/tests/test_story_records.py`), and a new pack file adds a Python the committed
+records do not have. Whether a release that is already out can produce the `X.Y` column has
+not been tried. Try it before opening the pull request.
 
 The gates a regeneration has to pass are listed in [quality-gates.md](./quality-gates.md).
 The three that matter most here:
@@ -459,15 +473,14 @@ documentation site's supported-languages page in each site language, the issue a
 pull-request templates, and every pack's own README and package docstring. A pack's files
 sit in the pack's directory, so they change with the pack, in the pull request for step 8.
 
-Two places name the pack files by number and are not found by a search for a range: the
-per-version list in `libs/i18n/README.md`, and "`3.11.yml` to `3.14.yml`" in
-`libs/i18n/CLAUDE.md`.
+Three places name the pack files by number and are not found by a search for a range: the
+per-version list and the directory tree (`{3.10..3.14}.yml`) in `libs/i18n/README.md`, and
+"`3.11.yml` to `3.14.yml`" in `libs/i18n/CLAUDE.md`.
 
 The first search also returns lines that state only the floor (`Python 3.10+`) and a few
 pack file headers. Those need no change.
 
-**Check:** run the searches again. Every line they return either names `X.Y` or states only
-the floor.
+**Check:** run the searches again. Every list or range they return ends at `X.Y`.
 
 ## When the list is finished
 
