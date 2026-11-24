@@ -9,6 +9,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **install**: the one-line installers install `legesher` 0.28.3 and
+  `legesher-language-server` 0.3.1, with `legesher-core` and `legesher-i18n`
+  0.28.3. Running one again over an earlier install upgrades it.
+- **legesher**: requires `legesher-core` and `legesher-i18n` 0.28.3 or later,
+  so `pip install -U legesher` brings them forward too.
+
 ### Removed
 
 - **ci**: the `Monitor Python Releases` workflow. It could only be started by

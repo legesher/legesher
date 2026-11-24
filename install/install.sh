@@ -29,8 +29,8 @@ UV_VERSION="0.13.7"
 # tool dir --bin, tool update-shell).
 UV_MINIMUM="0.5.0"
 SERVER_PYTHON="3.12"
-CLI_PIN="legesher==0.28.1"
-SERVER_PIN="legesher-language-server==0.3.0"
+CLI_PIN="legesher==0.28.3"
+SERVER_PIN="legesher-language-server==0.3.1"
 EXTENSION_ID="legesher.legesher-vscode"
 MANUAL_STEPS="https://github.com/legesher/legesher#installation"
 
@@ -180,10 +180,10 @@ jinja2==3.1.6
 jiter==0.19.0
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
-legesher==0.28.1
-legesher-core==0.28.1
-legesher-i18n==0.28.1
-legesher-language-server==0.3.0
+legesher==0.28.3
+legesher-core==0.28.3
+legesher-i18n==0.28.3
+legesher-language-server==0.3.1
 legesher-runtime==0.1.0
 lru-dict==1.4.1
 lsprotocol==2025.0.0
