@@ -11,7 +11,7 @@ code in your native language.
 
 ## Language Packs
 
-All language packs currently have **experimental** status. Language packs are initially generated via Cohere's Aya models and then await community validation before being promoted to **accepted** status.
+All language packs currently have **experimental** status. Language packs are initially generated via Cohere's Aya models and then await community review before moving up to **reviewed** and **official** status.
 
 | Code | Language   | Native Name      | RTL | Status       |
 |------|------------|------------------|-----|--------------|
@@ -95,4 +95,4 @@ an RTL language is active.
 
 ## Adding Your Language
 
-If your language isn't listed above, you can contribute a new language pack. Each pack requires translating Python's keywords, builtins, and exceptions into your language. See the [contributing guide on GitHub](https://github.com/legesher/legesher/blob/main/CONTRIBUTING.md) for instructions.
+If your language isn't listed above, [request a new language](https://github.com/legesher/legesher/issues/new?template=add_language.yml) on GitHub. If it is listed, help it move beyond experimental by [reviewing its pack](/contribute/review-a-language-pack/).

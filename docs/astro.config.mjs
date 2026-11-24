@@ -94,6 +94,17 @@ export default defineConfig({
 						},
 					],
 				},
+				{
+					label: 'Contribute',
+					translations: { es: 'Contribuir', ar: 'المساهمة' },
+					items: [
+						{
+							label: 'Review a language pack',
+							translations: { es: 'Revisar un paquete de idioma', ar: 'مراجعة حزمة لغة' },
+							slug: 'contribute/review-a-language-pack',
+						},
+					],
+				},
 			],
 		}),
 	],

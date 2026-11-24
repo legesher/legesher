@@ -15,7 +15,7 @@ permite escribir código Python plenamente funcional en tu idioma nativo.
 
 ## Paquetes de idioma
 
-Todos los paquetes de idioma tienen actualmente el estado **experimental**. Los paquetes se generan inicialmente con los modelos Aya de Cohere y después esperan la validación de la comunidad antes de pasar al estado **aceptado**.
+Todos los paquetes de idioma tienen actualmente el estado **experimental**. Los paquetes se generan inicialmente con los modelos Aya de Cohere y después esperan la revisión de la comunidad para pasar a los estados **revisado** y **oficial**.
 
 | Código | Idioma            | Nombre nativo    | RTL | Estado       |
 |--------|-------------------|------------------|-----|--------------|
@@ -97,4 +97,4 @@ El árabe, el hebreo, el persa y el urdu son idiomas que se escriben de derecha 
 
 ## Añade tu idioma
 
-Si tu idioma no aparece en la lista anterior, puedes contribuir con un nuevo paquete de idioma. Cada paquete requiere traducir las palabras clave, las funciones integradas y las excepciones de Python a tu idioma. Consulta la [guía de contribución en GitHub](https://github.com/legesher/legesher/blob/main/CONTRIBUTING.md) para ver las instrucciones.
+Si tu idioma no aparece en la lista anterior, [solicita un idioma nuevo](https://github.com/legesher/legesher/issues/new?template=add_language.yml) en GitHub. Si aparece, ayúdalo a avanzar más allá de experimental [revisando su paquete](/es/contribute/review-a-language-pack/).
