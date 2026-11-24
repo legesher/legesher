@@ -28,6 +28,7 @@ import keyword
 import unicodedata
 from dataclasses import dataclass
 
+from legesher_i18n.schema_validator import interpreter_needed_for_identifier
 from legesher_i18n.script_policy import (
     ALWAYS_ALLOWED_SCRIPTS,
     FORBIDDEN_FORMAT_CHARS,
@@ -46,6 +47,7 @@ __all__ = [
     "allowed_format_chars_for",
     "allowed_scripts_for",
     "format_char_violations",
+    "min_interpreter_ok",
     "validate_surface",
 ]
 
@@ -55,7 +57,23 @@ __all__ = [
 #: to v2 for the CORE-1514 fixes: term-aware identifiers, the SARA-AM NFKC delta
 #: class, and real locale-aware script-consistency. Bumped to v3 for CORE-2029:
 #: the policy-aware format-char / Default_Ignorable net now runs here too.
-VALIDATOR_VERSION = "py-identifier-v3"
+#: Bumped to v4 when ``min_interpreter_ok`` began reading every per-release
+#: identifier table (CPython 3.13, 3.14 and 3.15) instead of the 3.13 table
+#: alone: a 3.14 or 3.15 character read as OK under v3.
+VALIDATOR_VERSION = "py-identifier-v4"
+
+
+def min_interpreter_ok(surface: str) -> bool:
+    """Whether a rendering uses no identifier character newer than the 3.10 floor.
+
+    The stored ``min_interpreter_ok`` verdict, and the one rule behind it for
+    every writer of that column. ``False`` means the rendering needs a newer
+    CPython than the oldest supported one (it is version-tiered, not invalid);
+    :func:`legesher_i18n.schema_validator.interpreter_needed_for_identifier`
+    says which. Static: it reads the pinned per-release tables, so every
+    interpreter gives the same answer.
+    """
+    return interpreter_needed_for_identifier(surface) is None
 
 
 @dataclass(frozen=True)

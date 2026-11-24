@@ -33,6 +33,8 @@ from legesher_i18n.db.schema_v2 import (
 )
 from legesher_i18n.intake.canonical import canonicalize
 from legesher_i18n.intake.pipeline import BundleImporter
+from legesher_i18n.surface_validation import VALIDATOR_VERSION
+from tests.interpreter_gaps import NEWER_IDENTIFIER_SAMPLES
 
 SALT = "intake-test-salt"
 REVIEWER = "urdu-reviewer"
@@ -820,6 +822,40 @@ def test_every_mechanical_gate_signal_is_cached_on_the_row(db_path: Path) -> Non
     # message was originally written for, and "uses ZWJ/ZWNJ" is a false
     # description of U+30FB KATAKANA MIDDLE DOT (CORE-1905).
     assert any("U+200D" in str(d) and "\\u200d" in str(d) for d in gates["details"])
+
+
+@pytest.mark.parametrize(
+    "release",
+    sorted(NEWER_IDENTIFIER_SAMPLES),
+    ids=lambda release: f"{release[0]}.{release[1]}",
+)
+def test_a_character_from_any_release_after_the_floor_is_stored_as_not_ok(
+    db_path: Path, release: tuple[int, int]
+) -> None:
+    # ``min_interpreter_ok`` used to mean "no character CPython 3.13 added",
+    # so a rendering that needs 3.14 or 3.15 was stored as fine for 3.10.
+    newer = NEWER_IDENTIFIER_SAMPLES[release]
+    surface = f"ورنہ{newer}اگر"
+    result = importer(db_path).import_bundle(endorse_only(surface, "ورنہ_اگر"))
+    assert result.status == "accepted"
+
+    assert validation_row(db_path, surface)[5] == 0
+    assert validation_row(db_path, "ورنہ_اگر")[5] == 1
+    stamped = q(
+        db_path,
+        "SELECT DISTINCT validator_version FROM option_validations"
+        " WHERE option_uid = ?",
+        option_uid("elif-compound", "ur", surface),
+    )
+    assert stamped == [(VALIDATOR_VERSION,)]
+
+    # The report names the code point together with the release it needs.
+    # (Other lines may name the same code point for another reason: the
+    # format-character net reports a joiner too.)
+    details = [str(d) for d in result.report["stages"][3]["details"]]
+    code_point = f"U+{ord(newer):04X}"
+    needs = f"(CPython {release[0]}.{release[1]}+)"
+    assert any(code_point in d and needs in d for d in details), details
 
 
 def test_canon_refuses_every_mechanically_invalid_row(db_path: Path) -> None:

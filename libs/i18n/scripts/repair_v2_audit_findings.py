@@ -47,13 +47,19 @@ default, so a ``1`` reads "unchecked", not "checked and passed". This phase
 recomputes the FULL verdict for every option at the current validator and:
 
 * refuses the whole run if any already-computed column would flip — the
-  stored verdicts are supposed to be v3-stable, and silent drift is exactly
-  what the freeze triggers exist to prevent;
+  stored verdicts are supposed to be stable (no validator version since v3
+  changed how those columns are computed), and silent drift is exactly what
+  the freeze triggers exist to prevent;
 * writes the computed ``min_interpreter_ok`` and stamps
   ``validator_version`` / ``checked_at``. Filling a schema-default stamp
   with the first computed verdict is the ``ensure_format_char_net`` class of
   write, not a verdict flip, so the freeze triggers are dropped for the
   UPDATE and recreated from the shipped DDL, exactly as that upgrade does.
+  The recompute after a validator-version change is a different write: there
+  a stored ``min_interpreter_ok`` that the older rule computed can change,
+  on a canon-selected option too, and the freeze is lifted for it all the
+  same. So the run reports every row whose value changed and marks the
+  canon-selected ones; read that list on the dry run before the real one.
 
 The v1 database is the source of truth for every surface this script writes:
 the cell lists below are the audit scope, the values come from
@@ -73,12 +79,28 @@ corrections at ``machine``. It is a step of the rebuild-integrity sequence in
 ``docs/corpus-publish-runbook.md`` section 1, run after the rung correction:
 the order the durable database went through.
 
+Validator versions: ``min_interpreter_ok`` is computed by
+``surface_validation.min_interpreter_ok``, the same rule the intake path
+uses. When that rule changes the validator version moves with it (v4: every
+per-release identifier table, not only CPython 3.13's), and running this
+phase is the recompute: every row whose stamp is not the current one is
+recomputed and re-stamped (``validator_version`` and ``checked_at`` both
+move, on every such row), and the run still refuses if any other stored
+column would flip. ``--validations-only`` runs this phase alone, and needs
+no v1 database. It is the form for a recompute, and the only form that
+completes on a database an earlier revision of this script repaired: there
+phase 1 refuses, because canon ratifies the starred mirror under the
+python-scoped option id that revision minted.
+
 Interpreter: every verdict is recomputed with the running interpreter's
 Unicode tables, and the durable verdicts were computed on CPython 3.13
-(Unicode 15.1), the export toolchain's interpreter. Run this on 3.13 or
-later. On 3.10 to 3.12 the options carrying a 3.13-only code point (18
-today: 17 si U+200D, 1 ja U+30FB) read as identifier drift, and the run
-refuses before writing.
+(Unicode 15.1), the export toolchain's interpreter. Run this on 3.13. On
+3.10 to 3.12 the options carrying a 3.13-only code point (18 today: 17 si
+U+200D, 1 ja U+30FB) read as identifier drift, and the run refuses before
+writing. A newer interpreter gives the same result as 3.13 for as long as no
+stored rendering carries a character CPython 3.14 or 3.15 added (none does
+today). Once one does, 3.13 stored it as no identifier and the newer
+interpreter reads it as one, so there too the run refuses before writing.
 """
 
 from __future__ import annotations
@@ -86,7 +108,7 @@ from __future__ import annotations
 import argparse
 import sqlite3
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from legesher_i18n.db import schema_v2
@@ -97,11 +119,11 @@ from legesher_i18n.db.schema_v2 import (
     normalize_surface_form,
     option_uid,
 )
-from legesher_i18n.schema_validator import SchemaValidator
 from legesher_i18n.surface_validation import (
     VALIDATOR_VERSION,
     allowed_format_chars_for,
     allowed_scripts_for,
+    min_interpreter_ok,
     validate_surface,
 )
 
@@ -173,6 +195,12 @@ class Counts:
     replaced_canon: int = 0
     backfilled: int = 0
     already_correct: int = 0
+    #: Of the backfilled rows, how many had a different ``min_interpreter_ok``
+    #: stored. The rest were only re-stamped with the current validator.
+    min_interpreter_changed: int = 0
+    #: One line per row counted above: the option, the stored and the
+    #: computed value, and whether canon ratifies the option.
+    min_interpreter_changes: list[str] = field(default_factory=list)
 
 
 def _v1_selected(v1: sqlite3.Connection, locale: str, term_name: str) -> sqlite3.Row:
@@ -205,10 +233,6 @@ def _subtag(conn: sqlite3.Connection, locale: str) -> str:
     if row is None:
         raise RepairRefused(f"v2 has no locale {locale!r} in the reference layer.")
     return row[0]
-
-
-def _min_interpreter_ok(surface: str) -> bool:
-    return not any(ch in SchemaValidator._XID_ONLY_FROM_CPYTHON_313 for ch in surface)
 
 
 def _canon_eligible(verdict) -> bool:
@@ -274,7 +298,7 @@ def _ensure_option(
                 verdict.nfkc_delta_class,
                 int(verdict.script_consistent),
                 int(verdict.collides_en_keyword),
-                int(_min_interpreter_ok(surface)),
+                int(min_interpreter_ok(surface)),
                 int(verdict.format_chars_clean),
             ),
         )
@@ -487,7 +511,9 @@ def backfill_min_interpreter(conn: sqlite3.Connection) -> Counts:
     already-computed column, and stamps the current validator version. The
     freeze triggers are dropped for the UPDATE and recreated from the shipped
     DDL — the ``ensure_format_char_net`` convention for filling a stamped
-    column that predates its computation.
+    column that predates its computation. A row whose stored
+    ``min_interpreter_ok`` differs from the computed one is written under the
+    same lifted freeze and listed in ``Counts.min_interpreter_changes``.
     """
     counts = Counts()
     orphans = conn.execute(
@@ -508,6 +534,8 @@ def backfill_min_interpreter(conn: sqlite3.Connection) -> Counts:
         "       v.script_consistent, v.collides_en_keyword, v.format_chars_clean,"
         "       o.surface_form, o.locale, o.pl_scope, o.concept_id,"
         "       l.language_subtag,"
+        "       EXISTS (SELECT 1 FROM canon_selections cs"
+        "               WHERE cs.option_uid = v.option_uid) AS canon_selected,"
         # The term name carries the structural affixes the identifier check
         # mirrors, so it must be the TERM's spelling, not the concept slug —
         # a dunder's slug spells its underscores as dashes ('--import--'),
@@ -548,12 +576,20 @@ def backfill_min_interpreter(conn: sqlite3.Connection) -> Counts:
                     f" {column} stored {row[column]!r}, computed"
                     f" {computed[column]!r}"
                 )
-        min_ok = int(_min_interpreter_ok(row["surface_form"]))
+        min_ok = int(min_interpreter_ok(row["surface_form"]))
         if (
             row["validator_version"] != VALIDATOR_VERSION
             or row["min_interpreter_ok"] != min_ok
         ):
             updates.append((min_ok, row["option_uid"]))
+            if row["min_interpreter_ok"] != min_ok:
+                counts.min_interpreter_changed += 1
+                counts.min_interpreter_changes.append(
+                    f"{row['option_uid']} ({row['locale']}/{row['term_name']}"
+                    f" {row['surface_form']!r}): min_interpreter_ok"
+                    f" {row['min_interpreter_ok']} -> {min_ok}"
+                    + (", canon-selected" if row["canon_selected"] else "")
+                )
         else:
             counts.already_correct += 1
 
@@ -620,6 +656,58 @@ def verify(conn: sqlite3.Connection, v1: sqlite3.Connection) -> list[str]:
     return failures
 
 
+def run_validations_only(db_path: Path) -> tuple[Counts, int]:
+    """Phase 3 alone: recompute and re-stamp the stored verdicts of *db_path*.
+
+    The recompute after a validator-version change. Phases 1 and 2 are
+    specific to the 2026-08-18 audit, and phase 1 refuses on a database an
+    earlier revision of this script repaired; the validation backfill has no
+    such history, needs no v1 database, and is what a version change calls
+    for. It keeps its own safeguard: the run refuses if any other stored
+    verdict column would change. Committed only if every row then carries the
+    current validator and both freeze triggers are back in place.
+    """
+    conn = connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        ensure_intake_screening(conn)
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            counts = backfill_min_interpreter(conn)
+            stale = conn.execute(
+                "SELECT COUNT(*) FROM option_validations WHERE validator_version <> ?",
+                (VALIDATOR_VERSION,),
+            ).fetchone()[0]
+            failures = [
+                f"freeze trigger {name} is missing after the run."
+                for name in schema_v2._VALIDATION_FREEZE_TRIGGERS
+                if conn.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type = 'trigger' AND name = ?",
+                    (name,),
+                ).fetchone()
+                is None
+            ]
+            if stale:
+                failures.append(
+                    f"{stale} validation row(s) are not stamped {VALIDATOR_VERSION}"
+                    " after the run."
+                )
+            if failures:
+                raise RepairRefused(
+                    "post-run verification failed:\n  " + "\n  ".join(failures)
+                )
+        except BaseException:
+            conn.rollback()
+            raise
+        conn.commit()
+        min_ok_zero = conn.execute(
+            "SELECT COUNT(*) FROM option_validations WHERE min_interpreter_ok = 0"
+        ).fetchone()[0]
+        return counts, min_ok_zero
+    finally:
+        conn.close()
+
+
 def run(db_path: Path, v1_path: Path) -> tuple[dict[str, Counts], int]:
     """The whole repair against *db_path*, committed only if verification holds."""
     conn = connect(db_path)
@@ -661,7 +749,17 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--db", type=Path, required=True, help="v2 corpus database")
     parser.add_argument(
-        "--v1-db", type=Path, required=True, help="v1 selection database (read-only)"
+        "--v1-db",
+        type=Path,
+        help="v1 selection database (read-only); not needed with --validations-only",
+    )
+    parser.add_argument(
+        "--validations-only",
+        action="store_true",
+        help=(
+            "only recompute and re-stamp the stored verdicts (phase 3): the "
+            "recompute after a validator-version change"
+        ),
     )
     parser.add_argument(
         "--dry-run",
@@ -671,6 +769,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if not args.db.is_file():
         raise RepairRefused(f"no database at {args.db}.")
+    if args.validations_only:
+        return _main_validations_only(args.db, dry_run=args.dry_run)
+    if args.v1_db is None:
+        parser.error("--v1-db is required unless --validations-only is given")
     if not args.v1_db.is_file():
         raise RepairRefused(f"no v1 database at {args.v1_db}.")
 
@@ -708,6 +810,41 @@ def main(argv: list[str] | None = None) -> int:
         f" {VALIDATOR_VERSION}, min_interpreter_ok=0 on"
         f" {min_ok_zero} option(s); verification passed."
     )
+    _print_changed_verdicts(backfill)
+    return 0
+
+
+def _print_changed_verdicts(counts: Counts) -> None:
+    """One line per stored ``min_interpreter_ok`` the run changed."""
+    for change in counts.min_interpreter_changes:
+        print(f"  changed: {change}")
+
+
+def _main_validations_only(db_path: Path, *, dry_run: bool) -> int:
+    if dry_run:
+        with tempfile.TemporaryDirectory() as scratch:
+            copy = Path(scratch) / db_path.name
+            # The sqlite backup API, for the reason given in ``main``.
+            source = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+            snapshot = sqlite3.connect(copy)
+            try:
+                source.backup(snapshot)
+            finally:
+                snapshot.close()
+                source.close()
+            counts, min_ok_zero = run_validations_only(copy)
+        prefix = "[dry-run, discarded] "
+    else:
+        counts, min_ok_zero = run_validations_only(db_path)
+        prefix = ""
+    print(
+        f"{prefix}validations only: {counts.backfilled} validation row(s) stamped"
+        f" {VALIDATOR_VERSION} ({counts.min_interpreter_changed} with a changed"
+        f" min_interpreter_ok, the rest re-stamped only),"
+        f" {counts.already_correct} already current;"
+        f" min_interpreter_ok=0 on {min_ok_zero} option(s); verification passed."
+    )
+    _print_changed_verdicts(counts)
     return 0
 
 

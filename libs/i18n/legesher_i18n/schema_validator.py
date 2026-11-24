@@ -338,6 +338,13 @@ _UNICODE_OF_CPYTHON: dict[tuple[int, int], str] = {
     (3, 15): "17.0",
 }
 
+#: The one release boundary a pack keeps two spellings across. The pack
+#: exporter writes the files below it without the 3.13 characters that carry
+#: no sound (ZWJ, ZWNJ, the katakana middle dots) and restores the full
+#: spelling in the 3.13 file. A character a later release added has no such
+#: second spelling, so the exporter refuses it and the review check says so.
+TIERED_IDENTIFIER_RELEASE: tuple[int, int] = (3, 13)
+
 
 def interpreter_needed_for_identifier(value: str) -> tuple[int, int] | None:
     """The CPython release a value's newest identifier character needs, from the pinned tables.
@@ -356,6 +363,54 @@ def interpreter_needed_for_identifier(value: str) -> tuple[int, int] | None:
         if any(ch in added for ch in value):
             needed = version
     return needed
+
+
+def identifier_characters_newer_than(
+    value: str, floor: tuple[int, int] = (3, 10)
+) -> dict[tuple[int, int], list[str]]:
+    """The characters of ``value`` a CPython release after ``floor`` added, by release.
+
+    Keyed by the first release that accepts each character, oldest release
+    first, each list sorted and without repeats. Empty when ``value`` needs
+    nothing newer than ``floor``. Static, like
+    :func:`interpreter_needed_for_identifier`: it reads the pinned tables,
+    never the running interpreter. A ``floor`` of 3.11 or 3.12 still reports
+    a 3.13-table character, because that table is the whole 3.10 -> 3.13
+    measurement.
+    """
+    found: dict[tuple[int, int], list[str]] = {}
+    for release in sorted(_XID_ADDED_BY_CPYTHON):
+        if release <= floor:
+            continue
+        added = _XID_ADDED_BY_CPYTHON[release]
+        characters = sorted({ch for ch in value if ch in added})
+        if characters:
+            found[release] = characters
+    return found
+
+
+def describe_newer_identifier_characters(
+    value: str, floor: tuple[int, int] = (3, 10)
+) -> str:
+    """Name each character ``value`` uses that a release after ``floor`` added.
+
+    One function for every surface that reports such a character, so each
+    gives the code point and the release it needs in the same form:
+    ``U+0897 ARABIC PEPET (CPython 3.14+), U+200D ZERO WIDTH JOINER (CPython
+    3.13+)``. Newest release first; an empty string when there is nothing to
+    name. The code point and the release come from the pinned tables. The
+    character name comes from the running interpreter, so one whose Unicode
+    data predates the character leaves the name out: ``U+0897 (CPython
+    3.14+)``.
+    """
+    parts: list[str] = []
+    by_release = identifier_characters_newer_than(value, floor)
+    for release in sorted(by_release, reverse=True):
+        for ch in by_release[release]:
+            name = unicodedata.name(ch, "")
+            point = f"U+{ord(ch):04X} {name}" if name else f"U+{ord(ch):04X}"
+            parts.append(f"{point} (CPython {release[0]}.{release[1]}+)")
+    return ", ".join(parts)
 
 
 @dataclass(frozen=True)
@@ -1829,8 +1884,9 @@ class SchemaValidator:
     # same reason and a set naming only the first two waved it through.
     #
     # The gate below no longer reads this name: it reads every release's table
-    # through ``interpreter_needed_for_identifier``. The name stays for the
-    # callers that still tier on the 3.13 boundary alone.
+    # through ``interpreter_needed_for_identifier``, and so does every other
+    # caller in the package and its scripts. The name stays because tests of
+    # the 3.13 boundary still read it.
     _XID_ONLY_FROM_CPYTHON_313: frozenset[str] = _XID_CHARS_ADDED_BY_CPYTHON_313
 
     @staticmethod

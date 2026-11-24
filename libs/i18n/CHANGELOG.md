@@ -9,6 +9,72 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- `scripts/repair_v2_audit_findings.py --validations-only`: the recompute
+  after a validator-version change. It runs the validation phase alone,
+  without the audit-specific phases and without a v1 database, and lists
+  every row whose stored `min_interpreter_ok` changed, marking the ones canon
+  ratifies (`docs/corpus-publish-runbook.md`).
+- `surface_validation.min_interpreter_ok`: the one rule behind the stored
+  verdict of that name. The intake path and the repair script both call it;
+  each had its own copy.
+- `schema_validator.identifier_characters_newer_than` and
+  `describe_newer_identifier_characters` say which characters of a value a
+  release after a given floor added.
+  `schema_validator.TIERED_IDENTIFIER_RELEASE` names the one release boundary
+  a pack keeps two spellings across; the exporter and the review check both
+  read it.
+
+### Changed
+
+- **`VALIDATOR_VERSION` is `py-identifier-v4`**, because the stored
+  `min_interpreter_ok` verdict changed meaning (see Fixed). A corpus database
+  stamped by another validator version is brought up to date with
+  `--validations-only` (see Added). Where no stored rendering carries a 3.14
+  or 3.15 character no verdict changes, but `validator_version` and
+  `checked_at` change on every row.
+- A report that names a character a newer Python added gives the code point,
+  the character's name and the release in one form: `U+200C ZERO WIDTH
+  NON-JOINER (CPython 3.13+)`. This rewords the intake report and the review
+  check for 3.13 characters too; their verdicts are unchanged. An interpreter
+  whose Unicode data predates the character leaves the name out.
+- The vocabulary prompt names every release that added identifier characters,
+  not only 3.13: the text `scripts/translate/generate_vocabulary.py` sends,
+  which now reads the releases from the validator's tables, and both
+  statements of the rule in its specification.
+
+### Fixed
+
+- **The remaining readers of the 3.13 identifier table read every release's
+  table.** A character that Python 3.14 (Unicode 16.0) or 3.15 (Unicode 17.0)
+  added to identifiers was invisible to four places that only knew the 3.13
+  table:
+  - The intake path stored such a rendering as `min_interpreter_ok = 1`,
+    "runs on the oldest supported interpreter". It is now 0, and the report
+    names the code point and the release it needs.
+  - The review check asked the running interpreter about it, so the verdict
+    depended on where the check ran. It now reads the tables: below the
+    release a word needs it is not an identifier, on any interpreter. At or
+    above that release the running interpreter judges, and one with older
+    Unicode tables says it cannot and names the release to run the check on.
+    The `version-tier` warning names the release and counts from the row's
+    own first version. For a character 3.14 or 3.15 added it also says the
+    exporter refuses the word as written.
+  - `scripts/translate/yaml_exporter.py`, run on an interpreter new enough to
+    accept the value, wrote it into the slot's pack file, which every later
+    file extends. Run on an older interpreter it reported the selection as
+    corrupt. It now refuses on any interpreter, when the selections are
+    loaded, naming the slot, the code point and the release.
+  - `scripts/repair_v2_audit_findings.py` recomputed the stored verdict with
+    the 3.13 table only.
+
+  No shipped pack carries such a character, so nothing changes for a shipped
+  pack.
+- A review file whose pinned Python is not a version (`python=3.x`) made the
+  review check raise when a suggestion carried a 3.13 character. It now
+  reports the pin and checks the rows.
+
 ## [0.28.2] - 2026-11-23
 
 ### Added

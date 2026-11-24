@@ -31,7 +31,7 @@ import pytest
 import yaml
 
 from legesher_i18n.db import TranslationDatabase
-from tests.interpreter_gaps import NEEDS_UNICODE_15_1
+from tests.interpreter_gaps import NEEDS_UNICODE_15_1, NEWER_IDENTIFIER_SAMPLES
 from legesher_i18n.term_definitions import (
     BUILTIN_FUNCTIONS,
     BUILTIN_TYPES,
@@ -1114,6 +1114,221 @@ class TestUnstrippableXIDCharacters:
             exporter.export_all_languages(overwrite=True)
         assert isinstance(excinfo.value.failures["te"], UnstrippableXIDError)
         assert "te" in excinfo.value.data_integrity
+
+
+#: Releases newer than the one boundary the exporter can tier across.
+_RELEASES_BEYOND_TIERING = [
+    release for release in sorted(NEWER_IDENTIFIER_SAMPLES) if release > (3, 13)
+]
+
+#: The selection categories that fill each pack section.
+_SECTION_CATEGORIES = {
+    "keywords": ("keyword",),
+    "builtins": ("builtin_func", "builtin_type", "special_constant"),
+    "exceptions": ("exception",),
+    "implicit_params": ("implicit_param",),
+}
+
+
+def _store_selection_directly(db, ids, lang, category, name, value) -> None:
+    """Write a selection as a newer interpreter's ``set_selected`` stored it.
+
+    ``set_selected`` asks the running interpreter, so on one that does not
+    read the character it refuses the value. The row is the same either way.
+    """
+    conn = db._get_connection()
+    changed = conn.execute(
+        "UPDATE selected_translations SET translation = ? "
+        "WHERE term_id = ? AND language_code = ?",
+        (value, ids[(category, name)], lang),
+    ).rowcount
+    conn.commit()
+    assert changed == 1
+
+
+class TestValuesBeyondTiering:
+    """A value that needs a release newer than 3.13 is refused, by name.
+
+    Tiering knows one boundary. A character CPython 3.14 or 3.15 added has no
+    second spelling for the older files, and written as it is it would sit in
+    files that older interpreters read. The exporter only tiered on the 3.13
+    table, so on an interpreter new enough to accept the value it wrote it
+    into the slot's file and every file that extends it.
+    """
+
+    def test_there_is_a_release_to_check(self):
+        assert _RELEASES_BEYOND_TIERING, "nothing below would run"
+
+    @pytest.mark.parametrize(
+        "release",
+        _RELEASES_BEYOND_TIERING,
+        ids=lambda release: f"{release[0]}.{release[1]}",
+    )
+    def test_every_slot_the_exporter_writes_is_refused_by_file_and_name(
+        self, exporter, temp_db, release
+    ):
+        # The slots come from the payload the exporter builds, not from a list
+        # kept here: a slot the check skipped would be written unrefused, and
+        # this names it. Resolved straight from slots, so the case runs on
+        # every interpreter.
+        _populate_full_language(temp_db, "ar")
+        clean = exporter._load_selected_slots("ar")
+        written = exporter._build_version_sections("ar", dict(clean), [])
+        newer = NEWER_IDENTIFIER_SAMPLES[release]
+
+        tweaked: set[tuple[str, str]] = set()
+        not_refused: list[str] = []
+        for version, by_section in written.items():
+            for section, values in by_section.items():
+                for name in values:
+                    (key,) = [
+                        (category, name)
+                        for category in _SECTION_CATEGORIES[section]
+                        if (category, name) in clean
+                    ]
+                    slots = dict(clean)
+                    slots[key] = f"t_x{newer}y" + ("*" if name.endswith("*") else "")
+                    missing: list[str] = []
+                    try:
+                        exporter._build_version_sections("ar", slots, missing)
+                    except UnstrippableXIDError as refusal:
+                        message = str(refusal)
+                        assert f" {section}.{name} = " in message
+                        assert f"into {version}.yml" in message
+                        assert f"U+{ord(newer):04X}" in message
+                        assert f"(CPython {release[0]}.{release[1]}+)" in message
+                    else:
+                        not_refused.append(f"{version}.yml {section}.{name}")
+                    assert missing == []
+                    tweaked.add(key)
+        assert not_refused == []
+        # Every selection the fixture holds is written somewhere, so every
+        # one of them was tried, the starred ``except*`` and each later
+        # file's additions included.
+        assert tweaked == set(clean)
+        assert {"3.10", "3.11", "3.12", "3.13"} <= {
+            version
+            for version, by_section in written.items()
+            if any(by_section.values())
+        }
+
+    def test_a_strippable_3_13_character_is_still_tiered_not_refused(
+        self, exporter, temp_db
+    ):
+        # The boundary tiering does know keeps working: only releases after
+        # it are refused outright.
+        _populate_full_language(temp_db, "si")
+        slots = exporter._load_selected_slots("si")
+        slots[("keyword", "while")] = f"t_whi{ZWJ}le"
+        sections = exporter._build_version_sections("si", slots, [])
+        assert sections["3.10"]["keywords"]["while"] == "t_while"
+        assert sections["3.13"]["keywords"]["while"] == f"t_whi{ZWJ}le"
+
+    @pytest.mark.parametrize(
+        "release",
+        _RELEASES_BEYOND_TIERING,
+        ids=lambda release: f"{release[0]}.{release[1]}",
+    )
+    def test_the_export_refuses_it_end_to_end_on_any_interpreter_and_writes_nothing(
+        self, exporter, temp_db, temp_output_dir, release
+    ):
+        # The selection is already in the database, as an interpreter that
+        # reads the character stored it. An older interpreter reads the value
+        # as no identifier at all, and used to report the selection as
+        # corrupt instead of naming the character and the release. Refused
+        # when the selections are loaded, before anything is resolved.
+        newer = NEWER_IDENTIFIER_SAMPLES[release]
+        ids = _populate_full_language(temp_db, "ar")
+        _store_selection_directly(
+            temp_db, ids, "ar", "keyword", "while", f"t_whi{newer}le"
+        )
+
+        with pytest.raises(UnstrippableXIDError) as excinfo:
+            exporter.export_language("ar", overwrite=True)
+        message = str(excinfo.value)
+        assert " keywords.while = " in message
+        assert f"U+{ord(newer):04X}" in message
+        assert f"(CPython {release[0]}.{release[1]}+)" in message
+        assert not (temp_output_dir / "ar").exists()
+
+    @pytest.mark.parametrize(
+        "release",
+        _RELEASES_BEYOND_TIERING,
+        ids=lambda release: f"{release[0]}.{release[1]}",
+    )
+    @pytest.mark.parametrize("shape", ["{newer}", "bad value{newer}"])
+    def test_a_term_the_exporter_does_not_write_is_refused_too(
+        self, exporter, temp_db, temp_output_dir, release, shape
+    ):
+        # A selection for a term no pack file carries yet. Skipping the
+        # publish gate for it and writing the rest would let a damaged
+        # selection through unseen, so the export stops here as well.
+        newer = NEWER_IDENTIFIER_SAMPLES[release]
+        ids = _populate_full_language(temp_db, "ar")
+        term_id = temp_db.get_or_create_term(
+            "not_in_any_file", "python", "keyword", allow_duplicate_name=True
+        )
+        temp_db.add_translation(
+            term_id=term_id, language_code="ar", translation="t_plain", source="test"
+        )
+        temp_db.set_selected(term_id=term_id, language_code="ar", translation="t_plain")
+        ids[("keyword", "not_in_any_file")] = term_id
+        _store_selection_directly(
+            temp_db,
+            ids,
+            "ar",
+            "keyword",
+            "not_in_any_file",
+            "t_x" + shape.format(newer=newer),
+        )
+
+        with pytest.raises(UnstrippableXIDError) as excinfo:
+            exporter.export_language("ar", overwrite=True)
+        message = str(excinfo.value)
+        assert " keywords.not_in_any_file = " in message
+        assert f"(CPython {release[0]}.{release[1]}+)" in message
+        assert not (temp_output_dir / "ar").exists()
+
+    def test_every_too_new_selection_is_named_in_one_refusal(self, exporter, temp_db):
+        # A maintainer fixes them in one pass, not one export run at a time.
+        ids = _populate_full_language(temp_db, "ar")
+        for name, release in (("while", (3, 14)), ("for", (3, 15))):
+            if release not in NEWER_IDENTIFIER_SAMPLES:
+                pytest.skip(f"no sample character for {release}")
+            _store_selection_directly(
+                temp_db,
+                ids,
+                "ar",
+                "keyword",
+                name,
+                f"t_{name}{NEWER_IDENTIFIER_SAMPLES[release]}x",
+            )
+
+        with pytest.raises(UnstrippableXIDError) as excinfo:
+            exporter.export_language("ar", overwrite=True)
+        message = str(excinfo.value)
+        assert " keywords.while = " in message and "keywords.for = " in message
+        assert "(CPython 3.14+)" in message and "(CPython 3.15+)" in message
+        assert message.endswith("Respell these terms.")
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("two words", id="no-newer-character"),
+            pytest.param(f"t_whi{ZWJ}le bad", id="a-3.13-character"),
+        ],
+    )
+    def test_a_value_no_interpreter_reads_is_still_a_corrupt_selection(
+        self, exporter, temp_db, value
+    ):
+        # The refusal ahead of the publish gate is for a character past the
+        # tiered boundary alone. A 3.13 character is tiering's own business,
+        # so a value carrying one still meets the publish gate, and a value
+        # that is no identifier anywhere is still a corrupt selection.
+        ids = _populate_full_language(temp_db, "ar")
+        _store_selection_directly(temp_db, ids, "ar", "keyword", "while", value)
+        with pytest.raises(CorruptSelectionError, match="while"):
+            exporter.export_language("ar", overwrite=True)
 
 
 class TestBulkExportBlastRadius:

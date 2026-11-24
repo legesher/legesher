@@ -96,7 +96,12 @@ from legesher_i18n.pack_messages import (
     message_fingerprint,
     messages_structure_errors,
 )
-from legesher_i18n.schema_validator import SchemaValidator
+from legesher_i18n.schema_validator import (
+    _XID_ADDED_BY_CPYTHON,
+    TIERED_IDENTIFIER_RELEASE,
+    describe_newer_identifier_characters,
+    interpreter_needed_for_identifier,
+)
 from legesher_i18n.selection import is_valid_pack_value, vocabulary_value_error
 from legesher_i18n.term_definitions import (
     BUILTIN_FUNCTIONS,
@@ -138,16 +143,23 @@ def _language_names(language_code: str) -> tuple[str, str]:
 
 # Categories tried, in order, when resolving a builtins-section slot.
 _BUILTIN_CATEGORIES = ("builtin_func", "builtin_type", "special_constant")
+#: The pack section each selection category is written to.
+_SECTION_OF_CATEGORY = {
+    "keyword": "keywords",
+    **dict.fromkeys(_BUILTIN_CATEGORIES, "builtins"),
+    "exception": "exceptions",
+    "implicit_param": "implicit_params",
+}
 
 # Characters valid in identifiers only on CPython 3.13+ (Unicode 15.1 XID)
 # WHOSE REMOVAL LEAVES THE SAME WORD. Canonical values containing one are
 # exported version-tiered (CORE-1521): the pre-3.13 files carry the stripped
 # compatibility form, the 3.13 overlay restores the canonical spelling.
 #
-# Deliberately NARROWER than SchemaValidator._XID_ONLY_FROM_CPYTHON_313, which
-# is the full 5,674-codepoint 3.10 -> 3.13 delta. That set is for DETECTION and
-# must be complete. This one authorises silent deletion, so it holds only
-# characters that carry no phonetic content:
+# Deliberately NARROWER than the validator's 3.13 table, which is the full
+# 5,674-codepoint 3.10 -> 3.13 delta. That table is for DETECTION and must be
+# complete. This one authorises silent deletion, so it holds only characters
+# that carry no phonetic content:
 #
 #   U+200D ZERO WIDTH JOINER      Sinhala conjuncts — an invisible ligature cue
 #   U+200C ZERO WIDTH NON-JOINER  Persian/Urdu — the same, negated
@@ -162,10 +174,24 @@ _BUILTIN_CATEGORIES = ("builtin_func", "builtin_type", "special_constant")
 _XID_STRIPPABLE_BELOW_313 = frozenset({"\u200d", "\u200c", "\u30fb", "\uff65"})
 _XID_STRIP_TABLE = {ord(ch): None for ch in _XID_STRIPPABLE_BELOW_313}
 
-# Detection is the validator's job, and its set is the complete delta. Imported
-# rather than mirrored: the previous copy here drifted from it by two
-# characters, which is how U+30FB reached a 3.10 pack.
-_XID_ONLY_FROM_CPYTHON_313 = SchemaValidator._XID_ONLY_FROM_CPYTHON_313
+# Detection is the validator's job, and its tables are the complete deltas,
+# one per CPython release. Imported rather than mirrored: the previous copy
+# here drifted from the validator by two characters, which is how U+30FB
+# reached a 3.10 pack.
+#
+# Tiering exists for ONE boundary, 3.13: the pre-3.13 files carry the stripped
+# form and the 3.13 file restores the canonical one. A value that needs a
+# newer release than that is not tiered, so it is refused when the selections
+# are loaded (``_load_selected_slots``), with a second check on the finished
+# payload behind it (``_refuse_values_tiering_cannot_place``), rather than
+# written into files that older interpreters read. The review check reads the
+# same boundary.
+_TIERED_RELEASE = TIERED_IDENTIFIER_RELEASE
+_TIERING_KNOWS_ONE_BOUNDARY = (
+    "The exporter can tier a value across the "
+    f"{_TIERED_RELEASE[0]}.{_TIERED_RELEASE[1]} boundary only"
+)
+_XID_ADDED_BY_TIERED_RELEASE = _XID_ADDED_BY_CPYTHON[_TIERED_RELEASE]
 
 
 # Pack sections, in emitted file order.
@@ -279,15 +305,20 @@ class UnplaceableMessageError(ValueError):
 
 
 class UnstrippableXIDError(ValueError):
-    """A canonical value needs a 3.13-only character that cannot be removed.
+    """A canonical value needs an identifier character tiering cannot handle.
 
-    Tiering works by DELETING the offending character from the pre-3.13
-    files, which is only honest for characters carrying no phonetic
-    content (:data:`_XID_STRIPPABLE_BELOW_313`). For anything else in the
-    3.10 -> 3.13 XID delta — a Telugu nukta, an Arabic letter — deletion
-    would publish a different word under the same term, so the export
-    refuses. The fix is a maintainer's: respell the term, or raise the
-    language's interpreter floor.
+    Two cases, one refusal. Tiering works by DELETING the offending character
+    from the pre-3.13 files, which is only honest for characters carrying no
+    phonetic content (:data:`_XID_STRIPPABLE_BELOW_313`). For anything else
+    in the 3.10 -> 3.13 XID delta (a Telugu nukta, an Arabic letter)
+    deletion would publish a different word under the same term. And a
+    character a release AFTER 3.13 added (the 3.14 and 3.15 tables) is not
+    tiered at all: the exporter knows one boundary, so written as it is the
+    value would land in files that older interpreters read. Either way the
+    export refuses, naming the character and the release it needs. The fix
+    is a maintainer's. In both cases the term can be respelled. For a 3.13
+    character the language's interpreter floor can be raised to 3.13
+    instead; no floor the packs support makes room for a newer one.
     """
 
 
@@ -392,26 +423,57 @@ class YAMLExporter:
     def _load_selected_slots(self, language_code: str) -> dict[tuple[str, str], str]:
         """Load canonical selections as a (category, term_name) -> value map.
 
+        A value that needs a CPython release newer than tiering knows is
+        refused here, before the publish gate is asked. That gate asks the
+        running interpreter, and an interpreter older than the release reads
+        such a value as no identifier at all, which would report a sound
+        selection made on a newer interpreter as a corrupt one. The tables
+        say the same thing on every interpreter, so the refusal names the
+        character and the release wherever the export runs. It covers every
+        selected term, written to a pack file or not: the exporter has no
+        way to place such a value.
+
         Raises:
             CorruptSelectionError: If any selected value fails the publish
                 gate (should be impossible — ``set_selected`` enforces it —
                 but export must never propagate a dirty value).
+            UnstrippableXIDError: If a selected value needs a CPython release
+                newer than the one boundary tiering knows.
         """
         slots: dict[tuple[str, str], str] = {}
         invalid: list[str] = []
+        beyond_tiering: list[str] = []
         for row in self.db.get_all_selected(language_code=language_code):
             if row.get("programming_language") not in (None, "python"):
                 continue
             name = row["term_name"]
             value = row["translation"]
+            category = row["term_category"]
+            too_new = self._beyond_tiering(
+                _SECTION_OF_CATEGORY.get(category, category), name, value
+            )
+            if too_new is not None:
+                beyond_tiering.append(too_new)
+                continue
             if not is_valid_pack_value(name, value, language_code):
                 invalid.append(f"{name} -> {value!r}")
                 continue
-            slots[(row["term_category"], name)] = value
+            slots[(category, name)] = value
         if invalid:
             raise CorruptSelectionError(
                 f"Selected translations for '{language_code}' fail the "
                 f"publish gate (selection layer corrupt?): {invalid}"
+            )
+        if beyond_tiering:
+            raise UnstrippableXIDError(
+                f"'{language_code}' {'; '.join(beyond_tiering)}. "
+                f"{_TIERING_KNOWS_ONE_BOUNDARY}, so it cannot place a value "
+                "that needs a newer release. "
+                + (
+                    "Respell the term."
+                    if len(beyond_tiering) == 1
+                    else "Respell these terms."
+                )
             )
         return slots
 
@@ -470,6 +532,9 @@ class YAMLExporter:
         Raises:
             InterpreterFloorCollisionError: If stripping collapses two
                 canonically-distinct values into one token.
+            UnstrippableXIDError: If a value needs a character tiering cannot
+                place: a 3.13 one that cannot be dropped, or one a later
+                release added.
         """
         kw_310 = self._resolve_section_slots(
             slots, "keywords", KEYWORDS_BASE + SPECIAL_VALUES + KEYWORDS_3_10, missing
@@ -507,7 +572,7 @@ class YAMLExporter:
         def tier(section: str, values: dict[str, str]) -> dict[str, str]:
             tiered: dict[str, str] = {}
             for name, value in values.items():
-                needs_313 = {ch for ch in value if ch in _XID_ONLY_FROM_CPYTHON_313}
+                needs_313 = {ch for ch in value if ch in _XID_ADDED_BY_TIERED_RELEASE}
                 if needs_313:
                     unstrippable = sorted(needs_313 - _XID_STRIPPABLE_BELOW_313)
                     if unstrippable:
@@ -549,6 +614,10 @@ class YAMLExporter:
             "3.14": {"keywords": {}, "exceptions": {}},
         }
 
+        # Checked on what will be written, file by file, so no slot can be
+        # left out of it: the 3.13 file's own additions never pass through
+        # ``tier``.
+        self._refuse_values_tiering_cannot_place(language_code, sections)
         self._assert_no_strip_collisions(language_code, stripped_index)
         return sections
 
@@ -735,6 +804,49 @@ class YAMLExporter:
         return resolved
 
     @staticmethod
+    def _refuse_values_tiering_cannot_place(
+        language_code: str,
+        sections: dict[str, dict[str, dict[str, str]]],
+    ) -> None:
+        """Refuse a value that needs a CPython release newer than tiering knows.
+
+        The backstop behind ``_load_selected_slots``, for slots that reach
+        ``_build_version_sections`` some other way. It reads the finished
+        payload, every value of every section of every file, so it covers
+        whatever is about to be written with no list of slots to keep in
+        step. The value named is the one that file would carry.
+
+        Raises:
+            UnstrippableXIDError: Naming the file, the slot, the character
+                and the release it needs.
+        """
+        for version, by_section in sections.items():
+            for section, values in by_section.items():
+                for name, value in values.items():
+                    too_new = YAMLExporter._beyond_tiering(section, name, value)
+                    if too_new is None:
+                        continue
+                    raise UnstrippableXIDError(
+                        f"'{language_code}' {too_new}. "
+                        f"{_TIERING_KNOWS_ONE_BOUNDARY}, so this one would be "
+                        f"written into {version}.yml and the files that extend "
+                        "it, which older interpreters read. Respell the term."
+                    )
+
+    @staticmethod
+    def _beyond_tiering(section: str, name: str, value: str) -> str | None:
+        """Name a value that needs a release newer than tiering knows, or ``None``.
+
+        ``keywords.while = 't_x...' uses U+0897 ARABIC PEPET (CPython 3.14+)``.
+        Read from the pinned tables, never from the running interpreter.
+        """
+        needed = interpreter_needed_for_identifier(value)
+        if needed is None or needed <= _TIERED_RELEASE:
+            return None
+        newer = describe_newer_identifier_characters(value, floor=_TIERED_RELEASE)
+        return f"{section}.{name} = {value!r} uses {newer}"
+
+    @staticmethod
     def _raise_unstrippable(
         language_code: str,
         section: str,
@@ -853,6 +965,8 @@ class YAMLExporter:
         Raises:
             CorruptSelectionError: When a canonical selection fails the
                 publish gate.
+            UnstrippableXIDError: When a canonical selection needs an
+                identifier character tiering cannot place.
             IncompleteSelectionError: In strict mode, when selections
                 don't cover the full term inventory.
             InterpreterFloorCollisionError: When interpreter-floor

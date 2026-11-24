@@ -18,6 +18,7 @@ a 3.13+ form on an older interpreter has to know (CORE-2334).
 
 from __future__ import annotations
 
+import sys
 import unicodedata
 
 import pytest
@@ -41,3 +42,37 @@ NEEDS_UNICODE_15_1 = pytest.mark.xfail(
         "the ja katakana middle dot (tests/interpreter_gaps.py; core's gap 2)"
     ),
 )
+
+
+#: One identifier character from each per-release table, for tests that need
+#: "a value that needs release V". Each is a single character that can follow
+#: a letter in a name on the release that added it. ``test_min_interpreter_
+#: identifier.py`` checks that every table has a sample here and that each
+#: sample is in its own table and no older one.
+NEWER_IDENTIFIER_SAMPLES: dict[tuple[int, int], str] = {
+    (3, 13): "\u200d",  # ZERO WIDTH JOINER (Unicode 15.1)
+    (3, 14): "\u0897",  # ARABIC PEPET (Unicode 16.0)
+    (3, 15): "\u088f",  # an Arabic letter Unicode 17.0 added
+}
+
+
+def needs_identifier_rules_of(release: tuple[int, int]):
+    """The strict-xfail mark for a test that loads a value needing ``release``.
+
+    For 3.13 this is :data:`NEEDS_UNICODE_15_1`, the ledger every such test
+    already carries. A value that needs a newer release gets the same shape
+    of mark, decided from the running interpreter, so the day a pack tier
+    carries one the tests that load it are ledgered on the older CI legs
+    without anyone listing languages.
+    """
+    if release == (3, 13):
+        return NEEDS_UNICODE_15_1
+    return pytest.mark.xfail(
+        sys.version_info[:2] < release,
+        strict=True,
+        reason=(
+            f"needs the identifier rules of CPython {release[0]}.{release[1]}+: this "
+            f"interpreter's tables ({unicodedata.unidata_version}) reject a "
+            "character that release added (tests/interpreter_gaps.py)"
+        ),
+    )

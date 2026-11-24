@@ -28,10 +28,10 @@ from legesher_i18n.schema_validator import (
     TRANSLATION_SECTIONS,
     VOCABULARY_SECTIONS,
     LanguagePackSchema,
-    SchemaValidator,
+    interpreter_needed_for_identifier,
 )
 from legesher_i18n.script_policy import BIDI_CONTROLS
-from tests.interpreter_gaps import NEEDS_UNICODE_15_1
+from tests.interpreter_gaps import needs_identifier_rules_of
 
 LIB_ROOT = Path(__file__).parent.parent
 
@@ -674,13 +674,14 @@ class TestLoading:
 def _shipped_tiers() -> list[object]:
     """Every (language, version) the packs ship, from the registry and the loader.
 
-    A tier whose merged values carry a character that is an identifier
-    character only under Unicode 15.1 is marked with the interpreter-gap
-    ledger: on 3.10 to 3.12 the schema rejects its identifiers before
-    ``messages`` is reached.
+    A tier whose merged values carry a character that a newer CPython added
+    to identifiers is marked with the interpreter-gap ledger for the release
+    it needs: on an older interpreter the schema rejects its identifiers
+    before ``messages`` is reached. The release comes from the per-release
+    tables, so a tier that one day needs 3.14 or 3.15 is ledgered on the
+    older legs without a list of languages.
     """
     loader = LanguagePackLoader()
-    only_from_313 = SchemaValidator._XID_ONLY_FROM_CPYTHON_313
     tiers: list[object] = []
     for language in get_active_language_codes():
         for version in loader.list_available_versions():
@@ -691,11 +692,8 @@ def _shipped_tiers() -> list[object]:
                 for name in (*TRANSLATION_SECTIONS, *VOCABULARY_SECTIONS)
                 for value in (data.get(name) or {}).values()
             )
-            marks = (
-                [NEEDS_UNICODE_15_1]
-                if any(ch in only_from_313 for ch in values)
-                else []
-            )
+            needed = interpreter_needed_for_identifier(values)
+            marks = [] if needed is None else [needs_identifier_rules_of(needed)]
             tiers.append(
                 pytest.param(language, version, marks=marks, id=f"{language}-{version}")
             )

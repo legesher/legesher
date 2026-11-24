@@ -69,6 +69,7 @@ from legesher_i18n.language_registry import (  # noqa: E402
     get_native_name,
 )
 from legesher_i18n.model_config import anthropic_model  # noqa: E402
+from legesher_i18n.schema_validator import _UNICODE_OF_CPYTHON  # noqa: E402
 from legesher_i18n.selection import vocabulary_value_error  # noqa: E402
 from legesher_i18n.style_guides import StyleGuideLoader  # noqa: E402
 from legesher_i18n.vocabulary_definitions import (  # noqa: E402
@@ -101,6 +102,20 @@ def render_symbol_inventory() -> str:
             f"| {entry.slug} | {glyph} | {entry.english_name} | {entry.role} |"
         )
     return "\n".join(lines)
+
+
+def render_releases_that_added_identifier_characters() -> str:
+    """The CPython releases whose characters a recommended name may not use.
+
+    ``3.13 (Unicode 15.1), 3.14 (Unicode 16.0) and 3.15 (Unicode 17.0)``, read
+    from the validator's tables so the prompt names every release the write
+    boundary (:func:`legesher_i18n.selection.vocabulary_value_error`) refuses.
+    """
+    named = [
+        f"{release[0]}.{release[1]} (Unicode {unicode_version})"
+        for release, unicode_version in sorted(_UNICODE_OF_CPYTHON.items())
+    ]
+    return " and ".join([", ".join(named[:-1]), named[-1]]) if named[1:] else named[0]
 
 
 def render_convention_inventory() -> str:
@@ -207,8 +222,9 @@ native abbreviations would describe no real codebase.
 
 Each value must be a valid Python identifier, must not be a Python keyword, \
 and must parse on CPython 3.10 (avoid characters that only became \
-identifier-legal in CPython 3.13). Keep them short - brevity is the whole \
-point of these names.
+identifier-legal in a later CPython: \
+{render_releases_that_added_identifier_characters()} each added some). Keep \
+them short - brevity is the whole point of these names.
 
 {render_convention_inventory()}
 

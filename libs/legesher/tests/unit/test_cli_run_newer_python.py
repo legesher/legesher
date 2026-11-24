@@ -37,7 +37,7 @@ from legesher.runtime import error_handler, import_hook
 from legesher_core import TokenTranslator
 from legesher_core import transformer as transformer_module
 from legesher_i18n import LanguagePackLoader
-from legesher_i18n.schema_validator import SchemaValidator
+from legesher_i18n.schema_validator import interpreter_needed_for_identifier
 
 TIERS = LanguagePackLoader().list_available_versions("python")
 NEWEST = TIERS[-1]
@@ -81,9 +81,6 @@ def _maps(translator: TokenTranslator) -> tuple[dict[str, str], dict[str, str]]:
     return translator.mapper.keyword_map, translator.mapper.builtin_map
 
 
-UNICODE_VERSION = tuple(int(part) for part in unicodedata.unidata_version.split("."))
-
-
 def _xfail_where_the_newest_tier_cannot_load(request, lang: str) -> None:
     """Mark the case strict xfail where this interpreter rejects the newest tier.
 
@@ -92,10 +89,9 @@ def _xfail_where_the_newest_tier_cannot_load(request, lang: str) -> None:
     rejects ZWJ, ZWNJ and the katakana middle dot, so a pack whose later tiers
     spell words with them does not load at those tiers at all (core's gap 2,
     CORE-1521). Decided from the pack's own files, not a list of languages.
+    The same holds for a character a later release added, on any interpreter
+    older than that release, so every release's table is read.
     """
-    if UNICODE_VERSION >= (15, 1):
-        return
-    xid_313 = SchemaValidator._XID_ONLY_FROM_CPYTHON_313
     packs = LanguagePackLoader()._discover_packs()[f"python-{lang}"] / "packs"
     for tier in TIERS:
         data = yaml.safe_load((packs / f"{tier}.yml").read_text(encoding="utf-8"))
@@ -103,18 +99,23 @@ def _xfail_where_the_newest_tier_cannot_load(request, lang: str) -> None:
             if not isinstance(entries, dict):
                 continue
             for key, value in entries.items():
-                if isinstance(value, str) and any(ch in xid_313 for ch in value):
-                    request.applymarker(
-                        pytest.mark.xfail(
-                            strict=True,
-                            reason=(
-                                f"CORE-1521: {lang} {tier}.yml {section}.{key} needs "
-                                "Unicode 15.1 identifier rules (CPython 3.13+); this "
-                                f"interpreter has {unicodedata.unidata_version}"
-                            ),
-                        )
+                if not isinstance(value, str):
+                    continue
+                needed = interpreter_needed_for_identifier(value)
+                if needed is None or sys.version_info[:2] >= needed:
+                    continue
+                request.applymarker(
+                    pytest.mark.xfail(
+                        strict=True,
+                        reason=(
+                            f"CORE-1521: {lang} {tier}.yml {section}.{key} needs the "
+                            f"identifier rules of CPython {needed[0]}.{needed[1]}+; "
+                            "this interpreter has Unicode "
+                            f"{unicodedata.unidata_version}"
+                        ),
                     )
-                    return
+                )
+                return
 
 
 @pytest.mark.parametrize("lang", sorted(IDENTIFIERS))
@@ -192,11 +193,12 @@ def _xfail_on_interpreter_gaps(request, english: str, lang: str) -> None:
       that carries a combining mark into ERRORTOKEN fragments, so the return
       hop never matches it (core's gap 1, CORE-2192).
     """
-    xid_313 = SchemaValidator._XID_ONLY_FROM_CPYTHON_313
-    if UNICODE_VERSION < (15, 1) and any(ch in xid_313 for ch in english):
+    needed = interpreter_needed_for_identifier(english)
+    if needed is not None and sys.version_info[:2] < needed:
         reason = (
-            "CORE-1521: needs Unicode 15.1 identifier rules (CPython 3.13+); "
-            f"this interpreter has {unicodedata.unidata_version}"
+            f"CORE-1521: needs the identifier rules of CPython {needed[0]}."
+            f"{needed[1]}+; this interpreter has Unicode "
+            f"{unicodedata.unidata_version}"
         )
     elif sys.version_info < (3, 12):
         native = TokenTranslator.from_language_pack(lang).translate_code(english)

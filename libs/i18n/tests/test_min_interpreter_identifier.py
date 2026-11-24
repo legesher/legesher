@@ -30,9 +30,13 @@ from legesher_i18n.schema_validator import (
     _XID_RANGES_ADDED_BY_CPYTHON_315,
     LanguagePackSchema,
     SchemaValidator,
+    describe_newer_identifier_characters,
+    identifier_characters_newer_than,
     interpreter_needed_for_identifier,
 )
 from legesher_i18n.script_policy import ZWJ
+from legesher_i18n.surface_validation import min_interpreter_ok
+from tests.interpreter_gaps import NEWER_IDENTIFIER_SAMPLES
 
 #: U+30FB, the character that shipped in ``ja``'s 3.10 pack and is a hard
 #: SyntaxError there. Its halfwidth twin is U+FF65.
@@ -405,3 +409,171 @@ class TestTheGateIsOneRulePerRelease:
             schema, "si", min_version="3.10"
         )
         assert "U+088F" in finding.message and "U+200D" in finding.message
+
+
+TABLE_RELEASES = sorted(_XID_ADDED_BY_CPYTHON)
+
+
+def _release_label(release: tuple[int, int]) -> str:
+    return f"CPython {release[0]}.{release[1]}+"
+
+
+class TestTheSampleCharacters:
+    """The one-per-release samples the other suites build their values from."""
+
+    def test_every_table_has_a_sample_and_nothing_else_does(self):
+        assert set(NEWER_IDENTIFIER_SAMPLES) == set(_XID_ADDED_BY_CPYTHON)
+
+    @pytest.mark.parametrize(
+        "release", TABLE_RELEASES, ids=lambda release: f"{release[0]}.{release[1]}"
+    )
+    def test_a_sample_is_one_character_from_its_own_table_only(self, release):
+        sample = NEWER_IDENTIFIER_SAMPLES[release]
+        assert len(sample) == 1
+        owners = [r for r, added in _XID_ADDED_BY_CPYTHON.items() if sample in added]
+        assert owners == [release]
+
+    @pytest.mark.parametrize(
+        "release", TABLE_RELEASES, ids=lambda release: f"{release[0]}.{release[1]}"
+    )
+    def test_a_sample_continues_a_name_on_the_release_that_added_it(self, release):
+        if sys.version_info[:2] < release:
+            pytest.skip(f"this interpreter predates CPython {release[0]}.{release[1]}")
+        assert ("a" + NEWER_IDENTIFIER_SAMPLES[release]).isidentifier()
+
+
+class TestNewerIdentifierCharacters:
+    """The helpers every surface uses to say which release a value needs."""
+
+    @pytest.mark.parametrize(
+        "release", TABLE_RELEASES, ids=lambda release: f"{release[0]}.{release[1]}"
+    )
+    def test_a_character_is_reported_under_the_release_that_added_it(self, release):
+        sample = NEWER_IDENTIFIER_SAMPLES[release]
+        assert identifier_characters_newer_than(f"a{sample}b{sample}") == {
+            release: [sample]
+        }
+
+    def test_releases_come_oldest_first_and_characters_sorted(self):
+        value = "x" + "".join(
+            NEWER_IDENTIFIER_SAMPLES[r] for r in reversed(TABLE_RELEASES)
+        )
+        found = identifier_characters_newer_than(value)
+        assert list(found) == TABLE_RELEASES
+        assert all(chars == sorted(chars) for chars in found.values())
+
+    @pytest.mark.parametrize(
+        "release", TABLE_RELEASES, ids=lambda release: f"{release[0]}.{release[1]}"
+    )
+    def test_a_floor_at_the_release_drops_it_and_everything_older(self, release):
+        value = "x" + "".join(NEWER_IDENTIFIER_SAMPLES.values())
+        found = identifier_characters_newer_than(value, floor=release)
+        assert list(found) == [r for r in TABLE_RELEASES if r > release]
+
+    def test_a_floor_between_tables_still_reports_the_next_table(self):
+        # The 3.13 table is the whole 3.10 -> 3.13 measurement, so a 3.11 or
+        # 3.12 floor does not make a 3.13-table character safe.
+        oldest = TABLE_RELEASES[0]
+        sample = NEWER_IDENTIFIER_SAMPLES[oldest]
+        for minor in range(10, oldest[1]):
+            assert identifier_characters_newer_than(
+                f"a{sample}", floor=(oldest[0], minor)
+            ) == {oldest: [sample]}
+
+    def test_a_value_with_nothing_newer_reports_nothing(self):
+        assert identifier_characters_newer_than("plain_name") == {}
+        assert describe_newer_identifier_characters("plain_name") == ""
+
+    @pytest.mark.parametrize(
+        "release", TABLE_RELEASES, ids=lambda release: f"{release[0]}.{release[1]}"
+    )
+    def test_the_description_names_the_code_point_and_its_release(self, release):
+        sample = NEWER_IDENTIFIER_SAMPLES[release]
+        text = describe_newer_identifier_characters(f"a{sample}")
+        assert f"U+{ord(sample):04X}" in text
+        assert f"({_release_label(release)})" in text
+
+    @pytest.mark.parametrize(
+        "release", TABLE_RELEASES, ids=lambda release: f"{release[0]}.{release[1]}"
+    )
+    def test_the_description_never_invents_a_character_name(self, release):
+        # The name is the running interpreter's. One that predates the
+        # character gives the code point and the release and nothing else.
+        import unicodedata
+
+        sample = NEWER_IDENTIFIER_SAMPLES[release]
+        point, label = f"U+{ord(sample):04X}", f"({_release_label(release)})"
+        name = unicodedata.name(sample, "")
+        expected = f"{point} {name} {label}" if name else f"{point} {label}"
+        assert describe_newer_identifier_characters(f"a{sample}") == expected
+
+    def test_the_description_lists_the_newest_release_first(self):
+        value = "x" + "".join(NEWER_IDENTIFIER_SAMPLES.values())
+        text = describe_newer_identifier_characters(value)
+        positions = [
+            text.index(f"({_release_label(release)})") for release in TABLE_RELEASES
+        ]
+        assert positions == sorted(positions, reverse=True)
+
+    def test_the_description_agrees_with_the_release_needed(self):
+        for release in TABLE_RELEASES:
+            value = "a" + NEWER_IDENTIFIER_SAMPLES[release]
+            assert interpreter_needed_for_identifier(value) == release
+            assert describe_newer_identifier_characters(value).endswith(
+                f"({_release_label(release)})"
+            )
+
+
+class TestTheStoredVerdictRule:
+    """``min_interpreter_ok``: one rule for every writer of that column."""
+
+    def test_a_plain_rendering_is_ok(self):
+        assert min_interpreter_ok("plain_name")
+        assert min_interpreter_ok("नाम")
+
+    @pytest.mark.parametrize(
+        "release", TABLE_RELEASES, ids=lambda release: f"{release[0]}.{release[1]}"
+    )
+    def test_a_character_from_any_release_after_the_floor_is_not(self, release):
+        # Under the 3.13-only rule a 3.14 or 3.15 character read as OK.
+        assert not min_interpreter_ok(f"a{NEWER_IDENTIFIER_SAMPLES[release]}")
+
+
+def _releases_as_the_prompt_names_them() -> list[str]:
+    assert _UNICODE_OF_CPYTHON.keys() == _XID_ADDED_BY_CPYTHON.keys()
+    return [
+        f"{release[0]}.{release[1]} (Unicode {unicode_version})"
+        for release, unicode_version in _UNICODE_OF_CPYTHON.items()
+    ]
+
+
+def test_the_prompt_the_model_receives_names_every_release_that_has_a_table():
+    # The prompt tells the model which characters a recommended name may not
+    # use. A release with a table and no mention here would leave the model
+    # free to use its characters. This is the text that is sent:
+    # ``build_prompt``, not the specification document beside it.
+    from scripts.translate.generate_vocabulary import build_prompt
+
+    flat = " ".join(build_prompt("ar").split())
+    assert "must parse on CPython 3.10" in flat
+    for named in _releases_as_the_prompt_names_them():
+        assert named in flat
+
+
+def test_the_prompt_specification_names_every_release_wherever_it_states_the_rule():
+    # The specification states the rule twice. It is prose, so both are
+    # checked: each statement names every release.
+    from pathlib import Path
+
+    specification = (
+        Path(__file__).resolve().parents[1]
+        / "scripts"
+        / "translate"
+        / "prompts"
+        / "vocabulary_prompt.md"
+    ).read_text(encoding="utf-8")
+    flat = " ".join(specification.split())
+    statements = flat.count("identifier-legal in")
+    assert statements == 2
+    for named in _releases_as_the_prompt_names_them():
+        assert flat.count(named) == statements, named

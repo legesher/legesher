@@ -15,6 +15,7 @@ from legesher_i18n.schema_validator import (
     LanguagePackMetadata,
     LanguagePackSchema,
     SchemaValidator,
+    interpreter_needed_for_identifier,
 )
 from legesher_i18n.exceptions import (
     CircularInheritanceError,
@@ -817,18 +818,22 @@ class TestJapaneseInterpreterTiers:
     def test_the_tiers_are_the_same_word_minus_the_separator(self):
         assert self.DOTTED.replace(self.MIDDLE_DOT, "") == self.DOT_FREE
 
-    def test_no_other_ja_value_needs_a_313_only_character(self):
-        """The tiering is one term wide; a second one would want its own note."""
+    def test_no_other_ja_value_needs_a_newer_interpreter(self):
+        """The tiering is one term wide; a second one would want its own note.
+
+        Read from every release's table: a character 3.14 or 3.15 added is
+        as unreadable on 3.10 as the middle dot.
+        """
         loader = LanguagePackLoader()
         pack = loader.load("ja", "python", "3.10")
         offenders = {
             f"{section}.{key}": value
             for section in ("keywords", "builtins", "exceptions", "implicit_params")
             for key, value in (getattr(pack, section, {}) or {}).items()
-            if any(ch in SchemaValidator._XID_ONLY_FROM_CPYTHON_313 for ch in value)
+            if interpreter_needed_for_identifier(value) is not None
         }
         assert offenders == {}, (
-            f"ja 3.10 still carries 3.13-only characters: {offenders}"
+            f"ja 3.10 still carries characters a later CPython added: {offenders}"
         )
 
 

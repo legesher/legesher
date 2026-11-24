@@ -9,6 +9,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **i18n**: the review check, the intake report, the pack exporter and the
+  corpus repair script read the identifier tables of every Python release
+  that has one (3.13, 3.14 and 3.15), not only 3.13's. A word that needs
+  Python 3.14 or 3.15 is reported with the release it needs wherever it
+  turns up, and the review check no longer raises on a pinned Python that is
+  not a version. Nothing changes for a shipped pack.
+
 ## [0.28.2] - 2026-11-23
 
 ### Changed
