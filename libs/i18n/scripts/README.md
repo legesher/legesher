@@ -10,7 +10,7 @@ here that writes. The gates a pack change has to pass are listed in
 
 ## When Python ships a new version
 
-Two scripts here help with the first step: measuring what the release added.
+Two scripts here help measure what a new Python release added.
 
 ### `extract_python_content.py`
 
