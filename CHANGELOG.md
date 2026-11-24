@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.28.3] - 2026-11-24
+
 ### Fixed
 
 - **i18n**: the review check, the intake report, the pack exporter and the
@@ -1819,10 +1821,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.28.2  | Yes      |
-| legesher-i18n            | 0.28.2  | Yes      |
-| legesher (CLI)           | 0.28.2  | —        |
-| legesher-language-server | 0.3.0   | Yes      |
+| legesher-core            | 0.28.3  | Yes      |
+| legesher-i18n            | 0.28.3  | Yes      |
+| legesher (CLI)           | 0.28.3  | —        |
+| legesher-language-server | 0.3.1   | Yes      |
 | legesher-vscode          | 0.1.8   | —        |
 
 ### Removed

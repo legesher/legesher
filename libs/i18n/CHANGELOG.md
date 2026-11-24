@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.28.3] - 2026-11-24
+
 ### Added
 
 - `scripts/repair_v2_audit_findings.py --validations-only`: the recompute
