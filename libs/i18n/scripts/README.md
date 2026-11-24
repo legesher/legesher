@@ -45,12 +45,14 @@ uv run python scripts/monitor_python.py --verbose
 ```
 
 It prints the new version to standard output, or an empty line when there is none, and logs
-to standard error. It needs the network and no token.
+to standard error. It needs the network and no token. It also prints an empty line when the
+lookup fails, so an empty line alone does not prove there is no new version; `--verbose`
+shows what happened.
 
 Nothing runs it on a schedule. A manually started workflow that ran it and then tried to
-generate pack files from the result was removed: it called a script that no longer exists
-and wrote outside the database. Finding a new version is step 1 of the page above, and the
-rest of that page is what happens next.
+generate pack files from the result was removed: it called a script that no longer exists,
+and it would have written pack files without going through the database. Finding a new
+version is step 1 of the page above, and the rest of that page is what happens next.
 
 ## What else is here
 
@@ -63,7 +65,8 @@ for its options.
 | --- | --- |
 | `verify_pack_regen.py` | Checks that regenerating from the database reproduces the shipped pack files |
 | `audit_collisions.py` | Finds two terms that share a word, in the database and in the packs |
-| `translate/screen_terms.py` | Screens new words; `--gate` fails when one has not been screened |
+| `translate/screen_terms.py` | The term-screening harness; `--gate` fails when a pack changed since it was last screened |
+| `analyze/analyze_packs.py` | Reports multi-word, punctuated and duplicate translations across the packs |
 | `require_pack_version_bump.py` | Refuses a pack change that has no version bump |
 | `validate_language_pack_yaml.py` | Validates a pack file's YAML |
 | `validate_showcase_examples.py` | Checks the showcase examples against the packs |
@@ -98,7 +101,8 @@ for its options.
 **Generation (`translate/`)**
 
 The pipeline that proposes translations, the prompts it follows, the term screening, and
-`yaml_exporter.py`, which writes pack files from the database.
+`yaml_exporter.py`, which writes pack files from the database. It has its own
+[`translate/README.md`](translate/README.md).
 
 **Comparing translations**
 
@@ -109,7 +113,8 @@ where they agree. Its commands are `compare`, `list-languages` and `list-terms`;
 ## Not in use
 
 - `translate_content.py` predates the translations database. It looks for a pack layout this
-  repository no longer has, so it cannot run against the current packs. Do not build on it.
+  repository no longer has, so it reads none of the current packs and treats every name as
+  untranslated. Do not build on it.
 - `fix_comment_syntax.py`: do not run it. [`../CLAUDE.md`](../CLAUDE.md) says why.
 
 ## License
