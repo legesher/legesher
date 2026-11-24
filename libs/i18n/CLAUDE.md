@@ -16,8 +16,7 @@ the repository root, which is said where it applies.
   (`VERSION_ADDITIONS`); the index gains its entry in the change that ships the pack files for that release, because
   the pack tests and the review-template contract read the index as the list of files every pack has. A release's
   row is checked against the interpreter only when the tests run on that release, so run
-  `tests/test_baseline_against_stdlib.py` on the new interpreter before trusting a new row.
-  `docs/new-python-version.md` lists what a new Python release needs, in order. Sections:
+  `tests/test_baseline_against_stdlib.py` on the new interpreter before trusting a new row. Sections:
   `keywords`, `builtins`, `exceptions`, `implicit_params` (`self`/`cls`), the optional vocabulary sections `symbols`
   and `variable_conventions` (`docs/pack-vocabulary.md`), and the optional `messages` section for localized error
   messages (`docs/pack-messages.md`; es and ar carry it).

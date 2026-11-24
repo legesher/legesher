@@ -10,8 +10,7 @@ here that writes. The gates a pack change has to pass are listed in
 
 ## When Python ships a new version
 
-The steps, in order, are in [`../docs/new-python-version.md`](../docs/new-python-version.md).
-Two scripts here help with its first step.
+Two scripts here help with the first step: measuring what the release added.
 
 ### `extract_python_content.py`
 
@@ -52,8 +51,7 @@ shows what happened.
 
 Nothing runs it on a schedule. A manually started workflow that ran it and then tried to
 generate pack files from the result was removed: it called a script that no longer exists,
-and it would have written pack files without going through the database. Finding a new
-version is step 1 of the page above, and the rest of that page is what happens next.
+and it would have written pack files without going through the database.
 
 ## What else is here
 
