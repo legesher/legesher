@@ -22,17 +22,28 @@ commits that change its own packages (CORE-2627), checked by running PSR's own
 parser over probe commits in a scratch repository. The foundation release
 attaches only the three packages, never the root workspace package, and no
 commit a train writes names a ticket (CORE-2604).
+
+The workflows that run the trains are checked here too. Each train pushes once
+(CORE-2933): ``semantic-release version --no-push`` commits and tags in the
+runner, the lock and changelog commits join them, and one ``git push --atomic``
+sends the commits and the tag together. semantic-release's own push sends the
+commit and then the tag; when GitHub refused the tag, main kept a version no
+tag matched, and the train could not run again. Without its push
+semantic-release creates no GitHub release, so each train posts the release
+for its tag after the push.
 """
 
 from __future__ import annotations
 
 import re
+import shlex
 import subprocess
 import tomllib
 from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 from git import Repo
 from semantic_release.cli.config import RawConfig
 from semantic_release.commit_parser import (
@@ -372,4 +383,171 @@ def test_per_package_trains_run_from_the_root_without_a_changelog(workflow: str)
             f"{workflow}: a step runs from a working-directory; semantic-release "
             "resolves paths against the git root regardless, so every train runs "
             "from the root with an explicit -c (CORE-1852)"
+        )
+
+
+# One atomic push per train (CORE-2933). Every workflow is read, not only the
+# release-*.yml files, so a release cut from anywhere is held to the same rule.
+VERSION_CALL = re.compile(
+    r"\bsemantic[-_]release\b(?:\s+(?:-c|--config)\s+\S+|\s+-[-\w]+)*\s+version\b"
+)
+# `version` flags that only print or rehearse: such a call commits, tags and
+# pushes nothing.
+PRINT_ONLY = re.compile(r"\s--(?:print\S*|noop)\b")
+RELEASE_POST = re.compile(r"\bsemantic[-_]release\b.*\schangelog\s+--post-to-release-tag\b")
+TAG_FROM_VERSION_STEP = "${{ steps.semantic-release.outputs.tag }}"
+MAIN_REFSPECS = {"main", "main:main", "HEAD:main", "HEAD:refs/heads/main", "refs/heads/main"}
+
+
+def _commands(script: str) -> list[str]:
+    """A step's ``run`` as commands: continuation lines joined, comments and
+    blank lines dropped, so a flag on a continuation line still counts."""
+    commands: list[str] = []
+    pending = ""
+    for raw in script.splitlines():
+        line = raw.strip()
+        if not pending and (not line or line.startswith("#")):
+            continue
+        if line.endswith("\\"):
+            pending += line[:-1] + " "
+            continue
+        commands.append(pending + line)
+        pending = ""
+    if pending:
+        commands.append(pending.strip())
+    return commands
+
+
+def _jobs(workflow: str) -> dict[str, list[dict[str, Any]]]:
+    document = yaml.safe_load((WORKFLOWS / workflow).read_text(encoding="utf-8"))
+    return {name: job.get("steps") or [] for name, job in (document.get("jobs") or {}).items()}
+
+
+def _step_commands(steps: list[dict[str, Any]]) -> list[tuple[int, str]]:
+    """Every command of a job, with the index of the step that runs it."""
+    return [
+        (index, command)
+        for index, step in enumerate(steps)
+        for command in _commands(step.get("run") or "")
+    ]
+
+
+def _cuts_a_release(command: str) -> bool:
+    return bool(VERSION_CALL.search(command)) and not PRINT_ONLY.search(command)
+
+
+def _config_flag(command: str) -> str | None:
+    """The config a semantic-release command names with -c, or None for the root's."""
+    tokens = shlex.split(command)
+    for flag in ("-c", "--config"):
+        if flag in tokens[:-1]:
+            return tokens[tokens.index(flag) + 1]
+    return None
+
+
+ALL_WORKFLOWS = sorted(p.name for p in [*WORKFLOWS.glob("*.yml"), *WORKFLOWS.glob("*.yaml")])
+VERSIONING_JOBS = [
+    (workflow, job)
+    for workflow in ALL_WORKFLOWS
+    for job, steps in _jobs(workflow).items()
+    if any(_cuts_a_release(command) for _, command in _step_commands(steps))
+]
+versioning_jobs = pytest.mark.parametrize(
+    ("workflow", "job"), VERSIONING_JOBS, ids=[f"{w}:{j}" for w, j in VERSIONING_JOBS]
+)
+
+
+def test_the_discovery_found_every_versioning_job() -> None:
+    # Foundation, MCP and language server have one job each; the pack train has
+    # two, the push-triggered matrix and the manual dispatch. Every train that
+    # stamps a changelog cuts its version in one of them.
+    assert len(VERSIONING_JOBS) >= 5, f"only {VERSIONING_JOBS} run semantic-release version"
+    versioning = {workflow for workflow, _ in VERSIONING_JOBS}
+    assert set(STAMPING_WORKFLOWS) <= versioning, (
+        f"{sorted(set(STAMPING_WORKFLOWS) - versioning)} stamp a changelog but no job "
+        "in them was recognised as running semantic-release version"
+    )
+
+
+@versioning_jobs
+def test_trains_version_without_pushing(workflow: str, job: str) -> None:
+    """``version`` leaves the commit and the tag in the runner; the job pushes them."""
+    for _, command in _step_commands(_jobs(workflow)[job]):
+        if not _cuts_a_release(command):
+            continue
+        tokens = shlex.split(command)
+        assert "--no-push" in tokens and "--push" not in tokens, (
+            f"{workflow} job {job!r}: {command!r} lets semantic-release push the release "
+            "commit and then its tag, so a refused tag leaves a version on main that no "
+            "tag matches (CORE-2933); pass --no-push and push once, with --atomic"
+        )
+
+
+@versioning_jobs
+def test_each_train_pushes_once_atomically(workflow: str, job: str) -> None:
+    """One push, after every commit and tag the job makes, carrying main and the tag."""
+    steps = _jobs(workflow)[job]
+    commands = _step_commands(steps)
+    pushes = [(index, command) for index, command in commands if command.startswith("git push")]
+    assert len(pushes) == 1, (
+        f"{workflow} job {job!r} pushes {len(pushes)} times {[c for _, c in pushes]}; "
+        "a train sends its commits and its tag in one atomic push (CORE-2933)"
+    )
+    push_index, push = pushes[0]
+    tokens = shlex.split(push)
+    assert "--atomic" in tokens, (
+        f"{workflow} job {job!r}: {push!r} is not atomic, so GitHub can take main and "
+        "refuse the tag"
+    )
+    refspecs = [t for t in tokens[2:] if not t.startswith("-") and t != "origin"]
+    assert MAIN_REFSPECS & set(refspecs), f"{workflow} job {job!r}: {push!r} does not push main"
+    assert [r for r in refspecs if r.startswith("refs/tags/")] == ["refs/tags/${TAG}"], (
+        f"{workflow} job {job!r}: {push!r} must push exactly the release tag, refs/tags/${{TAG}}"
+    )
+    assert (steps[push_index].get("env") or {}).get("TAG") == TAG_FROM_VERSION_STEP, (
+        f"{workflow} job {job!r}: the push step's TAG is not {TAG_FROM_VERSION_STEP}, the "
+        "tag the version step made and checked"
+    )
+    late = [
+        command
+        for index, command in commands
+        if index >= push_index
+        and (command.startswith(("git commit", "git tag")) or _cuts_a_release(command))
+    ]
+    assert not late, (
+        f"{workflow} job {job!r}: {late} run at or after the push, so what they make "
+        "never reaches main in it"
+    )
+
+
+@versioning_jobs
+def test_each_train_posts_its_release_after_the_push(workflow: str, job: str) -> None:
+    """Without its push semantic-release creates no GitHub release, so the job
+    posts the release for the tag itself: after the push, from the same config."""
+    steps = _jobs(workflow)[job]
+    commands = _step_commands(steps)
+    push_index = next(
+        (index for index, command in commands if command.startswith("git push")), None
+    )
+    assert push_index is not None, f"{workflow} job {job!r} never pushes"
+    configs = {_config_flag(command) for _, command in commands if _cuts_a_release(command)}
+    posts = [(index, command) for index, command in commands if RELEASE_POST.search(command)]
+    assert posts, (
+        f"{workflow} job {job!r} never runs `semantic-release changelog "
+        "--post-to-release-tag`, so its releases would have no GitHub release"
+    )
+    for index, command in posts:
+        assert index > push_index, (
+            f"{workflow} job {job!r}: {command!r} runs before the push, for a tag "
+            "GitHub does not have yet"
+        )
+        assert _config_flag(command) in configs, (
+            f"{workflow} job {job!r}: {command!r} posts with another config than the "
+            f"version call ({sorted(map(str, configs))})"
+        )
+        assert shlex.split(command)[-1] == "${TAG}", (
+            f"{workflow} job {job!r}: {command!r} must post for the pushed tag, ${{TAG}}"
+        )
+        assert (steps[index].get("env") or {}).get("TAG") == TAG_FROM_VERSION_STEP, (
+            f"{workflow} job {job!r}: the release step's TAG is not {TAG_FROM_VERSION_STEP}"
         )

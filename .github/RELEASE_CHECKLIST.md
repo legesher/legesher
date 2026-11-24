@@ -20,9 +20,10 @@ Before triggering a release:
 Releases happen automatically when you merge to `main`:
 
 Each release train runs in the GitHub environment `release`: a run waits for a
-maintainer's approval before it versions anything, only runs from `main` can
-enter it, and the train pushes its version commit with a short-lived token
-minted in that environment.
+maintainer's approval before it versions anything, and only runs from `main` can
+enter it. The train makes its release commits and its tag in the runner, then
+sends them in one atomic push, with a short-lived token minted in that
+environment: either all of it reaches `main` or none of it does.
 
 **Foundation Suite** (core, i18n, legesher):
 
@@ -258,6 +259,27 @@ if: "!contains(github.event.head_commit.message, 'chore(release)')"
 
 If loop occurs, check workflow configuration.
 
+### A release run stopped partway
+
+A train pushes once: its release commits and its tag reach `main` together, or none of them do. Where the run
+stopped decides what is left to do.
+
+- **Before or at the push.** A failed gate, version, lock, changelog or build step, or a refused push, leaves
+  `main` and the tags as they were, and `project.version` still matches the last tag. Re-run the failed run if
+  `main` has not moved since its commit. If it has, run the train again from `main` (**Run workflow**), because a
+  run releases the commit that started it.
+- **After the push.** If creating the GitHub release or attaching its files failed, the tag and the release
+  commits are already on `main`. Create the release with the notes the train writes, from a checkout of `main`:
+  `uv run semantic-release -c <the train's config> changelog --post-to-release-tag <tag>`. The foundation's
+  config is the root `pyproject.toml`, so it takes no `-c`. Publish to PyPI as described above, then attach the
+  wheel and sdist PyPI serves, after checking them against the sha256 the index lists.
+- **A version commit on `main` and no tag.** A run made before the trains pushed atomically could stop here: the
+  version commit reached `main`, the tag push was refused, and the train refuses to run again until a tag matches
+  `project.version`. Create the annotated tag at the version commit and push that tag alone, create the GitHub
+  release as above, and publish to PyPI. Then land what the run left undone, the changelog stamp and the
+  `uv.lock` refresh if no later release has made it, in a pull request whose title starts with
+  `docs(changelog): stamp release`, so that merging it starts no release.
+
 ## Emergency Rollback
 
 If a release has critical issues:
@@ -318,5 +340,5 @@ git push origin main
 
 ---
 
-**Last Updated:** 2026-10-13
+**Last Updated:** 2026-11-24
 **Part of:** CORE-439 - CI/CD Release Workflow

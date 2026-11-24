@@ -18,11 +18,11 @@ on:
       - 'pyproject.toml'
   workflow_dispatch:  # Allow manual triggers
 
-# Nothing here calls the Issues or Pulls APIs — `semantic_release version`
-# commits, tags and creates the release, and `gh release upload` attaches
-# assets. Single-job workflow, so zizmor's excessive-permissions audit never
-# fires on it; narrowed by hand for the same reason release-language-packs
-# was (CORE-1920).
+# Nothing here calls the Issues or Pulls APIs: `semantic_release version`
+# commits and tags, `semantic_release changelog` creates the release, and
+# `gh release upload` attaches assets. Single-job workflow, so zizmor's
+# excessive-permissions audit never fires on it; narrowed by hand for the
+# same reason release-language-packs was (CORE-1920).
 permissions:
   contents: write
 
@@ -74,6 +74,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      # --no-push: the release commit and its tag stay in this checkout until
+      # the lock and changelog commits join them, and one atomic push sends
+      # all of it (CORE-2933). Without the push semantic-release creates no
+      # GitHub release either; "Create GitHub Release" does that afterwards.
       - name: Run Semantic Release
         id: semantic-release
         env:
@@ -86,14 +90,22 @@ jobs:
 
           # Run semantic-release
           # Note: Returns exit 0 regardless of whether a release is made
-          uv run semantic-release version
+          uv run semantic-release version --no-push
 
           # Check if HEAD changed (meaning a release commit was created)
           HEAD_AFTER=$(git rev-parse HEAD)
 
           if [ "$HEAD_BEFORE" != "$HEAD_AFTER" ]; then
-            echo "✅ Release created (commit: ${HEAD_AFTER:0:7})"
+            NEW_VERSION=$(python3 -c "import tomllib,pathlib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
+            TAG="v${NEW_VERSION}"
+            if [ "$(git rev-parse -q --verify "refs/tags/${TAG}^{commit}")" != "$HEAD_AFTER" ]; then
+              echo "::error::semantic-release made release commit ${HEAD_AFTER:0:7} but no tag ${TAG} on it."
+              exit 1
+            fi
+            echo "✅ Release commit and tag made: ${TAG} (commit: ${HEAD_AFTER:0:7}), pushed below"
             echo "release_created=true" >> $GITHUB_OUTPUT
+            echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+            echo "tag=${TAG}" >> $GITHUB_OUTPUT
           else
             echo "ℹ️ No release needed (HEAD unchanged)"
             echo "release_created=false" >> $GITHUB_OUTPUT
@@ -120,10 +132,8 @@ jobs:
             git commit -m "docs(changelog): stamp release"
           fi
 
-      - name: Push release commits
-        if: steps.semantic-release.outputs.release_created == 'true'
-        run: git push origin main
-
+      # Built before the push, so a failed build leaves main and the tags as
+      # they were.
       - name: Build packages
         if: steps.semantic-release.outputs.release_created == 'true'
         run: |
@@ -131,6 +141,27 @@ jobs:
           uv build --package legesher-core --out-dir libs/core/dist/
           uv build --package legesher-i18n --out-dir libs/i18n/dist/
           uv build --package legesher --out-dir libs/legesher/dist/
+
+      # The train's one push: the release, lock and changelog commits onto
+      # main and the release tag, atomically. If any part is refused, nothing
+      # lands: main, the tags and project.version stay as they were, so the
+      # train can run again (CORE-2933).
+      - name: Push the release commits and tag together
+        if: steps.semantic-release.outputs.release_created == 'true'
+        env:
+          TAG: ${{ steps.semantic-release.outputs.tag }}
+        run: git push --atomic origin HEAD:main "refs/tags/${TAG}"
+
+      # The release notes semantic-release writes for the tag. The packages
+      # are attached two steps below.
+      - name: Create GitHub Release
+        if: steps.semantic-release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.semantic-release.outputs.tag }}
+        run: |
+          echo "Creating GitHub Release for ${TAG}..."
+          uv run semantic-release changelog --post-to-release-tag "${TAG}"
 
       - name: Upload build artifacts
         if: steps.semantic-release.outputs.release_created == 'true'
@@ -151,10 +182,8 @@ jobs:
         if: steps.semantic-release.outputs.release_created == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.semantic-release.outputs.tag }}
         run: |
-          # `semantic-release version` created the release and its tag, so
-          # the most recent tag is what we want.
-          TAG=$(git describe --tags --abbrev=0)
           echo "📤 Attaching real foundation wheels to release ${TAG}..."
           gh release upload "${TAG}" \
             libs/core/dist/*.whl libs/core/dist/*.tar.gz \

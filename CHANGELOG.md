@@ -24,6 +24,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   pack files without going through the translations database.
   `libs/i18n/scripts/README.md` now describes the scripts that exist.
 
+### Fixed
+
+- **ci**: each release train sends its release commits and its tag in one
+  atomic push. When GitHub refused a train's tag push, the version commit was
+  already on `main` with no tag, and the train could not run again until the
+  tag was made by hand. A refused push now leaves `main` and the tags as they
+  were, and the train can run again. Each train builds its packages before the
+  push and creates its GitHub release after it. The release checklist says
+  what to do when a run stops partway.
+
 ## [0.28.3] - 2026-11-24
 
 ### Fixed
