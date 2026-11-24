@@ -9,13 +9,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-## [0.28.3] - 2026-11-24
-
 ### Added
 
 - `docs/new-python-version.md`: what a new Python minor version needs, in
   order, each step with the files it touches and its check, and which steps
   have been run for Python 3.15.
+
+### Changed
+
+- `scripts/README.md` describes the scripts that exist. It described a
+  pipeline whose last step called a script that is no longer in the
+  repository. The docstring of `scripts/extract_python_content.py` says what
+  `--version` and `--versions` do: they label the output, and the names
+  always come from the interpreter that runs the script.
+
+## [0.28.3] - 2026-11-24
+
+### Added
+
 - `scripts/repair_v2_audit_findings.py --validations-only`: the recompute
   after a validator-version change. It runs the validation phase alone,
   without the audit-specific phases and without a v1 database, and lists
@@ -33,11 +44,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
-- `scripts/README.md` describes the scripts that exist. It described a
-  pipeline whose last step called a script that is no longer in the
-  repository. The docstring of `scripts/extract_python_content.py` says what
-  `--version` and `--versions` do: they label the output, and the names
-  always come from the interpreter that runs the script.
 - **`VALIDATOR_VERSION` is `py-identifier-v4`**, because the stored
   `min_interpreter_ok` verdict changed meaning (see Fixed). A corpus database
   stamped by another validator version is brought up to date with
