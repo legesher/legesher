@@ -138,7 +138,7 @@ def content_lines(text: str) -> list[tuple[int, str]]:
     """
     kept: list[tuple[int, str]] = []
     fence, fence_indent, comment, front = "", 0, False, False
-    for number, raw in enumerate(text.removeprefix("﻿").split("\n"), start=1):
+    for number, raw in enumerate(text.removeprefix("\ufeff").split("\n"), start=1):
         line = raw.removesuffix("\r")
         if number == 1 and line.strip() == "---":
             front = True
@@ -374,12 +374,12 @@ def test_a_line_run_into_the_next_paragraph_fails() -> None:
 
 
 def test_a_byte_order_mark_does_not_hide_the_title() -> None:
-    doc = "﻿# Title\n\n> **Audience:** Readers, who read.\n"
+    doc = "\ufeff# Title\n\n> **Audience:** Readers, who read.\n"
     assert audience_problems(doc, LINES) == []
 
 
 def test_a_line_separator_inside_the_title_does_not_split_it() -> None:
-    doc = "# Title > **Audience:** Readers, who read.\n\nBody.\n"
+    doc = "# Title\u2028> **Audience:** Readers, who read.\n\nBody.\n"
     problems = audience_problems(doc, LINES)
     assert len(problems) == 1
     assert problems[0].startswith("line 1:")
@@ -447,8 +447,12 @@ def test_document_names_its_audience(doc: str) -> None:
     if not path.is_file():
         pytest.skip(f"{doc} is deleted in the work tree")
     problems = audience_problems(path.read_text(encoding="utf-8"), frozenset(vocabulary().values()))
+    # Beside an index.json, a document with no line may be a brief the index
+    # forgot, and the fix is then the index, not a line in pipeline input.
+    beside_index = (path.parent / "index.json").is_file()
     assert not problems, (
         f"{doc}:\n  "
         + "\n  ".join(problems)
         + f"\n  The lines are in {VOCABULARY_FILE}, '{VOCABULARY_HEADING}'."
+        + ("\n  If this is a translation brief, list it in the folder's index.json instead." if beside_index else "")
     )
