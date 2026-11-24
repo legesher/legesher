@@ -1,5 +1,7 @@
 # legesher-mcp
 
+> **Audience:** Users, who install and use Legesher.
+
 <!-- mcp-name: io.github.legesher/legesher-mcp -->
 
 The Legesher [Model Context Protocol](https://modelcontextprotocol.io) server:
@@ -262,6 +264,8 @@ policy and playbook half for agent sessions:
 
 ## Development
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 ```bash
 cd libs/mcp
 uv run pytest             # the per-commit suite (every tool, through MCP)
@@ -310,6 +314,8 @@ Pre-1.0, a breaking change bumps the minor (`0.1.0` → `0.2.0`);
 than a side effect of one commit.
 
 ## Listings
+
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
 
 `server.json` is the manifest the official MCP registry reads, and the
 `mcp-name` comment at the top of this README is how that registry confirms

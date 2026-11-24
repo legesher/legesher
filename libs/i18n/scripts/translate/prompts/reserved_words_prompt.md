@@ -1,5 +1,7 @@
 # Reserved Words Translation Prompt (CORE-710)
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 Specification for translating Python's `self` and `cls` conventions into
 the 51 supported language packs. Used during the CORE-710 generation pass
 and intended as the canonical reference for any future re-generation or

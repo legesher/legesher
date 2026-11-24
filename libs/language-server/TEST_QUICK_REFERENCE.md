@@ -1,5 +1,7 @@
 # Language Server Test Infrastructure - Quick Reference
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 ## File Locations
 
 ### YAML Fixtures

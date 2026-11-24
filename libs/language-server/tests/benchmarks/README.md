@@ -1,5 +1,7 @@
 # Performance Benchmarks
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 Performance tests for the language server's language-pack caching (CORE-446).
 
 ## How these tests run

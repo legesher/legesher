@@ -1,5 +1,7 @@
 # Legesher
 
+> **Audience:** Users, who install and use Legesher.
+
 **Code in Your Native Language** - Programming tools that break down the English language barrier
 
 [![All Contributors](https://img.shields.io/github/all-contributors/legesher/legesher?color=ee8449&style=flat-square)](#contributors)
@@ -179,7 +181,7 @@ See [libs/vs-code/README.md](libs/vs-code/README.md) for full documentation.
 
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute
 - **[CHANGELOG.md](CHANGELOG.md)** - What's new
-- **[CLAUDE.md](CLAUDE.md)** - Developer guide for contributors
+- **[DEVELOPMENT.md](DEVELOPMENT.md)** - Developer guide for contributors
 
 ## Features
 

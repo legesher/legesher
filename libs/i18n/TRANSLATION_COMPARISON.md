@@ -1,5 +1,7 @@
 # Translation Comparison System
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 The Legesher i18n package includes a comprehensive translation comparison system
 that enables comparison of AI-generated translations with community translations,
 helping ensure high-quality language packs.

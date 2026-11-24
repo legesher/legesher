@@ -1,5 +1,7 @@
 # Contributing to Legesher VS Code Extension
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 Thank you for your interest in contributing to the Legesher VS Code extension!
 
 ## Development Setup

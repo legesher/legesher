@@ -1,5 +1,7 @@
 # Legesher VS Code Extension
 
+> **Audience:** Users, who install and use Legesher.
+
 Write Python code in your native language with real-time translation and IDE support.
 
 **Languages**: 56 | **VS Code**: 1.110.0+ | **Status**: Preview

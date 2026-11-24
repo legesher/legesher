@@ -1,5 +1,7 @@
 # Development Guide
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 Get from clone to passing tests in under 5 minutes.
 
 ## Prerequisites

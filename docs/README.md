@@ -1,5 +1,7 @@
 # Legesher Documentation
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 [![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
 
 **Site**: [docs.legesher.io](https://docs.legesher.io)

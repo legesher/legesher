@@ -1,5 +1,7 @@
 # Reviewing a language pack
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 Legesher language packs let people write and read code in their heart language. Every pack starts
 **experimental**: a machine proposed every word, and mechanical checks are all it has passed. A pack
 becomes something better only through review by people who actually speak the language.

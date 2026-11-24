@@ -1,5 +1,7 @@
 # Aya-101 Hugging Face Model Integration
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 This document explains how to use the Aya-101 model from Cohere via Hugging Face for translating Python
 terms into **101 languages**.
 

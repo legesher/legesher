@@ -1,5 +1,7 @@
 # Pack maturity ladder
 
+> **Audience:** Users, who install and use Legesher.
+
 What each maturity stamp on a language pack means, what it does **not** mean,
 and which parts are still open.
 
@@ -43,6 +45,8 @@ carry, and it is why `experimental` is the honest stamp today.
 
 ## Open: what promotes a pack
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 Undecided, and deliberately not invented here:
 
 1. **How many endorsements**, and from how varied a set of voices — distinct
@@ -58,6 +62,8 @@ Until those land, any public surface should say that promotion criteria are
 being defined rather than imply a threshold exists.
 
 ## A naming inconsistency to resolve
+
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
 
 Four ladders exist in the tree today and they do not use the same words:
 

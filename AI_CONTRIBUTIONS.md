@@ -1,5 +1,7 @@
 # AI-Assisted Contributions
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 Legesher is a project about languages, built in the age of language models. We use AI in our own
 workflow, and we expect many contributors will too. This guide says plainly what is welcome, what we
 ask of you, and where the human line sits.

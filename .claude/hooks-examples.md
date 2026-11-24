@@ -1,5 +1,7 @@
 # Claude Code Hooks Examples
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 <!--
 SOURCES:
 - Claude Code Hooks Guide: https://docs.claude.com/en/docs/claude-code/hooks-guide

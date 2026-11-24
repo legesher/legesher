@@ -1,5 +1,7 @@
 # Integration Guide - Translation Comparison System Documentation
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 **Task**: CORE-396, Task 8 - Update Documentation for Translation Comparison System
 **Status**: Complete
 **Date**: 2025-11-11
@@ -213,7 +215,6 @@ cd /home/user/legesher/docs
 #### TRANSLATION_COMPARISON.md (Main Documentation)
 
 **Purpose**: Comprehensive technical documentation
-**Audience**: Developers using the comparison system
 **Content**:
 
 - System overview and features
@@ -233,7 +234,6 @@ cd /home/user/legesher/docs
 #### README_COMPARISON_SECTION.md (README Addition)
 
 **Purpose**: User-friendly overview for main README
-**Audience**: New users discovering the comparison system
 **Content**:
 
 - Feature highlights
@@ -252,7 +252,6 @@ cd /home/user/legesher/docs
 #### COMPARISON_QUICKREF.md (Quick Reference)
 
 **Purpose**: One-page cheat sheet
-**Audience**: Experienced users who need quick reminders
 **Content**:
 
 - All CLI commands with examples
@@ -271,7 +270,6 @@ cd /home/user/legesher/docs
 #### COMPARISON_ARCHITECTURE.md (Architecture)
 
 **Purpose**: Visual system architecture
-**Audience**: Contributors, architects, advanced users
 **Content**:
 
 - System architecture diagram
@@ -291,7 +289,6 @@ cd /home/user/legesher/docs
 #### examples/ (Example Reports)
 
 **Purpose**: Real-world report examples
-**Audience**: Anyone evaluating translations
 **Content**:
 
 - Spanish comparison report (detailed)

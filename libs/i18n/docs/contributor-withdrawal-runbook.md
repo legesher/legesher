@@ -1,9 +1,8 @@
 # Contributor withdrawal runbook
 
-<!-- disposition: MAINTAINER (CORE-1724 audit, 2026-08-11) -->
-
-> **Maintainer-only.** The operator procedure for honouring a withdrawal request. What we promise
-> contributors is in [CONTRIBUTOR_PRIVACY.md](../../../CONTRIBUTOR_PRIVACY.md); this is how the
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+>
+> What we promise contributors is in [CONTRIBUTOR_PRIVACY.md](../../../CONTRIBUTOR_PRIVACY.md); this is how the
 > promise is kept.
 >
 > It is published openly on purpose. A privacy commitment whose mechanism is secret is a commitment

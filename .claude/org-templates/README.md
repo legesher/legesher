@@ -1,5 +1,7 @@
 # Claude Code templates
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 This directory holds a starting point for Claude Code configuration in other
 projects.
 

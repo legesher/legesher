@@ -1,5 +1,7 @@
 # legesher-runtime
 
+> **Audience:** Users, who install and use Legesher.
+
 Localized tracebacks for Python: uncaught exceptions render with the
 traceback structure, exception type name, and error message in the
 developer's natural language.

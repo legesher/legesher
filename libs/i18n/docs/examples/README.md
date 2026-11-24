@@ -1,5 +1,7 @@
 # Deep Context Examples - Reference Guide
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 **Purpose**: Validated reference examples for generating deep context documents across all 105
 Python terms.
 

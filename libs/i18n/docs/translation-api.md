@@ -1,11 +1,6 @@
 # Translation API Documentation
 
-> **Maintainer notes — not newcomer documentation.** Written for someone already
-> working in this code: it assumes repo context, uses internal vocabulary, and
-> may cite work-tracker ids (`CORE-####`) an outside reader cannot resolve.
-> Public on purpose, but not part of the documentation site and not localized —
-> newcomer-facing documentation lives at [docs.legesher.io](https://docs.legesher.io).
-> <!-- disposition: MAINTAINER (CORE-1724 audit, 2026-08-11) -->
+> **Audience:** Users, who install and use Legesher.
 
 The Legesher Translation API provides dynamic translation capabilities with multi-provider support,
 intelligent quality-based fallback, comprehensive usage tracking, and cost monitoring.

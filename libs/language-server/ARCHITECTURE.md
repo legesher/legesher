@@ -1,5 +1,7 @@
 # Legesher Language Server - Architecture
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 ## Overview
 
 The Legesher Language Server provides LSP (Language Server Protocol) support for

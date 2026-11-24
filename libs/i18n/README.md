@@ -1,5 +1,7 @@
 # legesher-i18n
 
+> **Audience:** Users, who install and use Legesher.
+
 Industrial-strength internationalization infrastructure with 56 language packs, version-aware inheritance,
 and multi-provider translation API for multilingual programming.
 
@@ -357,6 +359,8 @@ This repository runs that audit in `.github/workflows/validate-packs.yml`.
 
 ## Development
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 ### Running Tests
 
 ```bash
@@ -406,5 +410,5 @@ Apache License 2.0 - see [LICENSE](LICENSE) file
 
 - [Legesher Monorepo](../../README.md)
 - [Translation API](docs/translation-api.md)
-- [Validation](docs/VALIDATION.md)
-- [Quality gates](docs/quality-gates.md)
+- [Validation](docs/VALIDATION.md), for contributors
+- [Quality gates](docs/quality-gates.md), for maintainers

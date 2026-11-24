@@ -1,5 +1,7 @@
 # legesher
 
+> **Audience:** Users, who install and use Legesher.
+>
 > Command-line interface for coding in any language
 
 **Status**: Pre-Beta | **Languages**: 56 | **Version**: see `pyproject.toml`
@@ -570,6 +572,8 @@ legesher metadata validate src/calculator.py
 ```
 
 ## Development
+
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
 
 ### Running Tests
 

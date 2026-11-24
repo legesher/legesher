@@ -1,5 +1,7 @@
 # Community Guidelines
 
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
+
 How we build together. This document sits alongside the [Code of Conduct](CODE_OF_CONDUCT.md): the
 Code of Conduct covers how we treat each other, and these guidelines cover how we work on a shared
 map of programming terminology without stepping on each other.

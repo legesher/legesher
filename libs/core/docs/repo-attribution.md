@@ -1,5 +1,7 @@
 # Repository attribution
 
+> **Audience:** Users, who install and use Legesher.
+
 Repository attribution is opt-in usage attribution. When you switch it on, a
 Legesher client attaches a label for the current repository to its calls to
 Legesher's hosted service, so usage can be attributed to a repository. The
@@ -109,6 +111,8 @@ also be on. The extension does not send this label yet: the
 `legesher.telemetry.repoAttribution` setting records your choice only.
 
 ## For client authors
+
+> **Audience:** Contributors, who change the code, tests and docs, or offer and review the words in a language pack.
 
 Python:
 

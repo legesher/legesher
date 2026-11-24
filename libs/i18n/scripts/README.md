@@ -1,5 +1,7 @@
 # Legesher i18n scripts
 
+> **Audience:** Maintainers, who run releases, regenerate packs and write to the translations database.
+
 Maintainer scripts for the language packs, the translations database, and the datasets built
 from them. They are not installed with the package.
 
