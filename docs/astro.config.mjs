@@ -88,8 +88,8 @@ export default defineConfig({
 							slug: 'reference/supported-languages',
 						},
 						{
-							label: 'Privacy Policy',
-							translations: { es: 'Política de privacidad', ar: 'سياسة الخصوصية' },
+							label: 'Privacy',
+							translations: { es: 'Privacidad', ar: 'الخصوصية' },
 							slug: 'privacy',
 						},
 					],

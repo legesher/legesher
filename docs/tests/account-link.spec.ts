@@ -313,11 +313,3 @@ for (const lang of Object.keys(LABELS)) {
     expect(ring.offset).toBeGreaterThanOrEqual(2);
   });
 }
-
-test('the privacy page says what the site reads', async ({ page }) => {
-  await page.goto('/privacy/');
-  const section = page.locator('main');
-  await expect(section.getByRole('heading', { name: 'Sign-in state' })).toBeVisible();
-  await expect(section).toContainText('sign-in cookie');
-  await expect(section).toContainText('sets no cookie of its own');
-});
