@@ -221,7 +221,12 @@ jobs:
       # config's paths stay under the pack.
       #
       # --no-changelog: this repo's changelogs are hand-written and stamped by
-      # scripts/stamp-changelog-release.py (next step), not generated.
+      # scripts/stamp-changelog-release.py (below), not generated.
+      #
+      # --no-push: the release commit and its tag stay in this checkout until
+      # the changelog commit joins them, and one atomic push sends all of it
+      # (CORE-2933). Without the push semantic-release creates no GitHub
+      # release either; "Create GitHub Release" does that afterwards.
       #
       # `version` exits 0 whether or not it releases. Any other exit is an
       # error and fails the job; it is no longer read as "no release needed",
@@ -235,15 +240,21 @@ jobs:
 
           HEAD_BEFORE=$(git rev-parse HEAD)
 
-          uv run semantic-release -c "${PACK_DIR}/pyproject.toml" version --no-changelog
+          uv run semantic-release -c "${PACK_DIR}/pyproject.toml" version --no-changelog --no-push
 
           HEAD_AFTER=$(git rev-parse HEAD)
 
           if [ "$HEAD_BEFORE" != "$HEAD_AFTER" ]; then
             NEW_VERSION=$(python3 -c "import os,tomllib,pathlib; print(tomllib.loads(pathlib.Path(os.environ['PACK_DIR'], 'pyproject.toml').read_text())['project']['version'])")
-            echo "✅ Release created: legesher-i18n-${TARGET}-${PACK} v${NEW_VERSION} (commit: ${HEAD_AFTER:0:7})"
+            TAG="i18n-${TARGET}-${PACK}-v${NEW_VERSION}"
+            if [ "$(git rev-parse -q --verify "refs/tags/${TAG}^{commit}")" != "$HEAD_AFTER" ]; then
+              echo "::error::semantic-release made release commit ${HEAD_AFTER:0:7} but no tag ${TAG} on it."
+              exit 1
+            fi
+            echo "✅ Release commit and tag made: ${TAG} (commit: ${HEAD_AFTER:0:7}), pushed below"
             echo "release_created=true" >> "$GITHUB_OUTPUT"
             echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+            echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           else
             echo "ℹ️ No release needed (HEAD unchanged)"
             echo "release_created=false" >> "$GITHUB_OUTPUT"
@@ -265,28 +276,39 @@ jobs:
             git commit -m "docs(changelog): stamp release"
           fi
 
-      - name: Push release commits
-        if: steps.semantic-release.outputs.release_created == 'true'
-        run: git push origin main
-
       # `uv build <path>`, positional and WITH build isolation. A path build of
       # a pack lands in that pack's own dist/ (uv sets the root workspace aside
       # because libs/i18n, a project but not a workspace root, sits between
       # them), which is where the config's dist_glob_patterns points, so the
       # GitHub release gets the wheel. Built BEFORE the release is created,
-      # which the old order got backwards (CORE-1852). publish-pypi.yml names
-      # the distribution with --package instead (CORE-2313).
+      # which the old order got backwards (CORE-1852), and before the push, so
+      # a failed build leaves main and the tags as they were. publish-pypi.yml
+      # names the distribution with --package instead (CORE-2313).
       - name: Build package
         if: steps.semantic-release.outputs.release_created == 'true'
         run: |
           uv build "${PACK_DIR}"
 
+      # The job's one push: the release and changelog commits onto main and
+      # the release tag, atomically. If any part is refused, nothing lands:
+      # main, the tags and project.version stay as they were, so the release
+      # can run again (CORE-2933).
+      - name: Push the release commits and tag together
+        if: steps.semantic-release.outputs.release_created == 'true'
+        env:
+          TAG: ${{ steps.semantic-release.outputs.tag }}
+        run: git push --atomic origin HEAD:main "refs/tags/${TAG}"
+
+      # The release notes semantic-release writes for the tag, then the wheel
+      # and sdist built above.
       - name: Create GitHub Release
         if: steps.semantic-release.outputs.release_created == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.semantic-release.outputs.tag }}
         run: |
-          uv run semantic-release -c "${PACK_DIR}/pyproject.toml" publish
+          uv run semantic-release -c "${PACK_DIR}/pyproject.toml" changelog --post-to-release-tag "${TAG}"
+          uv run semantic-release -c "${PACK_DIR}/pyproject.toml" publish --tag "${TAG}"
 
       - name: Upload build artifacts
         if: steps.semantic-release.outputs.release_created == 'true'
@@ -374,7 +396,12 @@ jobs:
       # config's paths stay under the pack.
       #
       # --no-changelog: this repo's changelogs are hand-written and stamped by
-      # scripts/stamp-changelog-release.py (next step), not generated.
+      # scripts/stamp-changelog-release.py (below), not generated.
+      #
+      # --no-push: the release commit and its tag stay in this checkout until
+      # the changelog commit joins them, and one atomic push sends all of it
+      # (CORE-2933). Without the push semantic-release creates no GitHub
+      # release either; "Create GitHub Release" does that afterwards.
       #
       # `version` exits 0 whether or not it releases. Any other exit is an
       # error and fails the job; it is no longer read as "no release needed",
@@ -388,15 +415,21 @@ jobs:
 
           HEAD_BEFORE=$(git rev-parse HEAD)
 
-          uv run semantic-release -c "${PACK_DIR}/pyproject.toml" version --no-changelog
+          uv run semantic-release -c "${PACK_DIR}/pyproject.toml" version --no-changelog --no-push
 
           HEAD_AFTER=$(git rev-parse HEAD)
 
           if [ "$HEAD_BEFORE" != "$HEAD_AFTER" ]; then
             NEW_VERSION=$(python3 -c "import os,tomllib,pathlib; print(tomllib.loads(pathlib.Path(os.environ['PACK_DIR'], 'pyproject.toml').read_text())['project']['version'])")
-            echo "✅ Release created: legesher-i18n-${TARGET}-${PACK} v${NEW_VERSION} (commit: ${HEAD_AFTER:0:7})"
+            TAG="i18n-${TARGET}-${PACK}-v${NEW_VERSION}"
+            if [ "$(git rev-parse -q --verify "refs/tags/${TAG}^{commit}")" != "$HEAD_AFTER" ]; then
+              echo "::error::semantic-release made release commit ${HEAD_AFTER:0:7} but no tag ${TAG} on it."
+              exit 1
+            fi
+            echo "✅ Release commit and tag made: ${TAG} (commit: ${HEAD_AFTER:0:7}), pushed below"
             echo "release_created=true" >> "$GITHUB_OUTPUT"
             echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+            echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           else
             echo "ℹ️ No release needed (HEAD unchanged)"
             echo "release_created=false" >> "$GITHUB_OUTPUT"
@@ -418,28 +451,39 @@ jobs:
             git commit -m "docs(changelog): stamp release"
           fi
 
-      - name: Push release commits
-        if: steps.semantic-release.outputs.release_created == 'true'
-        run: git push origin main
-
       # `uv build <path>`, positional and WITH build isolation. A path build of
       # a pack lands in that pack's own dist/ (uv sets the root workspace aside
       # because libs/i18n, a project but not a workspace root, sits between
       # them), which is where the config's dist_glob_patterns points, so the
       # GitHub release gets the wheel. Built BEFORE the release is created,
-      # which the old order got backwards (CORE-1852). publish-pypi.yml names
-      # the distribution with --package instead (CORE-2313).
+      # which the old order got backwards (CORE-1852), and before the push, so
+      # a failed build leaves main and the tags as they were. publish-pypi.yml
+      # names the distribution with --package instead (CORE-2313).
       - name: Build package
         if: steps.semantic-release.outputs.release_created == 'true'
         run: |
           uv build "${PACK_DIR}"
 
+      # The job's one push: the release and changelog commits onto main and
+      # the release tag, atomically. If any part is refused, nothing lands:
+      # main, the tags and project.version stay as they were, so the release
+      # can run again (CORE-2933).
+      - name: Push the release commits and tag together
+        if: steps.semantic-release.outputs.release_created == 'true'
+        env:
+          TAG: ${{ steps.semantic-release.outputs.tag }}
+        run: git push --atomic origin HEAD:main "refs/tags/${TAG}"
+
+      # The release notes semantic-release writes for the tag, then the wheel
+      # and sdist built above.
       - name: Create GitHub Release
         if: steps.semantic-release.outputs.release_created == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.semantic-release.outputs.tag }}
         run: |
-          uv run semantic-release -c "${PACK_DIR}/pyproject.toml" publish
+          uv run semantic-release -c "${PACK_DIR}/pyproject.toml" changelog --post-to-release-tag "${TAG}"
+          uv run semantic-release -c "${PACK_DIR}/pyproject.toml" publish --tag "${TAG}"
 
       - name: Upload build artifacts
         if: steps.semantic-release.outputs.release_created == 'true'

@@ -22,17 +22,29 @@ commits that change its own packages (CORE-2627), checked by running PSR's own
 parser over probe commits in a scratch repository. The foundation release
 attaches only the three packages, never the root workspace package, and no
 commit a train writes names a ticket (CORE-2604).
+
+The workflows that run the trains are checked here too. Each train pushes once
+(CORE-2933): ``semantic-release version --no-push`` commits and tags in the
+runner, the lock and changelog commits join them, and one ``git push --atomic``
+sends the commits and the tag together. semantic-release's own push sends the
+commit and then the tag; when GitHub refused the tag, main kept a version no
+tag matched, and the train could not run again. Without its push
+semantic-release creates no GitHub release, so each train posts the release
+for its tag after the push.
 """
 
 from __future__ import annotations
 
+import os
 import re
+import shlex
 import subprocess
 import tomllib
 from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 from git import Repo
 from semantic_release.cli.config import RawConfig
 from semantic_release.commit_parser import (
@@ -372,4 +384,290 @@ def test_per_package_trains_run_from_the_root_without_a_changelog(workflow: str)
             f"{workflow}: a step runs from a working-directory; semantic-release "
             "resolves paths against the git root regardless, so every train runs "
             "from the root with an explicit -c (CORE-1852)"
+        )
+
+
+# One atomic push per train (CORE-2933). Every workflow is read, not only the
+# release-*.yml files, so a release cut from anywhere is held to the same rule.
+# A step's `run` is read close to the way bash reads it: comments dropped,
+# continuation lines joined, `&&`, `||`, `;`, `|` and `&` separating commands,
+# and shell keywords, `env` and assignments before a command skipped. So neither
+# `... # --no-push` nor `if ! git push ...` nor `git commit ... && git push`
+# slips past. It is not a shell parser: a construct it cannot read (a quote
+# spanning lines, a here-document) is read as plain words.
+RELEASE_GATE = "steps.semantic-release.outputs.release_created == 'true'"
+GATES = {RELEASE_GATE, f"${{{{ {RELEASE_GATE} }}}}"}
+TAG_FROM_VERSION_STEP = "${{ steps.semantic-release.outputs.tag }}"
+MAIN_REFSPECS = {"main", "main:main", "HEAD:main", "HEAD:refs/heads/main", "refs/heads/main"}
+# `version` flags that only print or rehearse: such a call commits, tags and
+# pushes nothing.
+PRINT_ONLY = {
+    "--noop",
+    "--print",
+    "--print-tag",
+    "--print-last-released",
+    "--print-last-released-tag",
+}
+SEPARATORS = {"&&", "||", ";", ";;", "|", "|&", "&", "(", ")"}
+ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=")
+# Words that come before the command they run: shell keywords, and commands
+# that run the rest of their line.
+PREFIXES = {"if", "then", "elif", "else", "do", "while", "until", "!", "{", "time", "command",
+            "exec", "nohup"}
+# Bash starts a comment only at a `#` that begins a word; shlex starts one at
+# any `#`. A `#` after another character (`${TAG#v}`) is hidden from shlex.
+MID_WORD_HASH = re.compile(r"(?<=\S)#")
+HIDDEN_HASH = "\x00"
+# Options that take a value, so the value is not read as the next word.
+GIT_VALUE_OPTIONS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
+PUSH_VALUE_OPTIONS = {"-o", "--push-option", "--repo", "--receive-pack", "--exec"}
+UV_VALUE_OPTIONS = {
+    "--with", "--python", "-p", "--group", "--extra", "--package", "--directory", "--project",
+    "--from",
+}
+ENV_VALUE_OPTIONS = {"-u", "--unset", "-C", "--chdir", "-S", "--split-string"}
+SR_VALUE_OPTIONS = {"-c", "--config"}
+
+
+def _commands(script: str) -> list[list[str]]:
+    """The simple commands of a step's ``run``, each as its words."""
+    commands: list[list[str]] = []
+    for line in script.replace("\\\n", " ").splitlines():
+        hidden = MID_WORD_HASH.sub(HIDDEN_HASH, line)
+        lexer = shlex.shlex(hidden, posix=True, punctuation_chars=True)
+        lexer.whitespace_split = True
+        try:
+            words = [word.replace(HIDDEN_HASH, "#") for word in lexer]
+        except ValueError:  # an unbalanced quote; no train writes one
+            words = line.split()
+        command: list[str] = []
+        for word in [*words, ";"]:
+            if word in SEPARATORS:
+                if command:
+                    commands.append(command)
+                command = []
+            else:
+                command.append(word)
+    return commands
+
+
+def _skip_options(words: list[str], takes_value: set[str]) -> list[str]:
+    """``words`` from its first word that is not an option or an option's value."""
+    index = 0
+    while index < len(words) and words[index].startswith("-"):
+        index += 2 if words[index] in takes_value else 1
+    return words[index:]
+
+
+def _program(words: list[str]) -> list[str]:
+    """The command a line of words runs: leading keywords (``if``, ``!``, ...),
+    ``env`` with its options, and ``NAME=value`` assignments skipped."""
+    index = 0
+    while index < len(words):
+        word = words[index]
+        if word in PREFIXES or ASSIGNMENT.match(word):
+            index += 1
+        elif word == "env":
+            index += 1
+            while index < len(words) and words[index].startswith("-"):
+                index += 2 if words[index] in ENV_VALUE_OPTIONS else 1
+        else:
+            break
+    return words[index:]
+
+
+def _name(word: str) -> str:
+    """A program word without its directory: ``.venv/bin/semantic-release``."""
+    return os.path.basename(word)
+
+
+def _git(words: list[str]) -> tuple[str, list[str]] | None:
+    """(subcommand, its arguments) for a git command, global options skipped."""
+    words = _program(words)
+    if not words or _name(words[0]) != "git":
+        return None
+    rest = _skip_options(words[1:], GIT_VALUE_OPTIONS)
+    return (rest[0], rest[1:]) if rest else None
+
+
+def _semantic_release(words: list[str]) -> tuple[str | None, str | None, list[str]] | None:
+    """(config, subcommand, every flag) for a semantic-release command, run
+    directly or by path, through ``uv run``, ``uv tool run`` or ``uvx``, or as
+    ``python -m semantic_release``."""
+    words = _program(words)
+    if [_name(w) for w in words[:3]] == ["uv", "tool", "run"]:
+        words = _skip_options(words[3:], UV_VALUE_OPTIONS)
+    elif [_name(w) for w in words[:2]] == ["uv", "run"]:
+        words = _skip_options(words[2:], UV_VALUE_OPTIONS)
+    elif words and _name(words[0]) == "uvx":
+        words = _skip_options(words[1:], UV_VALUE_OPTIONS)
+    is_python = len(words) > 2 and re.fullmatch(r"python[\d.]*", _name(words[0]))
+    if is_python and words[1:3] == ["-m", "semantic_release"]:
+        words = ["semantic-release", *words[3:]]
+    if not words or _name(words[0]) not in {"semantic-release", "semantic_release"}:
+        return None
+    arguments = words[1:]
+    config = next(
+        (arguments[i + 1] for i, word in enumerate(arguments[:-1]) if word in SR_VALUE_OPTIONS),
+        None,
+    )
+    rest = _skip_options(arguments, SR_VALUE_OPTIONS)
+    flags = [word for word in arguments if word.startswith("-")]
+    return config, (rest[0] if rest else None), flags
+
+
+def _cuts_a_release(words: list[str]) -> bool:
+    call = _semantic_release(words)
+    return bool(call) and call[1] == "version" and not PRINT_ONLY.intersection(call[2])
+
+
+def _jobs(workflow: str) -> dict[str, list[dict[str, Any]]]:
+    document = yaml.safe_load((WORKFLOWS / workflow).read_text(encoding="utf-8"))
+    return {name: job.get("steps") or [] for name, job in (document.get("jobs") or {}).items()}
+
+
+def _step_commands(steps: list[dict[str, Any]]) -> list[tuple[int, list[str]]]:
+    """Every simple command of a job, with the index of the step that runs it."""
+    return [
+        (index, words)
+        for index, step in enumerate(steps)
+        for words in _commands(step.get("run") or "")
+    ]
+
+
+def _pushes(steps: list[dict[str, Any]]) -> list[tuple[int, list[str]]]:
+    return [
+        (index, words)
+        for index, words in _step_commands(steps)
+        if (_git(words) or ("",))[0] == "push"
+    ]
+
+
+def _shown(words: list[str]) -> str:
+    return shlex.join(words)
+
+
+ALL_WORKFLOWS = sorted(p.name for p in [*WORKFLOWS.glob("*.yml"), *WORKFLOWS.glob("*.yaml")])
+VERSIONING_JOBS = [
+    (workflow, job)
+    for workflow in ALL_WORKFLOWS
+    for job, steps in _jobs(workflow).items()
+    if any(_cuts_a_release(words) for _, words in _step_commands(steps))
+]
+versioning_jobs = pytest.mark.parametrize(
+    ("workflow", "job"), VERSIONING_JOBS, ids=[f"{w}:{j}" for w, j in VERSIONING_JOBS]
+)
+
+
+def test_the_discovery_found_every_versioning_job() -> None:
+    # Foundation, MCP and language server have one job each; the pack train has
+    # two, the push-triggered matrix and the manual dispatch. Every train that
+    # stamps a changelog cuts its version in one of them.
+    assert len(VERSIONING_JOBS) >= 5, f"only {VERSIONING_JOBS} run semantic-release version"
+    versioning = {workflow for workflow, _ in VERSIONING_JOBS}
+    assert set(STAMPING_WORKFLOWS) <= versioning, (
+        f"{sorted(set(STAMPING_WORKFLOWS) - versioning)} stamp a changelog but no job "
+        "in them was recognised as running semantic-release version"
+    )
+
+
+@versioning_jobs
+def test_trains_version_without_pushing(workflow: str, job: str) -> None:
+    """``version`` leaves the commit and the tag in the runner; the job pushes them."""
+    for _, words in _step_commands(_jobs(workflow)[job]):
+        if not _cuts_a_release(words):
+            continue
+        flags = _semantic_release(words)[2]
+        assert "--no-push" in flags and "--push" not in flags, (
+            f"{workflow} job {job!r}: {_shown(words)!r} lets semantic-release push the "
+            "release commit and then its tag, so a refused tag leaves a version on main "
+            "that no tag matches (CORE-2933); pass --no-push and push once, with --atomic"
+        )
+
+
+@versioning_jobs
+def test_each_train_pushes_once_atomically(workflow: str, job: str) -> None:
+    """One push, after every commit and tag the job makes, carrying main and the tag."""
+    steps = _jobs(workflow)[job]
+    pushes = _pushes(steps)
+    assert len(pushes) == 1, (
+        f"{workflow} job {job!r} pushes {len(pushes)} times "
+        f"{[_shown(words) for _, words in pushes]}; a train sends its commits and its "
+        "tag in one atomic push (CORE-2933)"
+    )
+    push_index, push = pushes[0]
+    arguments = (_git(push) or ("", []))[1]
+    assert "--atomic" in arguments, (
+        f"{workflow} job {job!r}: {_shown(push)!r} is not atomic, so GitHub can take "
+        "main and refuse the tag"
+    )
+    refspecs = _skip_options(arguments, PUSH_VALUE_OPTIONS)[1:]  # after the remote
+    refspecs = [word for word in refspecs if not word.startswith("-")]
+    assert MAIN_REFSPECS & set(refspecs), (
+        f"{workflow} job {job!r}: {_shown(push)!r} does not push main"
+    )
+    assert [r for r in refspecs if r.startswith("refs/tags/")] == ["refs/tags/${TAG}"], (
+        f"{workflow} job {job!r}: {_shown(push)!r} must push exactly the release tag, "
+        "refs/tags/${TAG}"
+    )
+    step = steps[push_index]
+    assert (step.get("env") or {}).get("TAG") == TAG_FROM_VERSION_STEP, (
+        f"{workflow} job {job!r}: the push step's TAG is not {TAG_FROM_VERSION_STEP}, the "
+        "tag the version step made and checked"
+    )
+    assert str(step.get("if", "")).strip() in GATES, (
+        f"{workflow} job {job!r}: the push step's `if:` is not `{RELEASE_GATE}`, so it "
+        "runs when no release was made (pushing main and the last tag again, which fails "
+        "once main has moved) or after an earlier step failed"
+    )
+    late = [
+        _shown(words)
+        for index, words in _step_commands(steps)
+        if index >= push_index
+        and (index, words) != (push_index, push)
+        and ((_git(words) or ("",))[0] in {"commit", "tag"} or _cuts_a_release(words))
+    ]
+    assert not late, (
+        f"{workflow} job {job!r}: {late} run at or after the push, so what they make "
+        "never reaches main in it"
+    )
+
+
+@versioning_jobs
+def test_each_train_posts_its_release_after_the_push(workflow: str, job: str) -> None:
+    """Without its push semantic-release creates no GitHub release, so the job
+    posts the release for the tag itself: after the push, from the same config."""
+    steps = _jobs(workflow)[job]
+    commands = _step_commands(steps)
+    pushes = _pushes(steps)
+    assert pushes, f"{workflow} job {job!r} never pushes"
+    push_index = pushes[0][0]
+    configs = {_semantic_release(words)[0] for _, words in commands if _cuts_a_release(words)}
+    posts = []
+    for index, words in commands:
+        call = _semantic_release(words)
+        if call and call[1] == "changelog" and "--post-to-release-tag" in call[2]:
+            posts.append((index, words, call))
+    assert posts, (
+        f"{workflow} job {job!r} never runs `semantic-release changelog "
+        "--post-to-release-tag`, so its releases would have no GitHub release"
+    )
+    for index, words, (config, _, flags) in posts:
+        assert index > push_index, (
+            f"{workflow} job {job!r}: {_shown(words)!r} runs before the push, for a tag "
+            "GitHub does not have yet"
+        )
+        assert config in configs, (
+            f"{workflow} job {job!r}: {_shown(words)!r} posts with another config than "
+            f"the version call ({sorted(map(str, configs))})"
+        )
+        assert words[words.index("--post-to-release-tag") + 1 :][:1] == ["${TAG}"], (
+            f"{workflow} job {job!r}: {_shown(words)!r} must post for the pushed tag, ${{TAG}}"
+        )
+        assert (steps[index].get("env") or {}).get("TAG") == TAG_FROM_VERSION_STEP, (
+            f"{workflow} job {job!r}: the release step's TAG is not {TAG_FROM_VERSION_STEP}"
+        )
+        assert str(steps[index].get("if", "")).strip() in GATES, (
+            f"{workflow} job {job!r}: the release step's `if:` is not `{RELEASE_GATE}`, so "
+            "it posts the last release again when no release was made"
         )
