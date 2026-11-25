@@ -35,6 +35,7 @@ for its tag after the push.
 
 from __future__ import annotations
 
+import os
 import re
 import shlex
 import subprocess
@@ -388,10 +389,14 @@ def test_per_package_trains_run_from_the_root_without_a_changelog(workflow: str)
 
 # One atomic push per train (CORE-2933). Every workflow is read, not only the
 # release-*.yml files, so a release cut from anywhere is held to the same rule.
-# A step's `run` is read the way bash reads it: comments dropped, continuation
-# lines joined, and `&&`, `||`, `;`, `|` and `&` separating commands, so neither
-# `... # --no-push` nor `git commit ... && git push` slips past.
+# A step's `run` is read close to the way bash reads it: comments dropped,
+# continuation lines joined, `&&`, `||`, `;`, `|` and `&` separating commands,
+# and shell keywords, `env` and assignments before a command skipped. So neither
+# `... # --no-push` nor `if ! git push ...` nor `git commit ... && git push`
+# slips past. It is not a shell parser: a construct it cannot read (a quote
+# spanning lines, a here-document) is read as plain words.
 RELEASE_GATE = "steps.semantic-release.outputs.release_created == 'true'"
+GATES = {RELEASE_GATE, f"${{{{ {RELEASE_GATE} }}}}"}
 TAG_FROM_VERSION_STEP = "${{ steps.semantic-release.outputs.tag }}"
 MAIN_REFSPECS = {"main", "main:main", "HEAD:main", "HEAD:refs/heads/main", "refs/heads/main"}
 # `version` flags that only print or rehearse: such a call commits, tags and
@@ -405,12 +410,22 @@ PRINT_ONLY = {
 }
 SEPARATORS = {"&&", "||", ";", ";;", "|", "|&", "&", "(", ")"}
 ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=")
+# Words that come before the command they run: shell keywords, and commands
+# that run the rest of their line.
+PREFIXES = {"if", "then", "elif", "else", "do", "while", "until", "!", "{", "time", "command",
+            "exec", "nohup"}
+# Bash starts a comment only at a `#` that begins a word; shlex starts one at
+# any `#`. A `#` after another character (`${TAG#v}`) is hidden from shlex.
+MID_WORD_HASH = re.compile(r"(?<=\S)#")
+HIDDEN_HASH = "\x00"
 # Options that take a value, so the value is not read as the next word.
 GIT_VALUE_OPTIONS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
 PUSH_VALUE_OPTIONS = {"-o", "--push-option", "--repo", "--receive-pack", "--exec"}
 UV_VALUE_OPTIONS = {
     "--with", "--python", "-p", "--group", "--extra", "--package", "--directory", "--project",
+    "--from",
 }
+ENV_VALUE_OPTIONS = {"-u", "--unset", "-C", "--chdir", "-S", "--split-string"}
 SR_VALUE_OPTIONS = {"-c", "--config"}
 
 
@@ -418,10 +433,11 @@ def _commands(script: str) -> list[list[str]]:
     """The simple commands of a step's ``run``, each as its words."""
     commands: list[list[str]] = []
     for line in script.replace("\\\n", " ").splitlines():
-        lexer = shlex.shlex(line, posix=True, punctuation_chars=True)
+        hidden = MID_WORD_HASH.sub(HIDDEN_HASH, line)
+        lexer = shlex.shlex(hidden, posix=True, punctuation_chars=True)
         lexer.whitespace_split = True
         try:
-            words = list(lexer)
+            words = [word.replace(HIDDEN_HASH, "#") for word in lexer]
         except ValueError:  # an unbalanced quote; no train writes one
             words = line.split()
         command: list[str] = []
@@ -444,17 +460,31 @@ def _skip_options(words: list[str], takes_value: set[str]) -> list[str]:
 
 
 def _program(words: list[str]) -> list[str]:
-    """A command without its leading ``NAME=value`` assignments."""
+    """The command a line of words runs: leading keywords (``if``, ``!``, ...),
+    ``env`` with its options, and ``NAME=value`` assignments skipped."""
     index = 0
-    while index < len(words) and ASSIGNMENT.match(words[index]):
-        index += 1
+    while index < len(words):
+        word = words[index]
+        if word in PREFIXES or ASSIGNMENT.match(word):
+            index += 1
+        elif word == "env":
+            index += 1
+            while index < len(words) and words[index].startswith("-"):
+                index += 2 if words[index] in ENV_VALUE_OPTIONS else 1
+        else:
+            break
     return words[index:]
+
+
+def _name(word: str) -> str:
+    """A program word without its directory: ``.venv/bin/semantic-release``."""
+    return os.path.basename(word)
 
 
 def _git(words: list[str]) -> tuple[str, list[str]] | None:
     """(subcommand, its arguments) for a git command, global options skipped."""
     words = _program(words)
-    if not words or words[0] != "git":
+    if not words or _name(words[0]) != "git":
         return None
     rest = _skip_options(words[1:], GIT_VALUE_OPTIONS)
     return (rest[0], rest[1:]) if rest else None
@@ -462,16 +492,19 @@ def _git(words: list[str]) -> tuple[str, list[str]] | None:
 
 def _semantic_release(words: list[str]) -> tuple[str | None, str | None, list[str]] | None:
     """(config, subcommand, every flag) for a semantic-release command, run
-    directly, through ``uv run`` or ``uvx``, or as ``python -m semantic_release``."""
+    directly or by path, through ``uv run``, ``uv tool run`` or ``uvx``, or as
+    ``python -m semantic_release``."""
     words = _program(words)
-    if words[:2] == ["uv", "run"]:
+    if [_name(w) for w in words[:3]] == ["uv", "tool", "run"]:
+        words = _skip_options(words[3:], UV_VALUE_OPTIONS)
+    elif [_name(w) for w in words[:2]] == ["uv", "run"]:
         words = _skip_options(words[2:], UV_VALUE_OPTIONS)
-    elif words[:1] == ["uvx"]:
+    elif words and _name(words[0]) == "uvx":
         words = _skip_options(words[1:], UV_VALUE_OPTIONS)
-    is_python = len(words) > 2 and re.fullmatch(r"python[\d.]*", words[0])
+    is_python = len(words) > 2 and re.fullmatch(r"python[\d.]*", _name(words[0]))
     if is_python and words[1:3] == ["-m", "semantic_release"]:
         words = ["semantic-release", *words[3:]]
-    if not words or words[0] not in {"semantic-release", "semantic_release"}:
+    if not words or _name(words[0]) not in {"semantic-release", "semantic_release"}:
         return None
     arguments = words[1:]
     config = next(
@@ -582,9 +615,10 @@ def test_each_train_pushes_once_atomically(workflow: str, job: str) -> None:
         f"{workflow} job {job!r}: the push step's TAG is not {TAG_FROM_VERSION_STEP}, the "
         "tag the version step made and checked"
     )
-    assert RELEASE_GATE in str(step.get("if", "")), (
-        f"{workflow} job {job!r}: the push step runs without `if: {RELEASE_GATE}`, so a "
-        "run with no release pushes an empty tag name and fails"
+    assert str(step.get("if", "")).strip() in GATES, (
+        f"{workflow} job {job!r}: the push step's `if:` is not `{RELEASE_GATE}`, so it "
+        "runs when no release was made (pushing main and the last tag again, which fails "
+        "once main has moved) or after an earlier step failed"
     )
     late = [
         _shown(words)
@@ -633,6 +667,7 @@ def test_each_train_posts_its_release_after_the_push(workflow: str, job: str) ->
         assert (steps[index].get("env") or {}).get("TAG") == TAG_FROM_VERSION_STEP, (
             f"{workflow} job {job!r}: the release step's TAG is not {TAG_FROM_VERSION_STEP}"
         )
-        assert RELEASE_GATE in str(steps[index].get("if", "")), (
-            f"{workflow} job {job!r}: the release step runs without `if: {RELEASE_GATE}`"
+        assert str(steps[index].get("if", "")).strip() in GATES, (
+            f"{workflow} job {job!r}: the release step's `if:` is not `{RELEASE_GATE}`, so "
+            "it posts the last release again when no release was made"
         )
