@@ -12,9 +12,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 
 - Requires `legesher-core` and `legesher-i18n` 0.28.3 or later. An upgrade
-  keeps any installed version that meets the floor, so with the 0.28.0 floors
-  `pip install -U legesher` could leave core and i18n at 0.28.0 to 0.28.2,
-  without the fixes released since.
+  leaves an installed dependency alone while it meets the floor, so with the
+  0.28.0 floors `pip install -U legesher` could keep `legesher-i18n` at 0.28.0
+  to 0.28.2, without the i18n fixes released since. Core moves with it.
 
 ## [0.28.3] - 2026-11-24
 
