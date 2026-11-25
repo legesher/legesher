@@ -16,21 +16,25 @@ dependencies = [
     # The CLI exposes the tree-sitter backend (translate --full, identifier
     # maps), so it needs the optional extra that ships the C extensions.
     # Sibling ranges ship in the wheel metadata; in-repo the workspace
-    # override in the root [tool.uv.sources] applies. <1.0.0 because
-    # semantic-release (major_on_zero = true) moves 0.x to 1.0 on a
-    # breaking change.
-    # 0.28.0: `runtime/import_hook.py` imports `legesher_core.utils.continues_identifier`,
-    # first released in 0.28.0. pip's default upgrade strategy keeps any installed
-    # version that satisfies the floor, so a lower floor left 0.27.0 in place
-    # under a 0.28.0 CLI, which failed at import.
-    "legesher-core[treesitter]>=0.28.0,<1.0.0",
-    # 0.28.0: `runtime/import_hook.py` imports
+    # override in the root [tool.uv.sources] applies. <1.0.0 because 1.0 is a
+    # deliberate, coordinated release: the root config sets major_on_zero =
+    # false, so a breaking change moves 0.x to the next minor, not to 1.0.
+    # pip's default upgrade strategy leaves an installed dependency alone while
+    # it satisfies the floor, so with 0.28.0 floors `pip install -U legesher`
+    # could keep i18n at 0.28.0 to 0.28.2. The API minimum is 0.28.0 (below);
+    # the floors sit at 0.28.3 so an upgrade also brings i18n's 0.28.2 and
+    # 0.28.3 fixes, and core, which releases with it, moves to the same version.
+    #
+    # Core: `runtime/import_hook.py` imports `legesher_core.utils.continues_identifier`,
+    # first released in 0.28.0. A floor below that left 0.27.0 in place under a
+    # 0.28.0 CLI, which failed at import.
+    "legesher-core[treesitter]>=0.28.3,<1.0.0",
+    # i18n: `runtime/import_hook.py` imports
     # `legesher_i18n.language_registry.get_native_digits`, first released in
     # 0.28.0 (`cli/main.py`'s `legesher_i18n.console_encoding` dates from 0.24.0).
-    # The floor states the minimum API this package uses; anything lower lets an
-    # upgrade keep an older legesher-i18n and kills the `legesher` CLI with an
-    # ImportError before it parses an argument.
-    "legesher-i18n>=0.28.0,<1.0.0",
+    # A floor below that lets an upgrade keep an older legesher-i18n and kills the
+    # `legesher` CLI with an ImportError before it parses an argument.
+    "legesher-i18n>=0.28.3,<1.0.0",
     "legesher-runtime>=0.1.0,<1.0.0",
 ]
 name = "legesher"

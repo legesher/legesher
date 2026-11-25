@@ -1,4 +1,4 @@
 # The language server the extension installs for itself, and nothing else.
 # Compile with `npm run lock:server`; the result, requirements.lock, is what
 # the extension installs, every file checked against its SHA-256.
-legesher-language-server==0.3.0
+legesher-language-server==0.3.1

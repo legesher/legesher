@@ -196,13 +196,13 @@ jsonschema-specifications==2025.9.1 \
     --hash=sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe \
     --hash=sha256:b540987f239e745613c7a9176f3edb72b832a4ac465cf02712288397832b5e8d
     # via jsonschema
-legesher-i18n==0.25.1 \
-    --hash=sha256:7acd90158dec9add12ad37ad4ac6f0f4fc1e746938e2583ddf8724269a1a5015 \
-    --hash=sha256:d151cc7434c36b165523c2aec348a4da316dce1426eb6baac889f680e0b97a7f
+legesher-i18n==0.28.3 \
+    --hash=sha256:1903deb2d91bf154bb366d096bcee89eef87e8f96b9e1afc66a18f18aa36b02d \
+    --hash=sha256:3a95796c68e175320fee4d772de0e7397d401a19d6aea06bc6a5d8e767730c3c
     # via legesher-language-server
-legesher-language-server==0.3.0 \
-    --hash=sha256:0b7d91dfec6dbd309e680c119a00585447f990ca404697bcf7b5fcf51d6e469b \
-    --hash=sha256:a191df6c0a0c7bfe09d86c665f3655b9078d95b6ebda8388675a2781483cfcd8
+legesher-language-server==0.3.1 \
+    --hash=sha256:5df39f52a3b0875989bb1553cd9e0f0a990a3adf1477eff5e6d4d40950ca233a \
+    --hash=sha256:a7472046631b69c3c6061112ce4a2746e947c481a099bc511a60caae1203c4d8
     # via -r server/requirements.in
 lru-dict==1.4.1 \
     --hash=sha256:000ba9a2ab4dd1ad2d91764a6d5cce75a59de51534cdda478d1ddaa3cd8d5c48 \
