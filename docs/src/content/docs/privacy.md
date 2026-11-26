@@ -16,7 +16,7 @@ The extension's three telemetry settings are off by default. Add one to your VS 
 
 ### Usage telemetry
 
-Usage statistics, with no code content and no file paths.
+Usage statistics, with no code content. Error messages are scrubbed of file paths, email addresses and URLs before they are sent. The bundled VS Code telemetry library adds a pseudonymous machine id.
 
 ```json
 {
@@ -46,7 +46,7 @@ Records your choice about attaching a repository label to requests to Legesher's
 
 ### VS Code's own telemetry
 
-Setting VS Code's telemetry to off also turns off the extension's telemetry, along with VS Code's own and every other extension's.
+Setting VS Code's telemetry to off also turns off the extension's telemetry, and VS Code's own.
 
 ```json
 {
