@@ -1,6 +1,6 @@
 ---
 title: Privacy
-description: Where Legesher's privacy and legal documents are, and the VS Code extension settings that control what it sends.
+description: Where Legesher's privacy and legal documents are, and the VS Code extension's privacy settings.
 ---
 
 Legesher's privacy and legal documents are on legesher.io:
@@ -12,9 +12,11 @@ Legesher's privacy and legal documents are on legesher.io:
 
 ## VS Code extension settings
 
-The extension's three settings are off by default. Add one to your VS Code settings to keep it off, or to turn it off again.
+The extension's three telemetry settings are off by default. Add one to your VS Code settings to keep it off, or to turn it off again.
 
 ### Usage telemetry
+
+Usage statistics, with no code content and no file paths.
 
 ```json
 {
@@ -24,6 +26,8 @@ The extension's three settings are off by default. Add one to your VS Code setti
 
 ### ML training data (opt-in only)
 
+Records your consent to share translation feedback. The extension sends no translation corrections today.
+
 ```json
 {
   "legesher.telemetry.contributeToMLTraining": false
@@ -31,6 +35,8 @@ The extension's three settings are off by default. Add one to your VS Code setti
 ```
 
 ### Repository attribution
+
+Records your choice about attaching a repository label to requests to Legesher's hosted service. The extension sends no repository label today. It also needs usage telemetry and VS Code's telemetry to be on.
 
 ```json
 {
@@ -40,7 +46,7 @@ The extension's three settings are off by default. Add one to your VS Code setti
 
 ### VS Code's own telemetry
 
-VS Code's own telemetry setting also turns the extension's telemetry off.
+Setting VS Code's telemetry to off also turns off the extension's telemetry, along with VS Code's own and every other extension's.
 
 ```json
 {

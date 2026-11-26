@@ -16,6 +16,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   0.28.3. Running one again over an earlier install upgrades it.
 - **legesher**: requires `legesher-core` and `legesher-i18n` 0.28.3 or later,
   so `pip install -U legesher` brings them forward too.
+- **docs**: the privacy page links the Privacy Policy, Cookie Policy, Terms of
+  Service and Usage Policy on legesher.io, and lists the VS Code extension's
+  privacy settings, each with what it does today. It no longer repeats policy
+  text, so the old claim about translation corrections is gone from it. The
+  sidebar calls it Privacy.
 
 ### Removed
 
