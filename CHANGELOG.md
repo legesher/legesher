@@ -16,12 +16,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   0.28.3. Running one again over an earlier install upgrades it.
 - **legesher**: requires `legesher-core` and `legesher-i18n` 0.28.3 or later,
   so `pip install -U legesher` brings them forward too.
-- **docs**: the privacy page is removed. Its address, in every language,
-  redirects to the Privacy Policy on legesher.io, and the getting-started pages
-  link there. The old claim about translation corrections goes with it.
 
 ### Removed
 
+- **docs**: the privacy page is removed. Its address, in every language,
+  redirects to the Privacy Policy on legesher.io, and the getting-started pages
+  link there. The old claim about translation corrections goes with it.
 - **ci**: the `Monitor Python Releases` workflow. It could only be started by
   hand, it called a script that no longer exists, and it would have written
   pack files without going through the translations database.
