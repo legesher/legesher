@@ -146,7 +146,7 @@ test.describe('without JavaScript', () => {
 
 // The sign-in provider is never contacted: with every origin but this site
 // refused, the page renders, the link is right, and nothing was even asked for.
-for (const path of ['/', '/getting-started/', '/privacy/', '/ar/']) {
+for (const path of ['/', '/getting-started/', '/ar/']) {
   test(`${path} renders and reads the marker with every other origin unreachable`, async ({
     page,
     context,

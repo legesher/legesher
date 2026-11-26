@@ -87,11 +87,6 @@ export default defineConfig({
 							translations: { es: 'Idiomas compatibles', ar: 'اللغات المدعومة' },
 							slug: 'reference/supported-languages',
 						},
-						{
-							label: 'Privacy',
-							translations: { es: 'Privacidad', ar: 'الخصوصية' },
-							slug: 'privacy',
-						},
 					],
 				},
 			],

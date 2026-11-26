@@ -19,7 +19,6 @@ docs/
 │           ├── index.mdx       # Homepage
 │           ├── getting-started.md
 │           ├── why-legesher.md
-│           ├── privacy.md
 │           └── reference/
 │               └── supported-languages.md
 ├── astro.config.mjs            # Astro + Starlight configuration
