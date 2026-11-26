@@ -19,7 +19,6 @@ docs/
 │           ├── index.mdx       # Homepage
 │           ├── getting-started.md
 │           ├── why-legesher.md
-│           ├── privacy.md
 │           └── reference/
 │               └── supported-languages.md
 ├── astro.config.mjs            # Astro + Starlight configuration
@@ -51,8 +50,7 @@ reader who is signed in at app.legesher.io.
   shows by default, so the page works without JavaScript and on preview deployments.
 - An inline head script (`src/account/marker-script.mjs`) reads the sign-in marker cookie the account
   app leaves on legesher.io and marks `<html data-account="signed-in">`. The site loads no sign-in
-  code, makes no request and sets no cookie for this. The privacy page describes it; keep the two in
-  step.
+  code, makes no request and sets no cookie for this.
 - Labels per locale live in `src/account/labels.json`. A locale without labels fails the build.
 - The link is in the header bar in a wide window (77rem and up) and under the sidebar in anything
   narrower, which is the menu on a phone. Pages without a sidebar (the home page and the 404 page)

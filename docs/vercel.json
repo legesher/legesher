@@ -1,3 +1,35 @@
 {
-  "installCommand": "pnpm install"
+  "installCommand": "pnpm install",
+  "redirects": [
+    {
+      "source": "/privacy",
+      "destination": "https://www.legesher.io/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/privacy/",
+      "destination": "https://www.legesher.io/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/es/privacy",
+      "destination": "https://www.legesher.io/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/es/privacy/",
+      "destination": "https://www.legesher.io/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/ar/privacy",
+      "destination": "https://www.legesher.io/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/ar/privacy/",
+      "destination": "https://www.legesher.io/privacy",
+      "permanent": true
+    }
+  ]
 }

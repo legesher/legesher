@@ -19,6 +19,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Removed
 
+- **docs**: the privacy page is removed. Its address, in every language,
+  redirects to the Privacy Policy on legesher.io, and the getting-started pages
+  link there. The old claim about translation corrections goes with it.
 - **ci**: the `Monitor Python Releases` workflow. It could only be started by
   hand, it called a script that no longer exists, and it would have written
   pack files without going through the translations database.
