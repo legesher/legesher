@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import vercel from '@astrojs/vercel';
+import starlightOpenAPI, { createOpenAPISidebarGroup } from 'starlight-openapi';
 import { readFileSync } from 'node:fs';
 import { legesherSnippets } from './integrations/legesher-snippets.mjs';
 import { ACCOUNT_MARKER_SCRIPT } from './src/account/marker-script.mjs';
@@ -10,6 +11,11 @@ import { ACCOUNT_MARKER_SCRIPT } from './src/account/marker-script.mjs';
 const snippetLangs = JSON.parse(
 	readFileSync(new URL('./generated/snippet-langs.json', import.meta.url), 'utf-8'),
 ).map((/** @type {{ code: string }} */ l) => l.code);
+
+// The Translation API reference: pages generated at build time from the
+// OpenAPI document, which is also served as-is at /api/openapi.json. The
+// document is copied in from the API's repository, never edited here.
+const apiReferenceGroup = createOpenAPISidebarGroup();
 
 // https://astro.build/config
 export default defineConfig({
@@ -24,6 +30,15 @@ export default defineConfig({
 		legesherSnippets(),
 		starlight({
 			title: 'Legesher Documentation',
+			plugins: [
+				starlightOpenAPI([
+					{
+						base: 'api/reference',
+						schema: './public/api/openapi.json',
+						sidebar: { label: 'Endpoint reference', group: apiReferenceGroup },
+					},
+				]),
+			],
 			customCss: ['./src/styles/custom.css'],
 			components: {
 				Sidebar: './src/components/Sidebar.astro',
@@ -76,6 +91,17 @@ export default defineConfig({
 							translations: { es: 'Zona de pruebas', ar: 'ساحة التجريب' },
 							slug: 'playground',
 						},
+					],
+				},
+				{
+					label: 'Translation API',
+					items: [
+						{ label: 'Overview and first request', slug: 'api' },
+						{ label: 'Keys and sign-in', slug: 'api/keys' },
+						{ label: 'Errors and limits', slug: 'api/errors-and-limits' },
+						{ label: 'Languages', slug: 'api/languages' },
+						{ label: 'Versioning', slug: 'api/versioning' },
+						apiReferenceGroup,
 					],
 				},
 				{

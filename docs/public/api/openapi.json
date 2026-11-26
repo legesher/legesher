@@ -1,0 +1,4041 @@
+{
+  "components": {
+    "schemas": {
+      "CodebaseMapRequest": {
+        "additionalProperties": false,
+        "description": "A batch of files to produce the legibility report for.",
+        "properties": {
+          "files": {
+            "description": "Files to map. A request over the per-request file limit gets 413; map a large repository in batches.",
+            "items": {
+              "$ref": "#/components/schemas/SourceFile"
+            },
+            "minItems": 1,
+            "title": "Files",
+            "type": "array"
+          },
+          "include_translations": {
+            "default": false,
+            "description": "Also return the translated files (default: report only).",
+            "title": "Include Translations",
+            "type": "boolean"
+          },
+          "python_version": {
+            "default": "3.13",
+            "description": "Python grammar version used to select the language packs.",
+            "enum": [
+              "3.10",
+              "3.11",
+              "3.12",
+              "3.13",
+              "3.14"
+            ],
+            "title": "Python Version",
+            "type": "string"
+          },
+          "source_lang": {
+            "default": "en",
+            "description": "Language the codebase is written in.",
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)?$",
+            "title": "Source Lang",
+            "type": "string"
+          },
+          "target_lang": {
+            "description": "Language the report maps the codebase into.",
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)?$",
+            "title": "Target Lang",
+            "type": "string"
+          }
+        },
+        "required": [
+          "files",
+          "target_lang"
+        ],
+        "title": "CodebaseMapRequest",
+        "type": "object"
+      },
+      "CodebaseMapResponse": {
+        "description": "Legibility report: what translating this codebase would look like.",
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/FileMapEntry"
+            },
+            "title": "Files",
+            "type": "array"
+          },
+          "python_version": {
+            "enum": [
+              "3.10",
+              "3.11",
+              "3.12",
+              "3.13",
+              "3.14"
+            ],
+            "title": "Python Version",
+            "type": "string"
+          },
+          "source_lang": {
+            "title": "Source Lang",
+            "type": "string"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/CodebaseMapSummary"
+          },
+          "target_lang": {
+            "title": "Target Lang",
+            "type": "string"
+          },
+          "translated_files": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TranslatedFile"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Translated Files"
+          }
+        },
+        "required": [
+          "source_lang",
+          "target_lang",
+          "python_version",
+          "files",
+          "summary"
+        ],
+        "title": "CodebaseMapResponse",
+        "type": "object"
+      },
+      "CodebaseMapSummary": {
+        "description": "Aggregate coverage over the mapped batch.",
+        "properties": {
+          "constructs_found": {
+            "description": "Unique constructs seen across the batch.",
+            "title": "Constructs Found",
+            "type": "integer"
+          },
+          "constructs_mapped": {
+            "description": "Of those, how many the target pack has entries for.",
+            "title": "Constructs Mapped",
+            "type": "integer"
+          },
+          "coverage_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "constructs_mapped / constructs_found; null when no constructs were found.",
+            "title": "Coverage Ratio"
+          },
+          "files_total": {
+            "title": "Files Total",
+            "type": "integer"
+          },
+          "files_translatable": {
+            "title": "Files Translatable",
+            "type": "integer"
+          },
+          "pivoted": {
+            "description": "True when mapping went through the English pivot.",
+            "title": "Pivoted",
+            "type": "boolean"
+          },
+          "unmapped_constructs": {
+            "description": "Unique English constructs without target-pack entries.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Unmapped Constructs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "files_total",
+          "files_translatable",
+          "constructs_found",
+          "constructs_mapped",
+          "coverage_ratio",
+          "pivoted"
+        ],
+        "title": "CodebaseMapSummary",
+        "type": "object"
+      },
+      "ComponentStatuses": {
+        "description": "Per-component health, one status word each.",
+        "properties": {
+          "database": {
+            "description": "The key and subscription store.",
+            "enum": [
+              "ok",
+              "degraded",
+              "down"
+            ],
+            "title": "Database",
+            "type": "string"
+          },
+          "foundation": {
+            "description": "The translation engine ('down' when it is unavailable).",
+            "enum": [
+              "ok",
+              "degraded",
+              "down"
+            ],
+            "title": "Foundation",
+            "type": "string"
+          },
+          "limiter": {
+            "description": "The rate limiter.",
+            "enum": [
+              "ok",
+              "degraded",
+              "down"
+            ],
+            "title": "Limiter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "foundation",
+          "database",
+          "limiter"
+        ],
+        "title": "ComponentStatuses",
+        "type": "object"
+      },
+      "ConstructMapping": {
+        "description": "One construct present in the code, mapped across both languages.",
+        "properties": {
+          "category": {
+            "description": "keywords | builtins | exceptions | reserved_words",
+            "title": "Category",
+            "type": "string"
+          },
+          "construct": {
+            "description": "Canonical English term.",
+            "title": "Construct",
+            "type": "string"
+          },
+          "in_code_lang": {
+            "description": "How the construct is spelled in the code's language.",
+            "title": "In Code Lang",
+            "type": "string"
+          },
+          "in_explain_lang": {
+            "description": "How the construct is spelled in the explanation language (the English spelling when the pack has no entry for it).",
+            "title": "In Explain Lang",
+            "type": "string"
+          }
+        },
+        "required": [
+          "construct",
+          "in_code_lang",
+          "in_explain_lang",
+          "category"
+        ],
+        "title": "ConstructMapping",
+        "type": "object"
+      },
+      "DeviceAuthorizationResponse": {
+        "description": "RFC 8628 §3.2 device-authorization response.",
+        "properties": {
+          "device_code": {
+            "description": "The device verification code (lgsh_device_…). A bearer secret: hold it privately and present it only to the token endpoint. Never shown to the user.",
+            "title": "Device Code",
+            "type": "string"
+          },
+          "expires_in": {
+            "description": "Lifetime of the code pair in seconds (then expired_token).",
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "interval": {
+            "description": "Minimum seconds the device must wait between token polls. Polling faster answers slow_down and restarts the wait.",
+            "title": "Interval",
+            "type": "integer"
+          },
+          "user_code": {
+            "description": "The short code the user enters on the verification page, formatted XXXX-XXXX. Case-insensitive; hyphens and spaces are ignored on entry.",
+            "title": "User Code",
+            "type": "string"
+          },
+          "verification_uri": {
+            "description": "Where the user goes to approve or deny the sign-in.",
+            "title": "Verification Uri",
+            "type": "string"
+          },
+          "verification_uri_complete": {
+            "description": "verification_uri with the user_code pre-filled, for QR codes and clickable links.",
+            "title": "Verification Uri Complete",
+            "type": "string"
+          }
+        },
+        "required": [
+          "device_code",
+          "user_code",
+          "verification_uri",
+          "verification_uri_complete",
+          "expires_in",
+          "interval"
+        ],
+        "title": "DeviceAuthorizationResponse",
+        "type": "object"
+      },
+      "EnhancedElementCounts": {
+        "description": "Elements the enhanced model pass submitted, by kind.",
+        "properties": {
+          "comments": {
+            "default": 0,
+            "title": "Comments",
+            "type": "integer"
+          },
+          "docstrings": {
+            "default": 0,
+            "title": "Docstrings",
+            "type": "integer"
+          },
+          "identifiers": {
+            "default": 0,
+            "title": "Identifiers",
+            "type": "integer"
+          },
+          "strings": {
+            "default": 0,
+            "title": "Strings",
+            "type": "integer"
+          }
+        },
+        "title": "EnhancedElementCounts",
+        "type": "object"
+      },
+      "ErrorDetail": {
+        "description": "Machine-readable code + human message for one error.",
+        "properties": {
+          "code": {
+            "description": "Machine-readable error code, e.g. 'validation_error', 'unsupported_language', 'language_pack_not_found', 'payload_too_large', 'foundation_unavailable', 'invalid_source_code', 'internal_error'.",
+            "title": "Code",
+            "type": "string"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/FieldIssue"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Per-field breakdown (validation errors only).",
+            "title": "Details"
+          },
+          "message": {
+            "description": "Human-readable explanation.",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDetail",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "description": "Envelope for every error response.",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "ExplainRequest": {
+        "additionalProperties": false,
+        "description": "Code to gather explanation facts for.",
+        "properties": {
+          "code_lang": {
+            "default": "en",
+            "description": "Language the code is written in.",
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)?$",
+            "title": "Code Lang",
+            "type": "string"
+          },
+          "explain_in": {
+            "description": "Language the explanation will be written in.",
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)?$",
+            "title": "Explain In",
+            "type": "string"
+          },
+          "include_translation": {
+            "default": false,
+            "description": "Also return the source translated into explain_in.",
+            "title": "Include Translation",
+            "type": "boolean"
+          },
+          "python_version": {
+            "default": "3.13",
+            "description": "Python grammar version used to select the language packs.",
+            "enum": [
+              "3.10",
+              "3.11",
+              "3.12",
+              "3.13",
+              "3.14"
+            ],
+            "title": "Python Version",
+            "type": "string"
+          },
+          "source": {
+            "description": "The code to explain.",
+            "maxLength": 2000000,
+            "minLength": 1,
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "explain_in"
+        ],
+        "title": "ExplainRequest",
+        "type": "object"
+      },
+      "ExplainResponse": {
+        "description": "Engine facts for explaining code; the calling model writes the prose.",
+        "properties": {
+          "code_lang": {
+            "title": "Code Lang",
+            "type": "string"
+          },
+          "constructs": {
+            "items": {
+              "$ref": "#/components/schemas/ConstructMapping"
+            },
+            "title": "Constructs",
+            "type": "array"
+          },
+          "explain_in": {
+            "title": "Explain In",
+            "type": "string"
+          },
+          "python_version": {
+            "enum": [
+              "3.10",
+              "3.11",
+              "3.12",
+              "3.13",
+              "3.14"
+            ],
+            "title": "Python Version",
+            "type": "string"
+          },
+          "translated_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The code translated into explain_in, when requested.",
+            "title": "Translated Source"
+          },
+          "validation": {
+            "$ref": "#/components/schemas/ExplainValidation"
+          }
+        },
+        "required": [
+          "code_lang",
+          "explain_in",
+          "python_version",
+          "constructs",
+          "validation"
+        ],
+        "title": "ExplainResponse",
+        "type": "object"
+      },
+      "ExplainValidation": {
+        "description": "Static (compile-only, never-executed) validation of the code.",
+        "properties": {
+          "grammar_used": {
+            "description": "CPython grammar version that judged the source: the server interpreter's, the same as on /v1/validate.",
+            "title": "Grammar Used",
+            "type": "string"
+          },
+          "issue": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyntaxIssue"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present only when valid is false."
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "valid",
+          "grammar_used"
+        ],
+        "title": "ExplainValidation",
+        "type": "object"
+      },
+      "FieldIssue": {
+        "description": "One request-validation problem, stripped of the submitted input.",
+        "properties": {
+          "field": {
+            "description": "Dotted location of the offending field.",
+            "title": "Field",
+            "type": "string"
+          },
+          "message": {
+            "description": "Human-readable description.",
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "description": "Pydantic error type identifier.",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "message",
+          "type"
+        ],
+        "title": "FieldIssue",
+        "type": "object"
+      },
+      "FileMapEntry": {
+        "description": "Per-file report row.",
+        "properties": {
+          "construct_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Construct occurrences per category in this file.",
+            "title": "Construct Counts",
+            "type": "object"
+          },
+          "issue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why the file could not be mapped, if it couldn't.",
+            "title": "Issue"
+          },
+          "path": {
+            "description": "Caller-supplied label, echoed back verbatim.",
+            "title": "Path",
+            "type": "string"
+          },
+          "translatable": {
+            "title": "Translatable",
+            "type": "boolean"
+          },
+          "unmapped_constructs": {
+            "description": "English constructs present in the file with no entry in the target language's pack (they stay English after translation).",
+            "items": {
+              "type": "string"
+            },
+            "title": "Unmapped Constructs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "translatable"
+        ],
+        "title": "FileMapEntry",
+        "type": "object"
+      },
+      "FoundationStatus": {
+        "description": "Availability of the foundation packages on this deployment.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "core_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Installed legesher-core version, if any.",
+            "title": "Core Version"
+          },
+          "i18n_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Installed legesher-i18n version, if any.",
+            "title": "I18N Version"
+          }
+        },
+        "required": [
+          "available"
+        ],
+        "title": "FoundationStatus",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "description": "Service liveness plus dependency status.",
+        "properties": {
+          "components": {
+            "$ref": "#/components/schemas/ComponentStatuses"
+          },
+          "foundation": {
+            "$ref": "#/components/schemas/FoundationStatus"
+          },
+          "status": {
+            "description": "'degraded' when any component is not ok.",
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "description": "The API service's version.",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "version",
+          "foundation",
+          "components"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "LanguageInfo": {
+        "description": "One language as listed by the catalog endpoint.",
+        "properties": {
+          "code": {
+            "description": "ISO 639 language code, e.g. 'es'.",
+            "title": "Code",
+            "type": "string"
+          },
+          "name": {
+            "description": "English name, e.g. 'Spanish'.",
+            "title": "Name",
+            "type": "string"
+          },
+          "native": {
+            "description": "Native-script name, e.g. 'Español'.",
+            "title": "Native",
+            "type": "string"
+          },
+          "pack_available": {
+            "description": "Whether a Python language pack is installed for this code.",
+            "title": "Pack Available",
+            "type": "boolean"
+          },
+          "rtl": {
+            "description": "Whether the script is right-to-left.",
+            "title": "Rtl",
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "experimental",
+              "deprecated"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "native",
+          "rtl",
+          "status",
+          "pack_available"
+        ],
+        "title": "LanguageInfo",
+        "type": "object"
+      },
+      "LanguageTermsResponse": {
+        "description": "Full term dictionary for one language pack.",
+        "properties": {
+          "builtins": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "English builtin → translated builtin.",
+            "title": "Builtins",
+            "type": "object"
+          },
+          "exceptions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Canonical Python exception name ('ValueError') → translated exception type. Keys use Python's spelling as it appears in code, not the packs' lowercase storage form.",
+            "title": "Exceptions",
+            "type": "object"
+          },
+          "keywords": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "English keyword → translated keyword.",
+            "title": "Keywords",
+            "type": "object"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "python_version": {
+            "description": "Pack version the terms were resolved against.",
+            "title": "Python Version",
+            "type": "string"
+          },
+          "reserved_words": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Python conventions (self/cls) → translated form.",
+            "title": "Reserved Words",
+            "type": "object"
+          }
+        },
+        "required": [
+          "language",
+          "python_version",
+          "keywords",
+          "builtins",
+          "exceptions",
+          "reserved_words"
+        ],
+        "title": "LanguageTermsResponse",
+        "type": "object"
+      },
+      "LanguagesResponse": {
+        "description": "Catalog of active languages.",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "languages": {
+            "items": {
+              "$ref": "#/components/schemas/LanguageInfo"
+            },
+            "title": "Languages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "languages",
+          "count"
+        ],
+        "title": "LanguagesResponse",
+        "type": "object"
+      },
+      "MeKey": {
+        "description": "Metadata for one API key in the caller's scope. Never the key itself.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "is_active": {
+            "description": "False once revoked.",
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "key_hash_prefix": {
+            "description": "First 12 hex characters of the key's stored SHA-256 hash: an identifier, not a secret, and not derivable back to the key.",
+            "title": "Key Hash Prefix",
+            "type": "string"
+          },
+          "last_used": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Last successful authentication with this key, if any.",
+            "title": "Last Used"
+          },
+          "tier": {
+            "description": "The plan the key was created on.",
+            "title": "Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key_hash_prefix",
+          "tier",
+          "created_at",
+          "last_used",
+          "is_active"
+        ],
+        "title": "MeKey",
+        "type": "object"
+      },
+      "MeResponse": {
+        "description": "The caller's plan, current-period usage, and key metadata.",
+        "properties": {
+          "account_subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The billing account this key is bound to, if any. When set, usage_this_period is the account's shared budget and `keys` lists every key on the account; otherwise both are per-key.",
+            "title": "Account Subject"
+          },
+          "keys": {
+            "description": "Keys in the caller's scope (the account's, or just this one).",
+            "items": {
+              "$ref": "#/components/schemas/MeKey"
+            },
+            "title": "Keys",
+            "type": "array"
+          },
+          "tier": {
+            "$ref": "#/components/schemas/MeTier"
+          },
+          "usage_this_period": {
+            "$ref": "#/components/schemas/MeUsage"
+          }
+        },
+        "required": [
+          "tier",
+          "usage_this_period",
+          "account_subject",
+          "keys"
+        ],
+        "title": "MeResponse",
+        "type": "object"
+      },
+      "MeTier": {
+        "description": "The caller's effective plan: the subscription's plan when one is\nactive, else the plan the key was created on.",
+        "properties": {
+          "id": {
+            "description": "Tier id, e.g. 'individual'.",
+            "title": "Id",
+            "type": "string"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/MeTierLimits"
+          },
+          "name": {
+            "description": "Display name, e.g. 'Individual'.",
+            "title": "Name",
+            "type": "string"
+          },
+          "translation_mode": {
+            "description": "'enhanced' when the plan includes enhanced translation.",
+            "title": "Translation Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "translation_mode",
+          "limits"
+        ],
+        "title": "MeTier",
+        "type": "object"
+      },
+      "MeTierLimits": {
+        "description": "The limits of the caller's plan.\n\nA null value means the plan sets no fixed limit for that measure.",
+        "properties": {
+          "api_keys": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "API keys the plan includes.",
+            "title": "Api Keys"
+          },
+          "monthly_chars": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Translated characters per UTC month (code points).",
+            "title": "Monthly Chars"
+          },
+          "requests_per_minute": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Request rate ceiling per minute.",
+            "title": "Requests Per Minute"
+          }
+        },
+        "required": [
+          "monthly_chars",
+          "requests_per_minute",
+          "api_keys"
+        ],
+        "title": "MeTierLimits",
+        "type": "object"
+      },
+      "MeUsage": {
+        "description": "Billed character usage for the current UTC month.\n\nReads the same meter the quota is enforced against, so these numbers\nalways agree with the ``X-Usage-Characters-*`` response headers. For a\nkey that belongs to an account this is the account's shared total:\nevery key the account created draws on one budget.",
+        "properties": {
+          "chars_remaining": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Budget left this period; null when the budget is unlimited.",
+            "title": "Chars Remaining"
+          },
+          "chars_used": {
+            "description": "Characters billed so far this period.",
+            "title": "Chars Used",
+            "type": "integer"
+          },
+          "period_end": {
+            "description": "End of the window (exclusive): the monthly reset moment.",
+            "format": "date-time",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "description": "Start of the UTC month window.",
+            "format": "date-time",
+            "title": "Period Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "period_start",
+          "period_end",
+          "chars_used",
+          "chars_remaining"
+        ],
+        "title": "MeUsage",
+        "type": "object"
+      },
+      "OAuthErrorResponse": {
+        "description": "RFC 6749 §5.2 / RFC 8628 §3.5 error body (HTTP 400).\n\n``error`` values used by this API: ``authorization_pending``,\n``slow_down``, ``expired_token``, ``access_denied``, ``invalid_grant``,\n``invalid_request``, ``unsupported_grant_type``.",
+        "properties": {
+          "error": {
+            "description": "The OAuth error code (a bare string).",
+            "title": "Error",
+            "type": "string"
+          },
+          "error_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Human-readable detail for developers.",
+            "title": "Error Description"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "OAuthErrorResponse",
+        "type": "object"
+      },
+      "RevocationResponse": {
+        "description": "RFC 7009 revocation acknowledgement.\n\nDeliberately uniform: the endpoint answers 200 with this body whether or\nnot the presented token existed, so the response never confirms token\nvalidity to a prober.",
+        "properties": {
+          "status": {
+            "const": "ok",
+            "default": "ok",
+            "description": "The revocation request was processed.",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "title": "RevocationResponse",
+        "type": "object"
+      },
+      "SourceFile": {
+        "additionalProperties": false,
+        "description": "One input file for the map.",
+        "properties": {
+          "path": {
+            "description": "Report label only, treated as content: echoed back to the caller, never logged, never used to touch the filesystem.",
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Path",
+            "type": "string"
+          },
+          "source": {
+            "description": "The file's Python source text.",
+            "maxLength": 2000000,
+            "minLength": 1,
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "source"
+        ],
+        "title": "SourceFile",
+        "type": "object"
+      },
+      "SyntaxIssue": {
+        "description": "Location and message of a syntax problem (1-based line/column).",
+        "properties": {
+          "line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "SyntaxIssue",
+        "type": "object"
+      },
+      "TokenResponse": {
+        "description": "RFC 6749 §5.1 access-token response (successful device redemption).\n\nThe access token is a newly created Legesher API key: use it as\n``Authorization: Bearer <token>`` like any other key. It does not\nexpire and there is no refresh token; revoke it with\n``POST /v1/oauth/revoke``.",
+        "properties": {
+          "access_token": {
+            "description": "A newly minted API key (lgsh_live_…). Shown exactly once.",
+            "title": "Access Token",
+            "type": "string"
+          },
+          "token_type": {
+            "const": "bearer",
+            "default": "bearer",
+            "description": "Always 'bearer'.",
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token"
+        ],
+        "title": "TokenResponse",
+        "type": "object"
+      },
+      "TranslateFileRequest": {
+        "additionalProperties": false,
+        "description": "A complete Python source file to translate.",
+        "properties": {
+          "enhanced": {
+            "default": false,
+            "description": "Request AI-enhanced translation: after the deterministic pack pass, a model pass translates the extracted comments, docstrings, string literals, and identifier proposals (collision-validated against the pack). Gated to paid plans, Individual and above (402 tier_required on Free); degrades gracefully to standard with mode_fallback=true when the model layer is unavailable.",
+            "title": "Enhanced",
+            "type": "boolean"
+          },
+          "python_version": {
+            "default": "3.13",
+            "description": "Python grammar version used to select the language pack.",
+            "enum": [
+              "3.10",
+              "3.11",
+              "3.12",
+              "3.13",
+              "3.14"
+            ],
+            "title": "Python Version",
+            "type": "string"
+          },
+          "source": {
+            "description": "Python source text to translate.",
+            "maxLength": 2000000,
+            "minLength": 1,
+            "title": "Source",
+            "type": "string"
+          },
+          "source_lang": {
+            "description": "Language the source is written in (ISO 639 code).",
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)?$",
+            "title": "Source Lang",
+            "type": "string"
+          },
+          "target_lang": {
+            "description": "Language to translate into (ISO 639 code).",
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)?$",
+            "title": "Target Lang",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "source_lang",
+          "target_lang"
+        ],
+        "title": "TranslateFileRequest",
+        "type": "object"
+      },
+      "TranslateMetadata": {
+        "description": "Element-level metadata for one translation.\n\nEverything here is about the translation the caller just received,\nderived from their own submission, never from any other caller's data.",
+        "properties": {
+          "cultural_comments": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Engine cultural-comment metadata (#@culture[lang]: …) found in the source, keyed by line; null when the source carries none.",
+            "title": "Cultural Comments"
+          },
+          "enhanced_elements": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EnhancedElementCounts"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How many extracted elements the model pass covered, by kind; null unless the enhanced pass ran."
+          },
+          "identifier_glossary": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Identifier translations applied by the enhanced pass (source identifier → translated identifier), collision-validated against the language pack; null unless the enhanced pass ran. With the opt-in X-Legesher-Repo header, later requests from the same caller for the same repository reuse this glossary for consistent naming; it is kept per caller and never shared with another.",
+            "title": "Identifier Glossary"
+          }
+        },
+        "title": "TranslateMetadata",
+        "type": "object"
+      },
+      "TranslateResponse": {
+        "description": "Translated source plus the parameters that produced it.",
+        "properties": {
+          "fallback_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Machine-readable reason when mode_fallback is true: 'not_configured', 'enhanced_runtime_unavailable', 'model_budget_exhausted', or 'model_provider_unavailable' (the provider-failure code).",
+            "title": "Fallback Reason"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TranslateMetadata"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Element-level metadata (cultural comments; enhanced element counts and identifier glossary when the model pass ran); null when there is none to report."
+          },
+          "mode_fallback": {
+            "default": false,
+            "description": "True when enhanced was requested but the model pass could not run (or failed) and the deterministic result is served instead.",
+            "title": "Mode Fallback",
+            "type": "boolean"
+          },
+          "mode_used": {
+            "default": "standard",
+            "description": "Which pipeline produced translated_source: 'standard' (deterministic pack pass) or 'enhanced' (pack pass + model pass over extracted elements).",
+            "enum": [
+              "standard",
+              "enhanced"
+            ],
+            "title": "Mode Used",
+            "type": "string"
+          },
+          "pivoted": {
+            "description": "True when translated via the English pivot (X→en→Y).",
+            "title": "Pivoted",
+            "type": "boolean"
+          },
+          "python_version": {
+            "enum": [
+              "3.10",
+              "3.11",
+              "3.12",
+              "3.13",
+              "3.14"
+            ],
+            "title": "Python Version",
+            "type": "string"
+          },
+          "source_lang": {
+            "title": "Source Lang",
+            "type": "string"
+          },
+          "target_lang": {
+            "title": "Target Lang",
+            "type": "string"
+          },
+          "translated_source": {
+            "title": "Translated Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "translated_source",
+          "source_lang",
+          "target_lang",
+          "python_version",
+          "pivoted"
+        ],
+        "title": "TranslateResponse",
+        "type": "object"
+      },
+      "TranslateSnippetRequest": {
+        "additionalProperties": false,
+        "description": "A Python fragment to translate (need not be a complete module).",
+        "properties": {
+          "enhanced": {
+            "default": false,
+            "description": "Request AI-enhanced translation: after the deterministic pack pass, a model pass translates the extracted comments, docstrings, string literals, and identifier proposals (collision-validated against the pack). Gated to paid plans, Individual and above (402 tier_required on Free); degrades gracefully to standard with mode_fallback=true when the model layer is unavailable.",
+            "title": "Enhanced",
+            "type": "boolean"
+          },
+          "python_version": {
+            "default": "3.13",
+            "description": "Python grammar version used to select the language pack.",
+            "enum": [
+              "3.10",
+              "3.11",
+              "3.12",
+              "3.13",
+              "3.14"
+            ],
+            "title": "Python Version",
+            "type": "string"
+          },
+          "source": {
+            "description": "Python source text to translate.",
+            "maxLength": 2000000,
+            "minLength": 1,
+            "title": "Source",
+            "type": "string"
+          },
+          "source_lang": {
+            "description": "Language the source is written in (ISO 639 code).",
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)?$",
+            "title": "Source Lang",
+            "type": "string"
+          },
+          "target_lang": {
+            "description": "Language to translate into (ISO 639 code).",
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)?$",
+            "title": "Target Lang",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "source_lang",
+          "target_lang"
+        ],
+        "title": "TranslateSnippetRequest",
+        "type": "object"
+      },
+      "TranslatedFile": {
+        "description": "One translated file, when include_translations was requested.",
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "translated_source": {
+            "title": "Translated Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "translated_source"
+        ],
+        "title": "TranslatedFile",
+        "type": "object"
+      },
+      "ValidateRequest": {
+        "additionalProperties": false,
+        "description": "A (possibly translated) Python source file to syntax-check.",
+        "properties": {
+          "language": {
+            "default": "en",
+            "description": "Language the source is written in (ISO 639 code).",
+            "maxLength": 16,
+            "minLength": 2,
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)?$",
+            "title": "Language",
+            "type": "string"
+          },
+          "python_version": {
+            "default": "3.13",
+            "description": "Python grammar version used to select the language pack.",
+            "enum": [
+              "3.10",
+              "3.11",
+              "3.12",
+              "3.13",
+              "3.14"
+            ],
+            "title": "Python Version",
+            "type": "string"
+          },
+          "source": {
+            "description": "Python source text to validate.",
+            "maxLength": 2000000,
+            "minLength": 1,
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "title": "ValidateRequest",
+        "type": "object"
+      },
+      "ValidateResponse": {
+        "description": "Outcome of a static (compile-only, never-executed) syntax check.",
+        "properties": {
+          "grammar_used": {
+            "description": "CPython grammar version that actually judged the source: the interpreter running the service. When this differs from python_version, a construct that is valid in only one of the two versions can get a verdict that does not transfer to your target version (e.g. PEP 695 `type` aliases, 3.12+).",
+            "title": "Grammar Used",
+            "type": "string"
+          },
+          "issue": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyntaxIssue"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present only when valid is false."
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "python_version": {
+            "description": "The requested version, echoed back. It selects the language pack for reverse translation; it does not select the grammar the syntax verdict is produced under (see grammar_used).",
+            "enum": [
+              "3.10",
+              "3.11",
+              "3.12",
+              "3.13",
+              "3.14"
+            ],
+            "title": "Python Version",
+            "type": "string"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "valid",
+          "language",
+          "python_version",
+          "grammar_used"
+        ],
+        "title": "ValidateResponse",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "name": "Legesher",
+      "url": "https://legesher.io/"
+    },
+    "description": "Hosted HTTP API over the open-source [Legesher](https://legesher.io) engine:\ntranslate Python source between natural languages, read the language packs,\ngather the facts for explaining code in a language, and statically check\n(possibly translated) files.\n\n**Privacy.** Submitted source is never logged and never used for training.\n\n**Versioning.** Every route lives under `/v1`. The versioning and deprecation\npolicy is at https://docs.legesher.io/api/versioning/.\n\n**Authentication.** Send `Authorization: Bearer <api key>`. Keys are created\non the keys page at https://app.legesher.io, or by device sign-in\n(`/v1/oauth/*`, RFC 8628) from a command line or editor. `/v1/health` and the\n`/v1/languages*` listing need no key. `/v1/translate`, `/v1/translate/snippet`,\n`/v1/validate` and `/v1/explain` also answer a caller without a key, on a small\nanonymous trial. `/v1/me` requires a key; `/v1/map` and enhanced translation\nrequire a paid plan.\n\n**Limits and usage.** Responses from those routes, success and error alike,\ncarry `X-RateLimit-Limit`/`-Remaining`/`-Reset` and\n`X-Usage-Characters-Used`/`-Remaining`. A request refused before the caller is\nidentified does not, and a plan with no limit leaves the matching set out. Every response\ncarries `X-Request-ID`.\nA request over a limit gets `429` (there is no metered overage); only a\nsuccessfully served request is billed.\n\n**Errors** use one envelope, `{\"error\": {\"code\", \"message\"}}`, that never\ncontains filesystem paths, stack traces, or submitted source.\n\nGuides and this reference: https://docs.legesher.io/api/.\n",
+    "license": {
+      "identifier": "LicenseRef-Proprietary",
+      "name": "Proprietary (Legesher commercial license)"
+    },
+    "title": "Legesher Translation API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/explain": {
+      "post": {
+        "description": "Deterministic explanation material; the calling model writes the prose.\n\nConstruct-by-construct keyword mappings for the constructs actually\npresent in the code, plus a static (compile-only, never executed)\nvalidation result with the `grammar_used` disclosure. REST parity with\nthe open `legesher-mcp` package's `explain_in_language` tool.",
+        "operationId": "explain_source",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExplainRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExplainResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "An API key was sent and is not valid. A request with no key runs on the anonymous trial instead.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The language has no pack for the requested Python version.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The request body or the source is over the size limit.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A field is missing or malformed, or a language code is not supported.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests, or this month's character allowance is used up.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying. Usually sent with rate_limited; absent on quota_exceeded, which lasts until the UTC month resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The translation engine is unavailable.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Engine facts for explaining code in a language",
+        "tags": [
+          "explain"
+        ]
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "description": "Liveness plus per-component dependency status.\n\nAlways returns 200: a deployment with a failing component is alive but\n'degraded' (the affected endpoints answer their own 5xx). Read the JSON\nbody, not the HTTP status, to tell a degraded deployment from a healthy\none.",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Service liveness and dependency status",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/v1/languages": {
+      "get": {
+        "description": "All active registry languages, with pack availability per code.",
+        "operationId": "list_languages",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LanguagesResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The translation engine is unavailable.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List languages and their status",
+        "tags": [
+          "languages"
+        ]
+      }
+    },
+    "/v1/languages/{lang}/terms": {
+      "get": {
+        "description": "Keywords, builtins, exceptions, and reserved words for a language.",
+        "operationId": "get_language_terms",
+        "parameters": [
+          {
+            "description": "ISO 639 language code, e.g. 'es'.",
+            "in": "path",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "ISO 639 language code, e.g. 'es'.",
+              "maxLength": 16,
+              "minLength": 2,
+              "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)?$",
+              "title": "Lang",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Python grammar version used to select the pack.",
+            "in": "query",
+            "name": "python_version",
+            "required": false,
+            "schema": {
+              "default": "3.13",
+              "description": "Python grammar version used to select the pack.",
+              "enum": [
+                "3.10",
+                "3.11",
+                "3.12",
+                "3.13",
+                "3.14"
+              ],
+              "title": "Python Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LanguageTermsResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The language has no pack for the requested Python version.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A field is missing or malformed, or a language code is not supported.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The translation engine is unavailable.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Full keyword dictionary for one language",
+        "tags": [
+          "languages"
+        ]
+      }
+    },
+    "/v1/map": {
+      "post": {
+        "description": "Per-file translatability + aggregate coverage for a batch of files.\n\nREST parity with the open `legesher-mcp` package's\n`map_existing_codebase` tool. File paths are report labels only,\ntreated as content: echoed back, never logged, never used to touch the\nfilesystem.\n\nRequires an API key on a paid plan. A caller who is not signed in, or\nwhose plan does not pay, gets `402 entitlement_required`: the same\nanswer the hosted MCP instance gives for `map_existing_codebase`.",
+        "operationId": "map_codebase",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CodebaseMapRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodebaseMapResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The API key sent is not valid.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "No API key was sent, or the key's plan does not include mapping (entitlement_required).",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The language has no pack for the requested Python version.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The request body or the source is over the size limit.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A field is missing or malformed, or a language code is not supported.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests, or this month's character allowance is used up.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying. Usually sent with rate_limited; absent on quota_exceeded, which lasts until the UTC month resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The translation engine is unavailable.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Legibility report: map an existing codebase into a language",
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "description": "Describe the caller: effective tier, month-to-date usage, key list.\n\nRequires an API key: a caller without one gets the same generic 401 as\nan invalid key. Key entries carry hash prefixes and lifecycle metadata\nonly; key material is never returned by any endpoint after mint time.",
+        "operationId": "read_me",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying. Usually sent with rate_limited; absent on quota_exceeded, which lasts until the UTC month resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "summary": "The calling key's plan, current-period usage, and keys",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/v1/oauth/device": {
+      "post": {
+        "description": "Mint a ``device_code``/``user_code`` pair for one sign-in attempt.\n\nShow ``user_code`` to the user and send them to ``verification_uri``;\npoll ``POST /v1/oauth/token`` with ``device_code`` every ``interval``\nseconds until approval. The user approves the sign-in on the app's\ndevice page at ``verification_uri``.",
+        "operationId": "start_device_authorization",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "client_id": {
+                    "description": "Accepted and ignored: there is no client registry.",
+                    "type": "string"
+                  },
+                  "scope": {
+                    "description": "Accepted and ignored.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "client_id": {
+                    "description": "Accepted and ignored: there is no client registry.",
+                    "type": "string"
+                  },
+                  "scope": {
+                    "description": "Accepted and ignored.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceAuthorizationResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthErrorResponse"
+                }
+              }
+            },
+            "description": "OAuth error (RFC 6749 §5.2 / RFC 8628 §3.5): authorization_pending, slow_down, expired_token, access_denied, invalid_grant, invalid_request, or unsupported_grant_type.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request body over the ceiling.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests. Wait before retrying.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Start a device sign-in (RFC 8628 device authorization)",
+        "tags": [
+          "oauth"
+        ]
+      }
+    },
+    "/v1/oauth/revoke": {
+      "post": {
+        "description": "Deactivate the presented token. Always 200 with a uniform body.\n\nPer RFC 7009 §2.2 the response is identical whether the token was\nactive, already revoked, or never existed, so revocation cannot be used\nto test whether a key is valid. Works for any API key, not only ones\ncreated by device sign-in (they are the same credential): this is how\na command line signs out.",
+        "operationId": "revoke_token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "token": {
+                    "description": "The access token (API key) to revoke.",
+                    "type": "string"
+                  },
+                  "token_type_hint": {
+                    "description": "Accepted and ignored: there is one token type.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token"
+                ],
+                "type": "object"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "token": {
+                    "description": "The access token (API key) to revoke.",
+                    "type": "string"
+                  },
+                  "token_type_hint": {
+                    "description": "Accepted and ignored: there is one token type.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "token"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevocationResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthErrorResponse"
+                }
+              }
+            },
+            "description": "OAuth error (RFC 6749 §5.2 / RFC 8628 §3.5): authorization_pending, slow_down, expired_token, access_denied, invalid_grant, invalid_request, or unsupported_grant_type.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request body over the ceiling.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests. Wait before retrying.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Revoke an access token / API key (RFC 7009)",
+        "tags": [
+          "oauth"
+        ]
+      }
+    },
+    "/v1/oauth/token": {
+      "post": {
+        "description": "Poll for approval; on success the access token is a fresh API key.\n\nPoll outcomes (HTTP 400, OAuth error body): ``authorization_pending``\n(keep polling), ``slow_down`` (add 5 seconds to the interval; a poll\nthat comes too early also restarts the wait), ``expired_token`` /\n``access_denied``\n(terminal: restart the flow), ``invalid_grant`` (unknown, malformed, or\nalready-redeemed code).",
+        "operationId": "redeem_device_code",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "client_id": {
+                    "description": "Accepted and ignored: there is no client registry.",
+                    "type": "string"
+                  },
+                  "device_code": {
+                    "description": "The device_code from POST /v1/oauth/device.",
+                    "type": "string"
+                  },
+                  "grant_type": {
+                    "description": "Must be the RFC 8628 device-code grant URN.",
+                    "enum": [
+                      "urn:ietf:params:oauth:grant-type:device_code"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "grant_type",
+                  "device_code"
+                ],
+                "type": "object"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "client_id": {
+                    "description": "Accepted and ignored: there is no client registry.",
+                    "type": "string"
+                  },
+                  "device_code": {
+                    "description": "The device_code from POST /v1/oauth/device.",
+                    "type": "string"
+                  },
+                  "grant_type": {
+                    "description": "Must be the RFC 8628 device-code grant URN.",
+                    "enum": [
+                      "urn:ietf:params:oauth:grant-type:device_code"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "grant_type",
+                  "device_code"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthErrorResponse"
+                }
+              }
+            },
+            "description": "OAuth error (RFC 6749 §5.2 / RFC 8628 §3.5): authorization_pending, slow_down, expired_token, access_denied, invalid_grant, invalid_request, or unsupported_grant_type.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request body over the ceiling.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests. Wait before retrying.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Redeem a device code for an API key (RFC 8628 token endpoint)",
+        "tags": [
+          "oauth"
+        ]
+      }
+    },
+    "/v1/translate": {
+      "post": {
+        "description": "Translate a complete Python source file between natural languages.\n\nSupports en→X, X→en, and X→Y (pivoted through English). With\n``enhanced: true`` (any paid plan), a model pass additionally\ntranslates the extracted comments, docstrings, string literals, and\nidentifier proposals, once, after the pivot.",
+        "operationId": "translate_file",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranslateFileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslateResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "An API key was sent and is not valid. A request with no key runs on the anonymous trial instead.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Enhanced translation needs a paid plan (tier_required).",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The language has no pack for the requested Python version.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The request body or the source is over the size limit.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A field is missing or malformed, or a language code is not supported.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests, or this month's character allowance is used up.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying. Usually sent with rate_limited; absent on quota_exceeded, which lasts until the UTC month resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The translation engine is unavailable.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Translate a Python source file",
+        "tags": [
+          "translate"
+        ]
+      }
+    },
+    "/v1/translate/snippet": {
+      "post": {
+        "description": "Translate a Python fragment (need not be a complete module).",
+        "operationId": "translate_snippet",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranslateSnippetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslateResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "An API key was sent and is not valid. A request with no key runs on the anonymous trial instead.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Enhanced translation needs a paid plan (tier_required).",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The language has no pack for the requested Python version.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The request body or the source is over the size limit.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A field is missing or malformed, or a language code is not supported.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests, or this month's character allowance is used up.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying. Usually sent with rate_limited; absent on quota_exceeded, which lasts until the UTC month resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The translation engine is unavailable.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Translate a Python snippet",
+        "tags": [
+          "translate"
+        ]
+      }
+    },
+    "/v1/validate": {
+      "post": {
+        "description": "Syntax-check submitted source. compile() only, never executed.\n\nThe verdict is produced under the server interpreter's grammar,\ndisclosed in the response as `grammar_used`; `python_version` selects\nthe language pack for reverse translation only. If your target version\ndiffers from `grammar_used`, version-specific constructs may validate\n(or fail) against the wrong grammar.",
+        "operationId": "validate_source",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "An API key was sent and is not valid. A request with no key runs on the anonymous trial instead.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The language has no pack for the requested Python version.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The request body or the source is over the size limit.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A field is missing or malformed, or a language code is not supported.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests, or this month's character allowance is used up.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying. Usually sent with rate_limited; absent on quota_exceeded, which lasts until the UTC month resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The translation engine is unavailable.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Requests permitted per minute for the caller's tier. The X-RateLimit-* set is omitted when the tier's rate is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Requests remaining in the current rate window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the rate limit fully resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Correlation id for this request: the validated inbound X-Request-ID when one was sent, else a server-minted UUID.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Usage-Characters-Remaining": {
+                "description": "Characters left in the caller's monthly budget.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Usage-Characters-Used": {
+                "description": "Characters billed against the caller's monthly budget, UTC month to date. The X-Usage-* pair is omitted when the budget is unlimited, and on a request refused before the caller is identified.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Statically validate a (possibly translated) source file",
+        "tags": [
+          "validate"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "description": "Production",
+      "url": "https://api.legesher.io"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Public liveness and per-component dependency status.",
+      "name": "health"
+    },
+    {
+      "description": "Public language catalog and per-language term dictionaries.",
+      "name": "languages"
+    },
+    {
+      "description": "Translate Python source between natural languages (en→X, X→en, X→Y via the English pivot). Takes an API key or the anonymous trial.",
+      "name": "translate"
+    },
+    {
+      "description": "Static, compile-only syntax check of a (possibly translated) file; the code is never executed. Takes an API key or the anonymous trial.",
+      "name": "validate"
+    },
+    {
+      "description": "The calling key's effective plan, month-to-date usage, and key metadata. Requires an API key.",
+      "name": "me"
+    },
+    {
+      "description": "RFC 8628 device-authorization sign-in: obtain, redeem, and revoke an API key from a command line or editor. No key needed; rate-limited.",
+      "name": "oauth"
+    }
+  ]
+}
