@@ -18,8 +18,9 @@ Nothing is deprecated today.
 
 ## Deprecation window
 
-A deprecated version or route keeps working for at least 90 days between the announcement and its sunset,
-the date it stops responding. You hear about it three ways:
+A deprecated version or route keeps working for a designated period between the announcement and its sunset,
+the date it stops responding. The sunset date is given when the deprecation is announced, so you know from the
+start how long you have. You hear about it three ways:
 
 1. **Response headers** on every call to the deprecated path (below), so a client can alert without anyone
    reading the docs.
@@ -33,11 +34,11 @@ the date it stops responding. You hear about it three ways:
 A response from a deprecated route carries these headers on success and error answers alike
 ([RFC 9745](https://www.rfc-editor.org/rfc/rfc9745), [RFC 8594](https://www.rfc-editor.org/rfc/rfc8594)):
 
-| Header        | Meaning                                                                                                   | Example                                                                                             |
-| ------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `Deprecation` | When the route was deprecated: a date (`@` and Unix seconds), or `true` when no date is set.              | `Deprecation: @1798761600`                                                                          |
-| `Sunset`      | When the route stops responding, as an HTTP date.                                                         | `Sunset: Thu, 01 Apr 2027 00:00:00 GMT`                                                             |
-| `Link`        | The migration guide (`rel="deprecation"`) and the version to move to (`rel="successor-version"`).         | `Link: <https://docs.legesher.io/api/migrations/v1-to-v2>; rel="deprecation"`                       |
+| Header        | Meaning                                                                                           | Example                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `Deprecation` | When the route was deprecated: a date (`@` and Unix seconds), or `true` when no date is set.      | `Deprecation: @1798761600`                                                    |
+| `Sunset`      | When the route stops responding, as an HTTP date.                                                 | `Sunset: Thu, 01 Apr 2027 00:00:00 GMT`                                       |
+| `Link`        | The migration guide (`rel="deprecation"`) and the version to move to (`rel="successor-version"`). | `Link: <https://docs.legesher.io/api/migrations/v1-to-v2>; rel="deprecation"` |
 
 ## What a client should do
 
