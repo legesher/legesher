@@ -903,18 +903,6 @@
       "MeTierLimits": {
         "description": "The limits of the caller's plan.\n\nA null value means the plan sets no fixed limit for that measure.",
         "properties": {
-          "api_keys": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "API keys the plan includes.",
-            "title": "Api Keys"
-          },
           "monthly_chars": {
             "anyOf": [
               {
@@ -942,8 +930,7 @@
         },
         "required": [
           "monthly_chars",
-          "requests_per_minute",
-          "api_keys"
+          "requests_per_minute"
         ],
         "title": "MeTierLimits",
         "type": "object"
