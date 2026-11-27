@@ -95,7 +95,7 @@ The same shared map, more runtimes.
 
 Legesher meets people where they already work.
 
-- A hosted translation API for tools and platforms that want translation as a service
+- The Legesher Bridge API, so tools and platforms can localize Python source over HTTP
 - An MCP server so AI assistants can work with you in your language and your pack's terms
 - A hosted review portal, lowering the barrier for reviewers beyond GitHub entirely
 - Localized documentation, generated and reviewed through the same pipeline as the packs
