@@ -9,6 +9,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **docs**: a Translation API section on docs.legesher.io. Five guide pages
+  (overview and first request, keys and sign-in, errors and limits, languages,
+  versioning) and an endpoint reference that `starlight-openapi` generates at
+  build time from `docs/public/api/openapi.json`, which is also served as-is at
+  `/api/openapi.json`. The document is copied in from the API service and not
+  edited here. `tests/api-docs.spec.ts` fails when an operation in the
+  document has no id or no reference page, when the reference links a page the
+  document does not back, or when the served document differs from the source.
+
 ### Changed
 
 - **install**: the one-line installers install `legesher` 0.28.3 and

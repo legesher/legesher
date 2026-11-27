@@ -1,0 +1,150 @@
+---
+title: Translation API
+description: Translate Python source between natural languages over HTTP, starting with your first request.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+The Translation API translates Python source between natural languages over HTTP. It runs the same
+open-source engine and language packs as the editor extension and the command line. Submitted source is
+never logged and never used for training.
+
+- **Base URL:** `https://api.legesher.io`
+- **Version:** every route lives under `/v1`. See [Versioning](/api/versioning/).
+- **Format:** JSON requests and JSON responses.
+- **Reference:** every endpoint, request and response is in the [endpoint reference](/api/reference/),
+  generated from the [OpenAPI document](/api/openapi.json).
+
+## Before you start
+
+Most requests take an API key. Create an account at [app.legesher.io](https://app.legesher.io), open
+**Your keys**, and create a key. The key is shown once, so store it somewhere safe right away.
+[Keys and sign-in](/api/keys/) describes the other way to get a key, from a command line or an editor.
+
+Put the key in an environment variable for the examples on this page:
+
+```bash
+export LEGESHER_API_KEY="lgsh_live_..."
+```
+
+To try the API before you create an account, leave out the `Authorization` header. Translation,
+validation and explanation requests also work without a key, on a small anonymous trial.
+
+## Your first translation
+
+Send the source, the language it is written in, and the language to translate into. The language codes
+are the ones [`GET /v1/languages`](/api/languages/) lists.
+
+<Tabs syncKey="api-client">
+<TabItem label="curl">
+
+```bash
+curl https://api.legesher.io/v1/translate \
+  -H "Authorization: Bearer $LEGESHER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source": "def greet(name):\n    print(\"Hello,\", name)\n\ngreet(\"Ada\")\n",
+    "source_lang": "en",
+    "target_lang": "es"
+  }'
+```
+
+</TabItem>
+<TabItem label="Python">
+
+```python
+import os
+
+import httpx
+
+response = httpx.post(
+    "https://api.legesher.io/v1/translate",
+    headers={"Authorization": f"Bearer {os.environ['LEGESHER_API_KEY']}"},
+    json={
+        "source": 'def greet(name):\n    print("Hello,", name)\n\ngreet("Ada")\n',
+        "source_lang": "en",
+        "target_lang": "es",
+    },
+)
+response.raise_for_status()
+print(response.json()["translated_source"])
+```
+
+</TabItem>
+<TabItem label="JavaScript">
+
+```js
+const response = await fetch('https://api.legesher.io/v1/translate', {
+  method: 'POST',
+  headers: {
+    Authorization: `Bearer ${process.env.LEGESHER_API_KEY}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    source: 'def greet(name):\n    print("Hello,", name)\n\ngreet("Ada")\n',
+    source_lang: 'en',
+    target_lang: 'es',
+  }),
+});
+if (!response.ok) throw new Error(`${response.status}: ${await response.text()}`);
+const { translated_source } = await response.json();
+console.log(translated_source);
+```
+
+</TabItem>
+</Tabs>
+
+The response holds the translated source and says how it was produced:
+
+```json
+{
+  "translated_source": "definir greet(name):\n    imprimir(\"Hello,\", name)\n\ngreet(\"Ada\")\n",
+  "source_lang": "en",
+  "target_lang": "es",
+  "python_version": "3.13",
+  "pivoted": false,
+  "mode_used": "standard",
+  "mode_fallback": false,
+  "fallback_reason": null,
+  "metadata": null
+}
+```
+
+The language pack translates Python's own words: `def` becomes `definir` and `print` becomes `imprimir`.
+Your names and strings stay as you wrote them. A few more things to know:
+
+- `python_version` chooses the language pack: `3.10`, `3.11`, `3.12`, `3.13` (the default) or `3.14`.
+- Between two languages other than English, the API translates through English and sets `"pivoted": true`.
+- `POST /v1/translate/snippet` takes the same body, for a fragment that is not a whole file.
+- With `"enhanced": true` on a paid plan, a model pass also translates comments, docstrings, string literals
+  and suggested names. If that pass cannot run, you get the standard result with `"mode_fallback": true`.
+
+## Errors a new key meets
+
+Every error has the same shape: a machine-readable `code` and a message for people.
+
+```json
+{
+  "error": {
+    "code": "unsupported_language",
+    "message": "Unsupported language code: 'xx'."
+  }
+}
+```
+
+| Status | `error.code`                               | What it means                                                                                                         |
+| ------ | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| 401    | `unauthorized`                             | The key sent is malformed, unknown or revoked. Check the header reads `Authorization: Bearer <key>`.                  |
+| 402    | `tier_required`                            | The request needs a paid plan, for example `"enhanced": true`.                                                        |
+| 422    | `unsupported_language`, `validation_error` | A language code is not supported, or a field is missing or malformed. `details` lists each field.                     |
+| 429    | `rate_limited`, `quota_exceeded`           | Too many requests in a short time (wait for `Retry-After`), or this month's character allowance is used up.           |
+
+[Errors and limits](/api/errors-and-limits/) lists every code and the headers that report your usage.
+
+## Next steps
+
+- [Keys and sign-in](/api/keys/): create, check and revoke keys, and sign in from a tool.
+- [Errors and limits](/api/errors-and-limits/): every error code, and how to read your limits.
+- [Languages](/api/languages/): the supported languages and each language's terms.
+- [Versioning](/api/versioning/): how the API changes and how a version is retired.
+- [Endpoint reference](/api/reference/): every route, generated from the OpenAPI document.
