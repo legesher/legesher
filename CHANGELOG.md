@@ -11,7 +11,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- **docs**: a Translation API section on docs.legesher.io. Five guide pages
+- **docs**: a Legesher Bridge API section on docs.legesher.io. Five guide pages
   (overview and first request, keys and sign-in, errors and limits, languages,
   versioning) and an endpoint reference that `starlight-openapi` generates at
   build time from `docs/public/api/openapi.json`, which is also served as-is at

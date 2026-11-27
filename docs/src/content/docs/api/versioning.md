@@ -1,6 +1,6 @@
 ---
 title: Versioning
-description: How the Translation API is versioned, and how a version or a route is deprecated and retired.
+description: How the Legesher Bridge API is versioned, and how a version or a route is deprecated and retired.
 ---
 
 ## Versions

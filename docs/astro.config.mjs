@@ -12,7 +12,7 @@ const snippetLangs = JSON.parse(
 	readFileSync(new URL('./generated/snippet-langs.json', import.meta.url), 'utf-8'),
 ).map((/** @type {{ code: string }} */ l) => l.code);
 
-// The Translation API reference: pages generated at build time from the
+// The Legesher Bridge API reference: pages generated at build time from the
 // OpenAPI document, which is also served as-is at /api/openapi.json. The
 // document is copied in from the API's repository, never edited here.
 const apiReferenceGroup = createOpenAPISidebarGroup();
@@ -94,7 +94,7 @@ export default defineConfig({
 					],
 				},
 				{
-					label: 'Translation API',
+					label: 'Bridge API',
 					items: [
 						{ label: 'Overview and first request', slug: 'api' },
 						{ label: 'Keys and sign-in', slug: 'api/keys' },
